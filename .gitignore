@@ -1,0 +1,33 @@
+# Python virtual environment
+venv_fmri/
+
+# Build directories
+build/
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+dist/
+*.egg-info/
+
+# Cache directories
+nilearn_cache/
+
+# IDE files
+.vscode/
+
+# Compiled files
+*.so
+*.dll
+*.dylib
+*.exe
+
+# Temporary files
+*.swp
+*.swo
+*~
+
+# OS specific files
+.DS_Store
+Thumbs.db

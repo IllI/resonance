@@ -1,0 +1,124 @@
+# =========================================
+# fMRI Brain Analysis - Python Dependencies
+# =========================================
+
+# Core Scientific Computing
+numpy>=1.24.0
+scipy>=1.10.0
+pandas>=2.0.0
+matplotlib>=3.7.0
+seaborn>=0.12.0
+plotly>=5.15.0
+
+# Neuroimaging Core Libraries
+nibabel>=5.1.0              # NIfTI file I/O
+nilearn>=0.10.1             # Machine learning for neuroimaging
+nipy>=0.5.0                 # Neuroimaging analysis tools
+nipype>=1.8.6               # Workflow management
+
+# Brain Atlases and Templates
+siibra-python>=0.4.12       # EBRAINS brain atlas framework
+brainglobe-atlasapi>=2.0.0  # Multi-atlas brain framework
+templateflow>=23.1.0        # Template and atlas management
+ANTsPy>=0.3.2               # Advanced normalization tools
+
+# Data Acquisition
+openneuro-py>=2023.2        # OpenNeuro dataset access
+mne>=1.4.0                  # M/EEG analysis (for multimodal)
+pybids>=0.15.5              # BIDS dataset handling
+
+# Image Processing and Analysis
+scikit-image>=0.21.0        # Image processing
+opencv-python>=4.8.0        # Computer vision
+Pillow>=10.0.0              # Image handling
+
+# Machine Learning and Statistics
+scikit-learn>=1.3.0         # Machine learning algorithms
+statsmodels>=0.14.0         # Statistical modeling
+pingouin>=0.5.3             # Statistical testing
+
+# Deep Learning Frameworks (Optional)
+torch>=2.0.0                # PyTorch for neural networks
+torchvision>=0.15.0         # PyTorch vision utilities
+tensorflow>=2.13.0          # TensorFlow
+keras>=2.13.0               # High-level neural networks
+
+# GPU Acceleration
+pyopencl>=2023.1.4          # OpenCL Python bindings
+pycuda>=2022.2.2            # CUDA Python bindings (optional)
+
+# Time Series Analysis
+nitime>=0.9                 # Neuroimaging time series
+spectrum>=0.8.1             # Spectral analysis
+pyeeg>=0.4.0                # EEG/MEG signal processing
+
+# 3D Visualization (Phase 4)
+plotly>=5.15.0              # Interactive 3D plotting
+mayavi>=4.8.1               # Advanced 3D visualization (optional)
+vtk>=9.2.0                  # Visualization toolkit (optional)
+pyvista>=0.42.0             # 3D plotting and mesh analysis
+ipywidgets>=8.0.0           # Interactive widgets for Jupyter
+
+# Interactive Visualization
+bokeh>=3.2.0                # Interactive web plots
+holoviews>=1.17.0           # High-level data visualization
+datashader>=0.15.0          # Large dataset visualization
+panel>=1.2.0                # Dashboard creation
+
+# Connectivity Analysis
+networkx>=3.1               # Graph theory and network analysis
+python-igraph>=0.10.0       # Graph analysis library
+graph-tool>=2.45            # High-performance graph analysis (Linux)
+bctpy>=0.5.0                # Brain connectivity toolbox
+
+# Statistical Analysis
+statsmodels>=0.14.0         # Statistical modeling
+pingouin>=0.5.3             # Statistical tests
+scipy>=1.10.0               # Scientific computing
+
+# File Format Support
+h5py>=3.9.0                 # HDF5 file format
+tables>=3.8.0               # Hierarchical datasets
+pydicom>=2.4.0              # DICOM medical imaging
+natsort>=8.4.0              # Natural sorting
+
+# Preprocessing and Quality Control
+fmriprep>=23.1.0            # fMRI preprocessing (standalone)
+mriqc>=23.1.0               # Image quality metrics
+tedana>=0.0.12              # Multi-echo denoising
+
+# Advanced Analytics
+pyrqa>=7.0.0                # Recurrence quantification analysis
+nolds>=0.5.2                # Nonlinear dynamics analysis
+entropy>=0.2.1              # Entropy measures
+
+# Real-time Processing (Phase 4)
+asyncio                     # Asynchronous I/O
+threading                   # Multi-threading support
+multiprocessing             # Multi-processing support
+concurrent.futures          # High-level concurrency
+zmq                        # ZeroMQ messaging (optional)
+
+# Development and Testing
+pytest>=7.4.0              # Testing framework
+pytest-cov>=4.1.0          # Coverage testing
+black>=23.7.0               # Code formatting
+flake8>=6.0.0               # Linting
+mypy>=1.5.0                 # Type checking
+jupyter>=1.0.0              # Jupyter notebook support
+ipython>=8.14.0             # Enhanced Python shell
+
+# Documentation
+sphinx>=7.1.0               # Documentation generation
+sphinxcontrib-napoleon>=0.7 # NumPy/Google style docstrings
+
+# System Integration
+psutil>=5.9.0               # System and process utilities
+tqdm>=4.65.0                # Progress bars
+click>=8.1.0                # Command line interfaces
+rich>=13.5.0                # Rich text and beautiful formatting
+
+# Optional High-Performance Libraries
+numba>=0.57.0               # JIT compilation for NumPy
+cython>=3.0.0               # C extensions for Python
+joblib>=1.3.0               # Parallel computing utilities 
