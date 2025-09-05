@@ -1,5 +1,7 @@
 # Python virtual environment
 venv_fmri/
+.venv/
+venv/
 
 # Build directories
 build/
@@ -13,9 +15,13 @@ dist/
 
 # Cache directories
 nilearn_cache/
+*/cache/
+*/__pycache__/
+*.cache/
 
 # IDE files
 .vscode/
+.idea/
 
 # Compiled files
 *.so
@@ -31,3 +37,29 @@ nilearn_cache/
 # OS specific files
 .DS_Store
 Thumbs.db
+
+# Large data files
+*.nii.gz
+*.nii
+*.pkl
+*.npz
+*.h5
+*.hdf5
+
+# Training results and models
+*/training_results/
+*/models/
+*/results/
+*/visualizations/
+*/reports/
+
+# Dataset directories
+*/brain_datasets/
+*/data/
+*/openneuro_cache/
+
+# HTML visualization files larger than 10MB
+*.html
+
+# Log files
+*.log
