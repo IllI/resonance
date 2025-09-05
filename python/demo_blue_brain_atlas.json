@@ -1,0 +1,525 @@
+{
+  "version": "1.0-mock",
+  "last_updated": "2024",
+  "total_regions": 19,
+  "coordinate_system": "MNI152",
+  "metadata": {
+    "source": "mock",
+    "description": "Development/testing data"
+  },
+  "regions": {
+    "1": {
+      "name": "Primary Motor Cortex",
+      "acronym": "M1",
+      "coordinates": [
+        0,
+        -20,
+        60
+      ],
+      "volume_mm3": 1500.0,
+      "cell_counts": {
+        "excitatory_neuron": 90000000,
+        "inhibitory_neuron": 30000000,
+        "astrocyte": 22500000,
+        "oligodendrocyte": 4500000,
+        "microglia": 3000000
+      },
+      "cell_density": {
+        "excitatory_neuron": 60000.0,
+        "inhibitory_neuron": 20000.0,
+        "astrocyte": 15000.0,
+        "oligodendrocyte": 3000.0,
+        "microglia": 2000.0
+      },
+      "anatomical_level": "cortical",
+      "parent_region": null,
+      "child_regions": []
+    },
+    "2": {
+      "name": "Primary Visual Cortex",
+      "acronym": "V1",
+      "coordinates": [
+        0,
+        -80,
+        10
+      ],
+      "volume_mm3": 1800.0,
+      "cell_counts": {
+        "excitatory_neuron": 108000000,
+        "inhibitory_neuron": 36000000,
+        "astrocyte": 27000000,
+        "oligodendrocyte": 5400000,
+        "microglia": 3600000
+      },
+      "cell_density": {
+        "excitatory_neuron": 60000.0,
+        "inhibitory_neuron": 20000.0,
+        "astrocyte": 15000.0,
+        "oligodendrocyte": 3000.0,
+        "microglia": 2000.0
+      },
+      "anatomical_level": "cortical",
+      "parent_region": null,
+      "child_regions": []
+    },
+    "3": {
+      "name": "Prefrontal Cortex",
+      "acronym": "PFC",
+      "coordinates": [
+        0,
+        50,
+        20
+      ],
+      "volume_mm3": 2200.0,
+      "cell_counts": {
+        "excitatory_neuron": 132000000,
+        "inhibitory_neuron": 44000000,
+        "astrocyte": 33000000,
+        "oligodendrocyte": 6600000,
+        "microglia": 4400000
+      },
+      "cell_density": {
+        "excitatory_neuron": 60000.0,
+        "inhibitory_neuron": 20000.0,
+        "astrocyte": 15000.0,
+        "oligodendrocyte": 3000.0,
+        "microglia": 2000.0
+      },
+      "anatomical_level": "cortical",
+      "parent_region": null,
+      "child_regions": []
+    },
+    "4": {
+      "name": "Somatosensory Cortex",
+      "acronym": "S1",
+      "coordinates": [
+        0,
+        -30,
+        50
+      ],
+      "volume_mm3": 1200.0,
+      "cell_counts": {
+        "excitatory_neuron": 72000000,
+        "inhibitory_neuron": 24000000,
+        "astrocyte": 18000000,
+        "oligodendrocyte": 3600000,
+        "microglia": 2400000
+      },
+      "cell_density": {
+        "excitatory_neuron": 60000.0,
+        "inhibitory_neuron": 20000.0,
+        "astrocyte": 15000.0,
+        "oligodendrocyte": 3000.0,
+        "microglia": 2000.0
+      },
+      "anatomical_level": "cortical",
+      "parent_region": null,
+      "child_regions": []
+    },
+    "5": {
+      "name": "Auditory Cortex",
+      "acronym": "A1",
+      "coordinates": [
+        0,
+        -20,
+        10
+      ],
+      "volume_mm3": 800.0,
+      "cell_counts": {
+        "excitatory_neuron": 48000000,
+        "inhibitory_neuron": 16000000,
+        "astrocyte": 12000000,
+        "oligodendrocyte": 2400000,
+        "microglia": 1600000
+      },
+      "cell_density": {
+        "excitatory_neuron": 60000.0,
+        "inhibitory_neuron": 20000.0,
+        "astrocyte": 15000.0,
+        "oligodendrocyte": 3000.0,
+        "microglia": 2000.0
+      },
+      "anatomical_level": "cortical",
+      "parent_region": null,
+      "child_regions": []
+    },
+    "6": {
+      "name": "Insular Cortex",
+      "acronym": "INS",
+      "coordinates": [
+        0,
+        10,
+        0
+      ],
+      "volume_mm3": 600.0,
+      "cell_counts": {
+        "excitatory_neuron": 36000000,
+        "inhibitory_neuron": 12000000,
+        "astrocyte": 9000000,
+        "oligodendrocyte": 1800000,
+        "microglia": 1200000
+      },
+      "cell_density": {
+        "excitatory_neuron": 60000.0,
+        "inhibitory_neuron": 20000.0,
+        "astrocyte": 15000.0,
+        "oligodendrocyte": 3000.0,
+        "microglia": 2000.0
+      },
+      "anatomical_level": "cortical",
+      "parent_region": null,
+      "child_regions": []
+    },
+    "7": {
+      "name": "Cingulate Cortex",
+      "acronym": "CG",
+      "coordinates": [
+        0,
+        0,
+        40
+      ],
+      "volume_mm3": 900.0,
+      "cell_counts": {
+        "excitatory_neuron": 54000000,
+        "inhibitory_neuron": 18000000,
+        "astrocyte": 13500000,
+        "oligodendrocyte": 2700000,
+        "microglia": 1800000
+      },
+      "cell_density": {
+        "excitatory_neuron": 60000.0,
+        "inhibitory_neuron": 20000.0,
+        "astrocyte": 15000.0,
+        "oligodendrocyte": 3000.0,
+        "microglia": 2000.0
+      },
+      "anatomical_level": "cortical",
+      "parent_region": null,
+      "child_regions": []
+    },
+    "8": {
+      "name": "Temporal Pole",
+      "acronym": "TP",
+      "coordinates": [
+        0,
+        20,
+        -10
+      ],
+      "volume_mm3": 400.0,
+      "cell_counts": {
+        "excitatory_neuron": 24000000,
+        "inhibitory_neuron": 8000000,
+        "astrocyte": 6000000,
+        "oligodendrocyte": 1200000,
+        "microglia": 800000
+      },
+      "cell_density": {
+        "excitatory_neuron": 60000.0,
+        "inhibitory_neuron": 20000.0,
+        "astrocyte": 15000.0,
+        "oligodendrocyte": 3000.0,
+        "microglia": 2000.0
+      },
+      "anatomical_level": "cortical",
+      "parent_region": null,
+      "child_regions": []
+    },
+    "9": {
+      "name": "Thalamus",
+      "acronym": "THAL",
+      "coordinates": [
+        0,
+        -15,
+        5
+      ],
+      "volume_mm3": 800.0,
+      "cell_counts": {
+        "excitatory_neuron": 48000000,
+        "inhibitory_neuron": 16000000,
+        "astrocyte": 12000000,
+        "oligodendrocyte": 2400000,
+        "microglia": 1600000
+      },
+      "cell_density": {
+        "excitatory_neuron": 60000.0,
+        "inhibitory_neuron": 20000.0,
+        "astrocyte": 15000.0,
+        "oligodendrocyte": 3000.0,
+        "microglia": 2000.0
+      },
+      "anatomical_level": "subcortical",
+      "parent_region": null,
+      "child_regions": []
+    },
+    "10": {
+      "name": "Caudate Nucleus",
+      "acronym": "CAU",
+      "coordinates": [
+        0,
+        10,
+        15
+      ],
+      "volume_mm3": 600.0,
+      "cell_counts": {
+        "excitatory_neuron": 36000000,
+        "inhibitory_neuron": 12000000,
+        "astrocyte": 9000000,
+        "oligodendrocyte": 1800000,
+        "microglia": 1200000
+      },
+      "cell_density": {
+        "excitatory_neuron": 60000.0,
+        "inhibitory_neuron": 20000.0,
+        "astrocyte": 15000.0,
+        "oligodendrocyte": 3000.0,
+        "microglia": 2000.0
+      },
+      "anatomical_level": "subcortical",
+      "parent_region": null,
+      "child_regions": []
+    },
+    "11": {
+      "name": "Putamen",
+      "acronym": "PUT",
+      "coordinates": [
+        0,
+        5,
+        5
+      ],
+      "volume_mm3": 500.0,
+      "cell_counts": {
+        "excitatory_neuron": 30000000,
+        "inhibitory_neuron": 10000000,
+        "astrocyte": 7500000,
+        "oligodendrocyte": 1500000,
+        "microglia": 1000000
+      },
+      "cell_density": {
+        "excitatory_neuron": 60000.0,
+        "inhibitory_neuron": 20000.0,
+        "astrocyte": 15000.0,
+        "oligodendrocyte": 3000.0,
+        "microglia": 2000.0
+      },
+      "anatomical_level": "subcortical",
+      "parent_region": null,
+      "child_regions": []
+    },
+    "12": {
+      "name": "Globus Pallidus",
+      "acronym": "GP",
+      "coordinates": [
+        0,
+        0,
+        0
+      ],
+      "volume_mm3": 300.0,
+      "cell_counts": {
+        "excitatory_neuron": 18000000,
+        "inhibitory_neuron": 6000000,
+        "astrocyte": 4500000,
+        "oligodendrocyte": 900000,
+        "microglia": 600000
+      },
+      "cell_density": {
+        "excitatory_neuron": 60000.0,
+        "inhibitory_neuron": 20000.0,
+        "astrocyte": 15000.0,
+        "oligodendrocyte": 3000.0,
+        "microglia": 2000.0
+      },
+      "anatomical_level": "subcortical",
+      "parent_region": null,
+      "child_regions": []
+    },
+    "13": {
+      "name": "Hippocampus",
+      "acronym": "HIP",
+      "coordinates": [
+        0,
+        -25,
+        -10
+      ],
+      "volume_mm3": 700.0,
+      "cell_counts": {
+        "excitatory_neuron": 42000000,
+        "inhibitory_neuron": 14000000,
+        "astrocyte": 10500000,
+        "oligodendrocyte": 2100000,
+        "microglia": 1400000
+      },
+      "cell_density": {
+        "excitatory_neuron": 60000.0,
+        "inhibitory_neuron": 20000.0,
+        "astrocyte": 15000.0,
+        "oligodendrocyte": 3000.0,
+        "microglia": 2000.0
+      },
+      "anatomical_level": "subcortical",
+      "parent_region": null,
+      "child_regions": []
+    },
+    "14": {
+      "name": "Amygdala",
+      "acronym": "AMY",
+      "coordinates": [
+        0,
+        -5,
+        -15
+      ],
+      "volume_mm3": 200.0,
+      "cell_counts": {
+        "excitatory_neuron": 12000000,
+        "inhibitory_neuron": 4000000,
+        "astrocyte": 3000000,
+        "oligodendrocyte": 600000,
+        "microglia": 400000
+      },
+      "cell_density": {
+        "excitatory_neuron": 60000.0,
+        "inhibitory_neuron": 20000.0,
+        "astrocyte": 15000.0,
+        "oligodendrocyte": 3000.0,
+        "microglia": 2000.0
+      },
+      "anatomical_level": "subcortical",
+      "parent_region": null,
+      "child_regions": []
+    },
+    "15": {
+      "name": "Midbrain",
+      "acronym": "MB",
+      "coordinates": [
+        0,
+        -30,
+        -20
+      ],
+      "volume_mm3": 400.0,
+      "cell_counts": {
+        "excitatory_neuron": 24000000,
+        "inhibitory_neuron": 8000000,
+        "astrocyte": 6000000,
+        "oligodendrocyte": 1200000,
+        "microglia": 800000
+      },
+      "cell_density": {
+        "excitatory_neuron": 60000.0,
+        "inhibitory_neuron": 20000.0,
+        "astrocyte": 15000.0,
+        "oligodendrocyte": 3000.0,
+        "microglia": 2000.0
+      },
+      "anatomical_level": "brainstem",
+      "parent_region": null,
+      "child_regions": []
+    },
+    "16": {
+      "name": "Pons",
+      "acronym": "PONS",
+      "coordinates": [
+        0,
+        -35,
+        -30
+      ],
+      "volume_mm3": 600.0,
+      "cell_counts": {
+        "excitatory_neuron": 36000000,
+        "inhibitory_neuron": 12000000,
+        "astrocyte": 9000000,
+        "oligodendrocyte": 1800000,
+        "microglia": 1200000
+      },
+      "cell_density": {
+        "excitatory_neuron": 60000.0,
+        "inhibitory_neuron": 20000.0,
+        "astrocyte": 15000.0,
+        "oligodendrocyte": 3000.0,
+        "microglia": 2000.0
+      },
+      "anatomical_level": "brainstem",
+      "parent_region": null,
+      "child_regions": []
+    },
+    "17": {
+      "name": "Medulla",
+      "acronym": "MED",
+      "coordinates": [
+        0,
+        -40,
+        -40
+      ],
+      "volume_mm3": 500.0,
+      "cell_counts": {
+        "excitatory_neuron": 30000000,
+        "inhibitory_neuron": 10000000,
+        "astrocyte": 7500000,
+        "oligodendrocyte": 1500000,
+        "microglia": 1000000
+      },
+      "cell_density": {
+        "excitatory_neuron": 60000.0,
+        "inhibitory_neuron": 20000.0,
+        "astrocyte": 15000.0,
+        "oligodendrocyte": 3000.0,
+        "microglia": 2000.0
+      },
+      "anatomical_level": "brainstem",
+      "parent_region": null,
+      "child_regions": []
+    },
+    "18": {
+      "name": "Cerebellar Cortex",
+      "acronym": "CB",
+      "coordinates": [
+        0,
+        -50,
+        -30
+      ],
+      "volume_mm3": 1200.0,
+      "cell_counts": {
+        "excitatory_neuron": 72000000,
+        "inhibitory_neuron": 24000000,
+        "astrocyte": 18000000,
+        "oligodendrocyte": 3600000,
+        "microglia": 2400000
+      },
+      "cell_density": {
+        "excitatory_neuron": 60000.0,
+        "inhibitory_neuron": 20000.0,
+        "astrocyte": 15000.0,
+        "oligodendrocyte": 3000.0,
+        "microglia": 2000.0
+      },
+      "anatomical_level": "cerebellar",
+      "parent_region": null,
+      "child_regions": []
+    },
+    "19": {
+      "name": "Cerebellar Nuclei",
+      "acronym": "CBN",
+      "coordinates": [
+        0,
+        -45,
+        -25
+      ],
+      "volume_mm3": 300.0,
+      "cell_counts": {
+        "excitatory_neuron": 18000000,
+        "inhibitory_neuron": 6000000,
+        "astrocyte": 4500000,
+        "oligodendrocyte": 900000,
+        "microglia": 600000
+      },
+      "cell_density": {
+        "excitatory_neuron": 60000.0,
+        "inhibitory_neuron": 20000.0,
+        "astrocyte": 15000.0,
+        "oligodendrocyte": 3000.0,
+        "microglia": 2000.0
+      },
+      "anatomical_level": "cerebellar",
+      "parent_region": null,
+      "child_regions": []
+    }
+  }
+}

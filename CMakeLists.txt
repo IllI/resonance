@@ -70,16 +70,6 @@ add_executable(simple_dual_gpu_demo src/simple_dual_gpu_demo.cpp)
 target_link_libraries(simple_dual_gpu_demo OpenCL::OpenCL)
 target_include_directories(simple_dual_gpu_demo PRIVATE ${OpenCL_INCLUDE_DIR})
 
-# Phase 4: Advanced Parallel Training Accelerator
-add_executable(parallel_training_accelerator src/parallel_training_accelerator.cpp)
-target_link_libraries(parallel_training_accelerator OpenCL::OpenCL)
-target_include_directories(parallel_training_accelerator PRIVATE ${OpenCL_INCLUDE_DIR})
-
-# Phase 4: Parallel Training shared library for Python integration
-add_library(parallel_training_lib SHARED src/parallel_training_accelerator.cpp)
-target_link_libraries(parallel_training_lib OpenCL::OpenCL)
-target_include_directories(parallel_training_lib PRIVATE ${OpenCL_INCLUDE_DIR})
-
 # Set properties for shared libraries
 set_target_properties(brain_gpu_lib PROPERTIES
     PREFIX ""
@@ -93,13 +83,6 @@ set_target_properties(dual_gpu_brain_lib PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
 )
 
-set_target_properties(parallel_training_lib PROPERTIES
-    PREFIX ""
-    SUFFIX ".dll"
-    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
-)
-
 # Add compiler definitions for shared libraries
 target_compile_definitions(brain_gpu_lib PRIVATE BUILDING_DLL)
-target_compile_definitions(dual_gpu_brain_lib PRIVATE BUILDING_DLL)
-target_compile_definitions(parallel_training_lib PRIVATE BUILDING_DLL) 
+target_compile_definitions(dual_gpu_brain_lib PRIVATE BUILDING_DLL) 

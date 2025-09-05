@@ -1,0 +1,189 @@
+{
+  "regions": [
+    {
+      "region_name": "Cerebral cortex",
+      "region_id": 695,
+      "coordinates": [
+        0,
+        0,
+        0
+      ],
+      "cell_density": 92000,
+      "neuron_count": 82,
+      "glia_count": 9,
+      "cell_types": {
+        "pyramidal_neurons": 69,
+        "interneurons": 13,
+        "astrocytes": 7,
+        "oligodendrocytes": 1
+      },
+      "volume_mm3": 0.001,
+      "confidence": 0.85
+    },
+    {
+      "region_name": "Hippocampus",
+      "region_id": 375,
+      "coordinates": [
+        -2000,
+        -3000,
+        -1000
+      ],
+      "cell_density": 340000,
+      "neuron_count": 306,
+      "glia_count": 33,
+      "cell_types": {
+        "pyramidal_neurons": 272,
+        "interneurons": 34,
+        "astrocytes": 27,
+        "oligodendrocytes": 6
+      },
+      "volume_mm3": 0.001,
+      "confidence": 0.9
+    },
+    {
+      "region_name": "Striatum",
+      "region_id": 477,
+      "coordinates": [
+        -3000,
+        1000,
+        -2000
+      ],
+      "cell_density": 180000,
+      "neuron_count": 162,
+      "glia_count": 17,
+      "cell_types": {
+        "pyramidal_neurons": 135,
+        "interneurons": 27,
+        "astrocytes": 14,
+        "oligodendrocytes": 3
+      },
+      "volume_mm3": 0.001,
+      "confidence": 0.88
+    },
+    {
+      "region_name": "Thalamus",
+      "region_id": 549,
+      "coordinates": [
+        -1000,
+        -1000,
+        -3000
+      ],
+      "cell_density": 150000,
+      "neuron_count": 135,
+      "glia_count": 14,
+      "cell_types": {
+        "pyramidal_neurons": 112,
+        "interneurons": 22,
+        "astrocytes": 12,
+        "oligodendrocytes": 3
+      },
+      "volume_mm3": 0.001,
+      "confidence": 0.87
+    },
+    {
+      "region_name": "Hypothalamus",
+      "region_id": 467,
+      "coordinates": [
+        -1000,
+        -2000,
+        -4000
+      ],
+      "cell_density": 120000,
+      "neuron_count": 108,
+      "glia_count": 11,
+      "cell_types": {
+        "pyramidal_neurons": 90,
+        "interneurons": 18,
+        "astrocytes": 9,
+        "oligodendrocytes": 2
+      },
+      "volume_mm3": 0.001,
+      "confidence": 0.86
+    },
+    {
+      "region_name": "Midbrain",
+      "region_id": 313,
+      "coordinates": [
+        1000,
+        -3000,
+        -5000
+      ],
+      "cell_density": 95000,
+      "neuron_count": 85,
+      "glia_count": 9,
+      "cell_types": {
+        "pyramidal_neurons": 71,
+        "interneurons": 14,
+        "astrocytes": 7,
+        "oligodendrocytes": 1
+      },
+      "volume_mm3": 0.001,
+      "confidence": 0.84
+    },
+    {
+      "region_name": "Pons",
+      "region_id": 771,
+      "coordinates": [
+        2000,
+        -4000,
+        -6000
+      ],
+      "cell_density": 75000,
+      "neuron_count": 67,
+      "glia_count": 7,
+      "cell_types": {
+        "pyramidal_neurons": 56,
+        "interneurons": 11,
+        "astrocytes": 6,
+        "oligodendrocytes": 1
+      },
+      "volume_mm3": 0.001,
+      "confidence": 0.83
+    },
+    {
+      "region_name": "Medulla",
+      "region_id": 354,
+      "coordinates": [
+        3000,
+        -5000,
+        -7000
+      ],
+      "cell_density": 65000,
+      "neuron_count": 58,
+      "glia_count": 6,
+      "cell_types": {
+        "pyramidal_neurons": 48,
+        "interneurons": 9,
+        "astrocytes": 5,
+        "oligodendrocytes": 1
+      },
+      "volume_mm3": 0.001,
+      "confidence": 0.82
+    },
+    {
+      "region_name": "Cerebellum",
+      "region_id": 512,
+      "coordinates": [
+        -4000,
+        -6000,
+        -3000
+      ],
+      "cell_density": 280000,
+      "neuron_count": 252,
+      "glia_count": 27,
+      "cell_types": {
+        "purkinje_cells": 42,
+        "granule_cells": 196,
+        "interneurons": 14,
+        "glia": 28
+      },
+      "volume_mm3": 0.001,
+      "confidence": 0.91
+    }
+  ],
+  "total_regions": 9,
+  "coordinate_system": "CCF_v3",
+  "resolution_um": 25.0,
+  "species": "mouse",
+  "cache_time": 1756802750.9306204
+}

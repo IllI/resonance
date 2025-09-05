@@ -35,16 +35,45 @@ class TemporalRegistrationResult:
 class SpatioTemporalBrainRegistrator:
     """
     Advanced 4D registration system for aligning 3D brain models with 4D fMRI data.
+    Enhanced with Blue Brain Cell Atlas support for cellular-level registration.
     """
     
-    def __init__(self, registration_method: str = 'mutual_information'):
-        """Initialize the registration system."""
+    def __init__(self, 
+                 registration_method: str = 'mutual_information',
+                 enable_blue_brain: bool = True,
+                 cellular_weight: float = 0.3):
+        """Initialize the registration system with Blue Brain Atlas support.
+        
+        Args:
+            registration_method: Registration algorithm to use
+            enable_blue_brain: Whether to use Blue Brain Atlas for enhanced registration
+            cellular_weight: Weight for cellular information in registration (0.0-1.0)
+        """
         self.registration_method = registration_method
+        self.enable_blue_brain = enable_blue_brain
+        self.cellular_weight = cellular_weight
         self.reference_model = None
         self.temporal_transforms = {}
+        self.cellular_composition = None
+        
+        # Initialize Blue Brain Atlas integrator if enabled
+        if self.enable_blue_brain:
+            try:
+                from blue_brain_atlas_integrator import BlueBrainAtlasIntegrator
+                self.bb_integrator = BlueBrainAtlasIntegrator()
+                print("🔬 Blue Brain Cell Atlas integrator initialized")
+            except ImportError:
+                print("⚠️ Blue Brain Atlas integrator not available, using standard registration")
+                self.enable_blue_brain = False
+                self.bb_integrator = None
+        else:
+            self.bb_integrator = None
         
         print("🧠 Initializing 4D Spatial-Temporal Brain Registration System")
         print(f"   Registration method: {registration_method}")
+        print(f"   Blue Brain Atlas enhanced: {self.enable_blue_brain}")
+        if self.enable_blue_brain:
+            print(f"   Cellular weight in registration: {cellular_weight:.2f}")
     
     def register_model_to_fmri_sequence(self, 
                                        brain_model: Dict,
@@ -52,9 +81,10 @@ class SpatioTemporalBrainRegistrator:
                                        anatomical_features: List[Dict]) -> List[TemporalRegistrationResult]:
         """
         Register 3D brain model to each timepoint of 4D fMRI sequence.
+        Enhanced with Blue Brain Atlas cellular composition for improved accuracy.
         
         Args:
-            brain_model: 3D anatomical brain model
+            brain_model: 3D anatomical brain model (with optional cellular_composition)
             fmri_4d: 4D fMRI data (time, x, y, z)
             anatomical_features: Known anatomical features from the model
             
@@ -67,6 +97,13 @@ class SpatioTemporalBrainRegistrator:
         reference_volume = brain_model.get('volume', brain_model.get('labeled_volume'))
         if reference_volume is None:
             raise ValueError("Brain model must contain 'volume' or 'labeled_volume'")
+        
+        # Extract cellular composition if available from Blue Brain Atlas
+        self.cellular_composition = brain_model.get('cellular_composition', {})
+        if self.enable_blue_brain and self.cellular_composition:
+            print(f"🔬 Using Blue Brain cellular data for {len(self.cellular_composition)} regions")
+            # Enhance anatomical features with cellular information
+            anatomical_features = self._enhance_features_with_cellular_data(anatomical_features)
         
         self.reference_model = reference_volume
         n_timepoints = fmri_4d.shape[0]
@@ -112,11 +149,43 @@ class SpatioTemporalBrainRegistrator:
         print(f"✅ 4D registration completed: {len(results)} timepoints processed")
         return results
     
+    def _enhance_features_with_cellular_data(self, features: List[Dict]) -> List[Dict]:
+        """Enhance anatomical features with Blue Brain cellular composition data."""
+        enhanced_features = []
+        
+        for feature in features:
+            enhanced_feature = feature.copy()
+            feature_name = feature.get('name', feature.get('atlas_label', ''))
+            
+            # Add cellular information if available
+            if feature_name in self.cellular_composition:
+                cellular_data = self.cellular_composition[feature_name]
+                enhanced_feature['cellular_info'] = {
+                    'total_cells': cellular_data.get('total_cells', 0),
+                    'neuron_count': cellular_data.get('neuron_count', 0),
+                    'glia_count': cellular_data.get('glia_count', 0),
+                    'cell_density': cellular_data.get('cell_density', 0.0),
+                    'neuron_glia_ratio': cellular_data.get('neuron_glia_ratio', 0.0)
+                }
+                
+                # Adjust confidence based on cellular density
+                cell_density = cellular_data.get('cell_density', 0.0)
+                if cell_density > 0:
+                    # Higher cell density regions get higher confidence
+                    density_boost = min(0.2, cell_density / 10000.0)  # Normalize and cap boost
+                    enhanced_feature['confidence'] = min(1.0, 
+                        feature.get('confidence', 0.5) + density_boost)
+            
+            enhanced_features.append(enhanced_feature)
+        
+        return enhanced_features
+    
     def _compute_optimal_transform(self, 
                                   reference: np.ndarray,
                                   target: np.ndarray,
                                   features: List[Dict]) -> SpatialTransform:
-        """Compute optimal transformation between reference and target volumes."""
+        """Compute optimal transformation between reference and target volumes.
+        Enhanced with Blue Brain cellular information for improved accuracy."""
         
         # Initialize transformation parameters
         translation = np.array([0.0, 0.0, 0.0])
@@ -127,6 +196,12 @@ class SpatioTemporalBrainRegistrator:
         if features:
             translation, rotation = self._register_using_features(
                 reference, target, features
+            )
+        
+        # Blue Brain enhanced registration if enabled
+        if self.enable_blue_brain and self.cellular_composition:
+            translation, rotation = self._refine_with_cellular_guidance(
+                reference, target, translation, rotation, features
             )
         
         # Intensity-based registration refinement
@@ -252,6 +327,93 @@ class SpatioTemporalBrainRegistrator:
         rotation = rotation_obj.as_euler('xyz')
         
         return translation, rotation
+    
+    def _refine_with_cellular_guidance(self,
+                                     reference: np.ndarray,
+                                     target: np.ndarray,
+                                     init_translation: np.ndarray,
+                                     init_rotation: np.ndarray,
+                                     features: List[Dict]) -> Tuple[np.ndarray, np.ndarray]:
+        """Refine registration using Blue Brain cellular composition guidance."""
+        
+        refined_translation = init_translation.copy()
+        refined_rotation = init_rotation.copy()
+        
+        # Extract high-confidence cellular regions for guidance
+        cellular_landmarks = []
+        cellular_weights = []
+        
+        for feature in features:
+            if 'cellular_info' in feature:
+                cellular_info = feature['cellular_info']
+                cell_density = cellular_info.get('cell_density', 0.0)
+                
+                # Use regions with high cellular density as reliable landmarks
+                if cell_density > 1000:  # Threshold for significant cellular density
+                    cellular_landmarks.append(feature.get('coordinates', [0, 0, 0]))
+                    # Weight by cellular density and neuron/glia ratio
+                    neuron_ratio = cellular_info.get('neuron_glia_ratio', 1.0)
+                    weight = cell_density * (1.0 + neuron_ratio * 0.1)  # Slight boost for neuron-rich areas
+                    cellular_weights.append(weight)
+        
+        if len(cellular_landmarks) >= 3:
+            cellular_landmarks = np.array(cellular_landmarks)
+            cellular_weights = np.array(cellular_weights)
+            
+            # Normalize weights
+            cellular_weights = cellular_weights / np.sum(cellular_weights)
+            
+            # Find corresponding points in target using cellular-weighted search
+            target_landmarks = []
+            for i, ref_point in enumerate(cellular_landmarks):
+                # Enhanced search using cellular weight
+                search_radius = max(5, int(15 * cellular_weights[i]))  # Larger search for important regions
+                target_point = self._find_best_match_point(target, ref_point, search_radius)
+                target_landmarks.append(target_point)
+            
+            target_landmarks = np.array(target_landmarks)
+            
+            # Compute weighted transformation
+            ref_centroid = np.average(cellular_landmarks, weights=cellular_weights, axis=0)
+            target_centroid = np.average(target_landmarks, weights=cellular_weights, axis=0)
+            
+            # Cellular-guided translation adjustment
+            cellular_translation = target_centroid - ref_centroid
+            
+            # Blend with initial translation using cellular weight
+            refined_translation = (1 - self.cellular_weight) * init_translation + \
+                                self.cellular_weight * cellular_translation
+            
+            # Compute weighted rotation adjustment
+            ref_centered = cellular_landmarks - ref_centroid
+            target_centered = target_landmarks - target_centroid
+            
+            # Weighted covariance matrix
+            H = np.zeros((3, 3))
+            for i in range(len(cellular_landmarks)):
+                H += cellular_weights[i] * np.outer(ref_centered[i], target_centered[i])
+            
+            # SVD for rotation
+            try:
+                U, S, Vt = np.linalg.svd(H)
+                R = Vt.T @ U.T
+                
+                if np.linalg.det(R) < 0:
+                    Vt[-1] *= -1
+                    R = Vt.T @ U.T
+                
+                rotation_obj = Rotation.from_matrix(R)
+                cellular_rotation = rotation_obj.as_euler('xyz')
+                
+                # Blend rotations
+                refined_rotation = (1 - self.cellular_weight) * init_rotation + \
+                                 self.cellular_weight * cellular_rotation
+                
+            except np.linalg.LinAlgError:
+                # Fallback to initial rotation if SVD fails
+                pass
+        
+        return refined_translation, refined_rotation
     
     def _refine_with_intensity_matching(self,
                                       reference: np.ndarray,
