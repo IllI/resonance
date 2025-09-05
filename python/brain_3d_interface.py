@@ -197,14 +197,16 @@ class Brain3DInterface:
     
     def visualize_brain_model(self, model_name: Optional[str] = None, 
                             show_features: bool = True,
-                            confidence_threshold: float = 0.5) -> Optional[go.Figure]:
+                            confidence_threshold: float = 0.5,
+                            render_volume: bool = True) -> Optional[go.Figure]:
         """
-        Create interactive 3D visualization of a brain model.
+        Create interactive 3D visualization of a brain model with volume rendering.
         
         Args:
             model_name: Name of model to visualize (current if None)
             show_features: Whether to show anatomical features
             confidence_threshold: Minimum confidence for feature display
+            render_volume: Whether to render the brain volume as 3D mesh
             
         Returns:
             Plotly figure object
@@ -223,11 +225,18 @@ class Brain3DInterface:
         
         fig = go.Figure()
         
+        # Render brain volume as 3D mesh if available
+        if render_volume and 'volume' in brain_model:
+            print("   🧠 Rendering brain volume as 3D mesh...")
+            self._add_brain_volume_mesh(fig, brain_model)
+        
         if show_features:
             # Filter features by confidence
             confident_features = [f for f in features if f.confidence >= confidence_threshold]
             
             if confident_features:
+                print(f"   ✨ Adding {len(confident_features)} anatomical features...")
+                
                 # Prepare feature data
                 coords = np.array([f.coordinates for f in confident_features])
                 names = [f.name for f in confident_features]
@@ -245,17 +254,18 @@ class Brain3DInterface:
                 
                 colors = [tissue_colors.get(tissue, 'gray') for tissue in tissues]
                 
-                # Add brain regions as scatter points
+                # Add brain regions as enhanced markers on top of volume
                 fig.add_trace(go.Scatter3d(
                     x=coords[:, 0],
                     y=coords[:, 1],
                     z=coords[:, 2],
                     mode='markers',
                     marker=dict(
-                        size=[8 + 12 * conf for conf in confidences],
+                        size=[6 + 8 * conf for conf in confidences],
                         color=colors,
-                        opacity=0.8,
-                        line=dict(width=1, color='white')
+                        opacity=0.9,
+                        line=dict(width=2, color='white'),
+                        symbol='diamond'
                     ),
                     text=[f"<b>{name}</b><br>Confidence: {conf:.3f}<br>Tissue: {tissue}<br>Coords: {coord}" 
                           for name, conf, tissue, coord in zip(names, confidences, tissues, coords)],
@@ -292,6 +302,169 @@ class Brain3DInterface:
         print(f"✅ 3D visualization created with {len([f for f in features if f.confidence >= confidence_threshold])} features")
         return fig
     
+    def _add_brain_volume_mesh(self, fig: go.Figure, brain_model: Dict[str, Any]):
+        """Add brain volume as 3D mesh surface to the figure."""
+        try:
+            volume = brain_model['volume']
+            labeled_volume = brain_model.get('labeled_volume', None)
+            
+            print(f"   📊 Processing volume data: {volume.shape}")
+            
+            # Create isosurface from brain volume
+            # Use multiple threshold levels for different tissue types
+            thresholds = [0.3, 0.5, 0.7]  # Different tissue density levels
+            colors = ['rgba(255,182,193,0.3)', 'rgba(173,216,230,0.4)', 'rgba(255,255,255,0.2)']
+            names = ['Gray Matter', 'White Matter', 'CSF']
+            
+            for i, (threshold, color, name) in enumerate(zip(thresholds, colors, names)):
+                # Create isosurface at this threshold
+                vertices, faces = self._create_isosurface(volume, threshold)
+                
+                if len(vertices) > 0 and len(faces) > 0:
+                    # Add mesh to figure
+                    fig.add_trace(go.Mesh3d(
+                        x=vertices[:, 0],
+                        y=vertices[:, 1], 
+                        z=vertices[:, 2],
+                        i=faces[:, 0],
+                        j=faces[:, 1],
+                        k=faces[:, 2],
+                        color=color,
+                        opacity=0.3 + i * 0.1,
+                        name=name,
+                        showscale=False,
+                        hoverinfo='name'
+                    ))
+                    print(f"   ✅ Added {name} mesh: {len(vertices)} vertices, {len(faces)} faces")
+            
+            # If we have labeled volume, add region-specific meshes
+            if labeled_volume is not None:
+                self._add_labeled_region_meshes(fig, labeled_volume, brain_model)
+                
+        except Exception as e:
+            print(f"   ⚠️ Error creating brain volume mesh: {e}")
+            # Fallback to volume rendering
+            self._add_volume_rendering(fig, brain_model)
+    
+    def _create_isosurface(self, volume: np.ndarray, threshold: float) -> Tuple[np.ndarray, np.ndarray]:
+        """Create isosurface from volume data using marching cubes algorithm."""
+        try:
+            from skimage import measure
+            
+            # Apply threshold to volume
+            binary_volume = volume > threshold
+            
+            # Use marching cubes to extract surface
+            vertices, faces, _, _ = measure.marching_cubes(binary_volume, level=0.5, spacing=(1.0, 1.0, 1.0))
+            
+            return vertices, faces
+            
+        except ImportError:
+            print("   ⚠️ scikit-image not available, using fallback mesh generation")
+            return self._create_simple_mesh(volume, threshold)
+        except Exception as e:
+            print(f"   ⚠️ Error in marching cubes: {e}")
+            return self._create_simple_mesh(volume, threshold)
+    
+    def _create_simple_mesh(self, volume: np.ndarray, threshold: float) -> Tuple[np.ndarray, np.ndarray]:
+        """Simple fallback mesh generation."""
+        # Find voxels above threshold
+        coords = np.where(volume > threshold)
+        
+        if len(coords[0]) == 0:
+            return np.array([]), np.array([])
+        
+        # Sample points to avoid too many vertices
+        n_points = min(5000, len(coords[0]))
+        indices = np.random.choice(len(coords[0]), n_points, replace=False)
+        
+        vertices = np.column_stack([coords[0][indices], coords[1][indices], coords[2][indices]])
+        
+        # Create simple triangular faces (this is a very basic approach)
+        faces = []
+        for i in range(0, len(vertices) - 2, 3):
+            faces.append([i, i+1, i+2])
+        
+        return vertices, np.array(faces)
+    
+    def _add_labeled_region_meshes(self, fig: go.Figure, labeled_volume: np.ndarray, brain_model: Dict[str, Any]):
+        """Add meshes for specific labeled brain regions."""
+        try:
+            features = brain_model.get('features', [])
+            unique_labels = np.unique(labeled_volume)
+            unique_labels = unique_labels[unique_labels > 0]  # Exclude background
+            
+            # Limit to top regions to avoid overcrowding
+            max_regions = min(10, len(unique_labels))
+            
+            for i, label in enumerate(unique_labels[:max_regions]):
+                # Extract this region
+                region_mask = labeled_volume == label
+                
+                if np.sum(region_mask) > 100:  # Only process regions with sufficient voxels
+                    # Find corresponding feature
+                    feature_name = f"Region_{label}"
+                    region_color = f'rgba({50 + i*20},{100 + i*15},{150 + i*10},0.4)'
+                    
+                    # Create mesh for this region
+                    vertices, faces = self._create_isosurface(region_mask.astype(float), 0.5)
+                    
+                    if len(vertices) > 0 and len(faces) > 0:
+                        fig.add_trace(go.Mesh3d(
+                            x=vertices[:, 0],
+                            y=vertices[:, 1],
+                            z=vertices[:, 2],
+                            i=faces[:, 0],
+                            j=faces[:, 1],
+                            k=faces[:, 2],
+                            color=region_color,
+                            opacity=0.5,
+                            name=feature_name,
+                            showscale=False,
+                            hoverinfo='name'
+                        ))
+                        
+        except Exception as e:
+            print(f"   ⚠️ Error adding labeled region meshes: {e}")
+    
+    def _add_volume_rendering(self, fig: go.Figure, brain_model: Dict[str, Any]):
+        """Fallback volume rendering using scatter plot with density."""
+        try:
+            volume = brain_model['volume']
+            
+            # Sample volume points
+            coords = np.where(volume > 0.2)  # Only show significant voxels
+            values = volume[coords]
+            
+            # Subsample for performance
+            n_points = min(10000, len(coords[0]))
+            indices = np.random.choice(len(coords[0]), n_points, replace=False)
+            
+            x = coords[0][indices]
+            y = coords[1][indices] 
+            z = coords[2][indices]
+            intensities = values[indices]
+            
+            fig.add_trace(go.Scatter3d(
+                x=x, y=y, z=z,
+                mode='markers',
+                marker=dict(
+                    size=2,
+                    color=intensities,
+                    colorscale='Viridis',
+                    opacity=0.6,
+                    showscale=True,
+                    colorbar=dict(title="Intensity")
+                ),
+                name="Brain Volume",
+                hoverinfo='skip'
+            ))
+            
+            print(f"   ✅ Added volume rendering with {n_points} points")
+            
+        except Exception as e:
+            print(f"   ⚠️ Error in volume rendering: {e}")
+
     def _add_feature_connections(self, fig: go.Figure, coords: np.ndarray, 
                                confidences: List[float], threshold: float = 20):
         """Add connections between nearby anatomical features."""

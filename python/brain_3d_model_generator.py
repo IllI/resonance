@@ -56,6 +56,20 @@ try:
 except ImportError:
     HAS_LOCAL_MODULES = False
     warnings.warn("Local modules not available - limited functionality")
+    
+    # Define ROIDetection as a fallback if import fails
+    from dataclasses import dataclass
+    from typing import Tuple, Dict, Any
+    
+    @dataclass
+    class ROIDetection:
+        """Fallback ROI detection result."""
+        region_id: int
+        name: str
+        coordinates: Tuple[int, int, int]
+        confidence: float
+        network_type: str
+        properties: Dict[str, Any]
 
 @dataclass
 class AnatomicalFeature:
