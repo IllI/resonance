@@ -27,7 +27,7 @@ try:
     from neural_network_analyzer import BrainNetworkAnalyzer
     HAS_ANALYSIS_MODULES = True
 except ImportError as e:
-    print(f"⚠️ Analysis modules not available: {e}")
+    print(f" Analysis modules not available: {e}")
     HAS_ANALYSIS_MODULES = False
 
 @dataclass
@@ -110,7 +110,7 @@ class RealTimeFMRIProcessor:
         logging.basicConfig(level=logging.INFO)
         self.logger = logging.getLogger(__name__)
         
-        print("🚀 Real-time fMRI Processor initialized")
+        print(" Real-time fMRI Processor initialized")
         print(f"   Buffer size: {buffer_size} volumes")
         print(f"   Processing window: {processing_window} TRs")
         print(f"   Update interval: {update_interval}s")
@@ -123,10 +123,10 @@ class RealTimeFMRIProcessor:
     def start_processing(self):
         """Start real-time processing."""
         if self.is_processing:
-            print("⚠️ Processing already running")
+            print(" Processing already running")
             return
         
-        print("🚀 Starting real-time fMRI processing...")
+        print(" Starting real-time fMRI processing...")
         self.is_processing = True
         
         # Start processing threads
@@ -136,7 +136,7 @@ class RealTimeFMRIProcessor:
         self.processing_thread.start()
         self.visualization_thread.start()
         
-        print("✅ Real-time processing started")
+        print(" Real-time processing started")
     
     def stop_processing(self):
         """Stop real-time processing."""
@@ -150,7 +150,7 @@ class RealTimeFMRIProcessor:
         if self.visualization_thread:
             self.visualization_thread.join()
         
-        print("✅ Real-time processing stopped")
+        print(" Real-time processing stopped")
     
     def add_volume(self, volume_data: np.ndarray, 
                   scanner_params: Dict = None,
@@ -207,7 +207,7 @@ class RealTimeFMRIProcessor:
     
     def _processing_loop(self):
         """Main processing loop running in separate thread."""
-        print("🔄 Starting processing loop...")
+        print(" Starting processing loop...")
         
         while self.is_processing:
             try:
@@ -249,7 +249,7 @@ class RealTimeFMRIProcessor:
             
             if self.gpu_analyzer and HAS_ANALYSIS_MODULES:
                 # **DUAL-GPU REAL-TIME PROCESSING**
-                print(f"🔥 Processing window: {time_series_matrix.shape} with dual-GPU...")
+                print(f" Processing window: {time_series_matrix.shape} with dual-GPU...")
                 
                 # Optimized real-time analysis
                 results = self.gpu_analyzer.analyze_fmri_data_dual_gpu(
@@ -275,7 +275,7 @@ class RealTimeFMRIProcessor:
                 
             else:
                 # CPU fallback processing
-                print("🔧 Processing with CPU fallback...")
+                print(" Processing with CPU fallback...")
                 results = self._cpu_fallback_processing(time_series_matrix)
                 roi_activations = {}
                 gpu_util = {'cpu_usage': 0.45}
@@ -296,7 +296,7 @@ class RealTimeFMRIProcessor:
             # Performance monitoring
             self.performance_monitor.record_processing(processing_time)
             
-            print(f"⚡ Processed in {processing_time:.3f}s | GPUs: {gpu_util}")
+            print(f" Processed in {processing_time:.3f}s | GPUs: {gpu_util}")
             
             return processing_results
             
@@ -383,7 +383,7 @@ class RealTimeFMRIProcessor:
     
     def _visualization_loop(self):
         """Visualization update loop."""
-        print("🎨 Starting visualization loop...")
+        print(" Starting visualization loop...")
         
         while self.is_processing:
             try:
@@ -519,7 +519,7 @@ class fMRIScannerSimulator:
     def start_scan(self, processor: RealTimeFMRIProcessor, 
                   scan_duration: float = 60.0):
         """Simulate scanner data stream."""
-        print(f"🔬 Starting fMRI scan simulation...")
+        print(f" Starting fMRI scan simulation...")
         print(f"   Regions: {self.n_regions}")
         print(f"   TR: {self.tr}s")
         print(f"   Duration: {scan_duration}s")
@@ -539,12 +539,12 @@ class fMRIScannerSimulator:
             )
             
             self.volume_count += 1
-            print(f"📡 Acquired volume {self.volume_count} at t={time.time()-start_time:.1f}s")
+            print(f" Acquired volume {self.volume_count} at t={time.time()-start_time:.1f}s")
             
             # Wait for next TR
             time.sleep(self.tr)
         
-        print(f"✅ Scan completed: {self.volume_count} volumes acquired")
+        print(f" Scan completed: {self.volume_count} volumes acquired")
     
     def _generate_realistic_volume(self) -> np.ndarray:
         """Generate realistic fMRI volume with network structure."""
@@ -575,7 +575,7 @@ class fMRIScannerSimulator:
 
 def main():
     """Demonstrate real-time fMRI processing."""
-    print("🚀 Real-time fMRI Processing System Demo")
+    print(" Real-time fMRI Processing System Demo")
     print("=" * 60)
     
     # Initialize real-time processor
@@ -587,17 +587,17 @@ def main():
     
     # Add callback for new results
     def on_new_results(results):
-        print(f"📊 New results: Processing time: {results.processing_time:.3f}s")
+        print(f" New results: Processing time: {results.processing_time:.3f}s")
         if results.quality_flags:
-            print(f"⚠️ Quality flags: {results.quality_flags}")
+            print(f" Quality flags: {results.quality_flags}")
         
         # Print top ROI activations
         if results.roi_activations:
             top_roi = max(results.roi_activations.items(), key=lambda x: x[1])
-            print(f"🧠 Top ROI: {top_roi[0]} = {top_roi[1]:.3f}")
+            print(f" Top ROI: {top_roi[0]} = {top_roi[1]:.3f}")
     
     def on_network_change(change_info):
-        print(f"🔄 Network change detected: {change_info['change_type']} "
+        print(f" Network change detected: {change_info['change_type']} "
               f"(magnitude: {change_info['change_magnitude']:.3f})")
     
     processor.add_callback('new_results', on_new_results)
@@ -611,7 +611,7 @@ def main():
         processor.start_processing()
         
         # Simulate scan acquisition
-        print("\n🔬 Starting scan simulation...")
+        print("\n Starting scan simulation...")
         scan_thread = threading.Thread(
             target=scanner.start_scan,
             args=(processor, 30.0)  # 30 second scan
@@ -622,7 +622,7 @@ def main():
         for i in range(15):  # Monitor for 15 intervals
             time.sleep(2.0)
             status = processor.get_current_status()
-            print(f"📈 Status: Buffer={status['buffer_size']}, "
+            print(f" Status: Buffer={status['buffer_size']}, "
                   f"TimeSeries={status['time_series_length']}, "
                   f"Processing={status['is_processing']}")
         
@@ -634,7 +634,7 @@ def main():
         final_status = processor.get_current_status()
         perf_stats = final_status['performance_stats']
         
-        print(f"\n📊 Final Performance Statistics:")
+        print(f"\n Final Performance Statistics:")
         print(f"   Average processing time: {perf_stats['avg_processing_time']:.3f}s")
         print(f"   Maximum processing time: {perf_stats['max_processing_time']:.3f}s")
         print(f"   Acquisition rate: {perf_stats['acquisition_rate']:.2f} volumes/s")

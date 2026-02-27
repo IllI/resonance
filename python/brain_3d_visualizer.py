@@ -31,7 +31,7 @@ try:
     HAS_MAYAVI = True
 except ImportError:
     HAS_MAYAVI = False
-    print("⚠️ Mayavi not available - using Plotly for 3D visualization")
+    print("WARNING: Mayavi not available - using Plotly for 3D visualization")
 
 # Import our analysis modules
 try:
@@ -40,7 +40,7 @@ try:
     from neural_network_analyzer import BrainNetworkAnalyzer
     HAS_ANALYSIS_MODULES = True
 except ImportError as e:
-    print(f"⚠️ Analysis modules not available: {e}")
+    print(f"WARNING: Analysis modules not available: {e}")
     HAS_ANALYSIS_MODULES = False
 
 class Brain3DVisualizer:
@@ -69,7 +69,7 @@ class Brain3DVisualizer:
         self.dynamic_matrices = []
         self.network_hubs = []
         
-        print("🎨 Initializing 3D Brain Visualizer...")
+        print(" Initializing 3D Brain Visualizer...")
         print(f"   Atlas: {atlas_name}")
         
         if HAS_ANALYSIS_MODULES:
@@ -78,18 +78,18 @@ class Brain3DVisualizer:
                 self.atlas_manager.load_atlas()
                 self.brain_coords = self.atlas_manager.get_region_coordinates()
                 self.atlas_labels = self.atlas_manager.atlas_labels
-                print(f"✅ Loaded {len(self.atlas_labels)} brain regions")
+                print(f" Loaded {len(self.atlas_labels)} brain regions")
             except Exception as e:
-                print(f"⚠️ Using mock brain coordinates: {e}")
+                print(f"WARNING: Using mock brain coordinates: {e}")
                 self._create_mock_brain_coordinates()
         else:
             self._create_mock_brain_coordinates()
         
-        print("✅ 3D Brain Visualizer initialized")
+        print(" 3D Brain Visualizer initialized")
     
     def _create_mock_brain_coordinates(self):
         """Create mock brain coordinates for demonstration."""
-        print("🧠 Creating mock brain coordinates...")
+        print(" Creating mock brain coordinates...")
         
         # Create brain-like coordinate distribution
         n_regions = 100
@@ -124,7 +124,7 @@ class Brain3DVisualizer:
         subcortex_labels = [f"Subcortex_Region_{i+1}" for i in range(subcortex_regions)]
         self.atlas_labels = cortex_labels + subcortex_labels
         
-        print(f"✅ Created {len(self.atlas_labels)} mock brain regions")
+        print(f" Created {len(self.atlas_labels)} mock brain regions")
     
     def visualize_static_connectivity(self, 
                                     connectivity_matrix: np.ndarray,
@@ -141,12 +141,12 @@ class Brain3DVisualizer:
         Returns:
             Plotly figure object
         """
-        print(f"🎨 Creating 3D static connectivity visualization...")
+        print(f" Creating 3D static connectivity visualization...")
         print(f"   Matrix shape: {connectivity_matrix.shape}")
         print(f"   Threshold: {threshold}")
         
         if self.brain_coords is None:
-            print("❌ Brain coordinates not available")
+            print(" Brain coordinates not available")
             return None
         
         # Ensure matrix size matches coordinates
@@ -227,7 +227,7 @@ class Brain3DVisualizer:
             font=dict(color='white')
         )
         
-        print(f"✅ Created 3D visualization with {connection_count} connections")
+        print(f" Created 3D visualization with {connection_count} connections")
         return fig
     
     def visualize_network_hubs(self,
@@ -245,7 +245,7 @@ class Brain3DVisualizer:
         Returns:
             Plotly figure with network hubs highlighted
         """
-        print(f"🎯 Creating network hubs visualization...")
+        print(f" Creating network hubs visualization...")
         
         if self.brain_coords is None:
             return None
@@ -426,7 +426,7 @@ class Brain3DVisualizer:
             height=800
         )
         
-        print("✅ Dynamic connectivity animation created")
+        print(" Dynamic connectivity animation created")
         return fig
     
     def create_comprehensive_brain_dashboard(self, analysis_results: Dict) -> go.Figure:
@@ -439,7 +439,7 @@ class Brain3DVisualizer:
         Returns:
             Multi-panel dashboard figure
         """
-        print("📊 Creating comprehensive brain analysis dashboard...")
+        print(" Creating comprehensive brain analysis dashboard...")
         
         # Create subplot figure with multiple panels
         fig = make_subplots(
@@ -532,7 +532,7 @@ class Brain3DVisualizer:
             font=dict(color='white')
         )
         
-        print("✅ Comprehensive dashboard created")
+        print(" Comprehensive dashboard created")
         return fig
     
     def save_visualization(self, fig: go.Figure, filename: str, format: str = 'html'):
@@ -554,18 +554,18 @@ class Brain3DVisualizer:
         elif format == 'svg':
             fig.write_image(str(output_path))
         
-        print(f"✅ Visualization saved: {output_path}")
+        print(f" Visualization saved: {output_path}")
 
 def main():
     """Demonstrate the 3D brain visualization capabilities."""
-    print("🎨 3D Brain Visualization System Test")
+    print(" 3D Brain Visualization System Test")
     print("=" * 60)
     
     # Initialize visualizer
     visualizer = Brain3DVisualizer()
     
     if HAS_ANALYSIS_MODULES:
-        print("\n🧠 Running dual-GPU analysis for visualization...")
+        print("\n Running dual-GPU analysis for visualization...")
         
         # Get analysis results
         analyzer = EnhancedDualGPUBrainAnalyzer()
@@ -577,7 +577,7 @@ def main():
         # Run analysis
         results = analyzer.analyze_fmri_data_dual_gpu(mock_data)
         
-        print("\n🎨 Creating 3D visualizations...")
+        print("\n Creating 3D visualizations...")
         
         # 1. Static connectivity visualization
         if 'correlation_matrix' in results:
@@ -588,7 +588,7 @@ def main():
             )
             
             if fig1:
-                print("📊 Showing 3D brain connectivity...")
+                print(" Showing 3D brain connectivity...")
                 fig1.show()
                 visualizer.save_visualization(fig1, "brain_connectivity_3d")
         
@@ -600,7 +600,7 @@ def main():
             )
             
             if fig2:
-                print("🎯 Showing network hubs...")
+                print(" Showing network hubs...")
                 fig2.show()
                 visualizer.save_visualization(fig2, "network_hubs_3d")
         
@@ -620,12 +620,12 @@ def main():
         # 4. Comprehensive dashboard
         fig4 = visualizer.create_comprehensive_brain_dashboard(results)
         if fig4:
-            print("📊 Showing comprehensive dashboard...")
+            print(" Showing comprehensive dashboard...")
             fig4.show()
             visualizer.save_visualization(fig4, "brain_analysis_dashboard")
     
     else:
-        print("\n🎨 Creating demo visualizations with mock data...")
+        print("\n Creating demo visualizations with mock data...")
         
         # Create mock connectivity matrix
         n_regions = 80
@@ -641,7 +641,7 @@ def main():
         )
         
         if fig:
-            print("📊 Showing demo 3D brain connectivity...")
+            print(" Showing demo 3D brain connectivity...")
             fig.show()
             visualizer.save_visualization(fig, "demo_brain_connectivity")
     

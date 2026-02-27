@@ -26,7 +26,7 @@ from typing import List, Dict
 
 def check_system_requirements():
     """Check if parallel training requirements are met."""
-    print("🔍 Checking Parallel Training System Requirements...")
+    print(" Checking Parallel Training System Requirements...")
     
     requirements_met = True
     
@@ -34,7 +34,7 @@ def check_system_requirements():
     try:
         import pyopencl as cl
         platforms = cl.get_platforms()
-        print(f"✅ OpenCL available: {len(platforms)} platform(s)")
+        print(f" OpenCL available: {len(platforms)} platform(s)")
         
         amd_devices = []
         for platform in platforms:
@@ -42,38 +42,38 @@ def check_system_requirements():
                 devices = platform.get_devices(cl.device_type.GPU)
                 for device in devices:
                     amd_devices.append(device.name)
-                    print(f"   🎮 {device.name}")
+                    print(f"    {device.name}")
         
         if len(amd_devices) >= 2:
-            print("✅ Dual AMD GPU setup detected for parallel training!")
+            print(" Dual AMD GPU setup detected for parallel training!")
         else:
-            print("⚠️ Dual GPU setup recommended for optimal performance")
+            print(" Dual GPU setup recommended for optimal performance")
             
     except ImportError:
-        print("❌ OpenCL not available - install with: pip install pyopencl")
+        print(" OpenCL not available - install with: pip install pyopencl")
         requirements_met = False
     
     # Check parallel training modules
     try:
         from parallel_dual_gpu_training_optimizer import DualGPUTrainingPipeline, BrainModelParallelTrainer
-        print("✅ Parallel training optimizer available")
+        print(" Parallel training optimizer available")
     except ImportError:
-        print("❌ Parallel training optimizer not found")
+        print(" Parallel training optimizer not found")
         requirements_met = False
     
     # Check brain training modules
     try:
         from comprehensive_brain_training_orchestrator import ComprehensiveBrainTrainingOrchestrator
-        print("✅ Comprehensive training orchestrator available")
+        print(" Comprehensive training orchestrator available")
     except ImportError:
-        print("❌ Training orchestrator not found")
+        print(" Training orchestrator not found")
         requirements_met = False
     
     return requirements_met
 
 def demo_basic_parallel_training():
     """Demonstrate basic parallel training with dual GPUs."""
-    print("\n🔥 Basic Parallel Training Demo")
+    print("\n Basic Parallel Training Demo")
     print("=" * 50)
     
     try:
@@ -85,7 +85,7 @@ def demo_basic_parallel_training():
         # Create mock brain volume data
         mock_volumes = [f"mock_brain_{i:03d}.nii.gz" for i in range(10)]
         
-        print(f"🧠 Training on {len(mock_volumes)} mock brain volumes...")
+        print(f" Training on {len(mock_volumes)} mock brain volumes...")
         
         # Execute parallel training
         start_time = time.time()
@@ -98,7 +98,7 @@ def demo_basic_parallel_training():
         
         total_time = time.time() - start_time
         
-        print("\n📊 Basic Parallel Training Results:")
+        print("\n Basic Parallel Training Results:")
         print(f"   Volumes processed: {results['training_summary']['total_volumes']}")
         print(f"   Processing time: {results['training_summary']['training_time']:.2f}s")
         print(f"   Total demo time: {total_time:.2f}s")
@@ -114,12 +114,12 @@ def demo_basic_parallel_training():
         return True
         
     except Exception as e:
-        print(f"❌ Basic parallel training demo failed: {e}")
+        print(f" Basic parallel training demo failed: {e}")
         return False
 
 def demo_advanced_pipeline_parallelism():
     """Demonstrate advanced pipeline parallelism features."""
-    print("\n🚀 Advanced Pipeline Parallelism Demo")
+    print("\n Advanced Pipeline Parallelism Demo")
     print("=" * 50)
     
     try:
@@ -139,7 +139,7 @@ def demo_advanced_pipeline_parallelism():
         # Initialize advanced pipeline
         pipeline = DualGPUTrainingPipeline(config)
         
-        print("🔧 Pipeline Configuration:")
+        print(" Pipeline Configuration:")
         print(f"   GPU 0 (780M) workload: {config.primary_gpu_ratio:.1%}")
         print(f"   GPU 1 (RX 7700S) workload: {config.secondary_gpu_ratio:.1%}")
         print(f"   Async training: {config.use_async_training}")
@@ -156,7 +156,7 @@ def demo_advanced_pipeline_parallelism():
                 'quality_score': np.random.uniform(0.8, 0.98)
             })
         
-        print(f"\n🧠 Processing {len(brain_data_list)} brain volumes with advanced pipeline...")
+        print(f"\n Processing {len(brain_data_list)} brain volumes with advanced pipeline...")
         
         # Execute advanced parallel training
         start_time = time.time()
@@ -168,7 +168,7 @@ def demo_advanced_pipeline_parallelism():
         
         total_time = time.time() - start_time
         
-        print("\n📈 Advanced Pipeline Results:")
+        print("\n Advanced Pipeline Results:")
         training_summary = results['training_summary']
         print(f"   Volumes processed: {training_summary['total_results']}")
         print(f"   Training time: {training_summary['training_time']:.2f}s")
@@ -189,7 +189,7 @@ def demo_advanced_pipeline_parallelism():
         
         # Get detailed performance metrics
         metrics = pipeline.get_performance_metrics()
-        print(f"\n🔍 Performance Metrics:")
+        print(f"\n Performance Metrics:")
         print(f"   GPU 0 processing times: {len(metrics['gpu_performance_metrics']['gpu0_processing_times'])} samples")
         print(f"   GPU 1 processing times: {len(metrics['gpu_performance_metrics']['gpu1_processing_times'])} samples")
         
@@ -197,12 +197,12 @@ def demo_advanced_pipeline_parallelism():
         return True
         
     except Exception as e:
-        print(f"❌ Advanced pipeline demo failed: {e}")
+        print(f" Advanced pipeline demo failed: {e}")
         return False
 
 def demo_comprehensive_training_with_optimization():
     """Demonstrate comprehensive training with parallel optimization."""
-    print("\n🌟 Comprehensive Training with Parallel Optimization Demo")
+    print("\n Comprehensive Training with Parallel Optimization Demo")
     print("=" * 60)
     
     try:
@@ -226,7 +226,7 @@ def demo_comprehensive_training_with_optimization():
             create_model_reports=True
         )
         
-        print("🔧 Enhanced Training Configuration:")
+        print(" Enhanced Training Configuration:")
         print(f"   Target subjects: {config.target_total_subjects}")
         print(f"   Max datasets: {config.max_datasets}")
         print(f"   GPU acceleration: {config.use_gpu_acceleration}")
@@ -241,7 +241,7 @@ def demo_comprehensive_training_with_optimization():
             results_dir="demo_parallel_training_outputs"
         )
         
-        print(f"\n🚀 Starting comprehensive training with parallel optimization...")
+        print(f"\n Starting comprehensive training with parallel optimization...")
         print("   (This is a demo - no actual datasets will be downloaded)")
         
         # Note: For demo purposes, we'll simulate the training process
@@ -250,26 +250,26 @@ def demo_comprehensive_training_with_optimization():
         start_time = time.time()
         
         # Simulate comprehensive training process
-        print("📊 Simulating comprehensive training pipeline...")
+        print(" Simulating comprehensive training pipeline...")
         
         # Step 1: Dataset discovery (simulated)
-        print("   Step 1: Discovering brain datasets... ✅")
+        print("   Step 1: Discovering brain datasets... ")
         time.sleep(0.5)
         
         # Step 2: Dataset selection (simulated)
-        print("   Step 2: Selecting optimal datasets... ✅")
+        print("   Step 2: Selecting optimal datasets... ")
         time.sleep(0.3)
         
         # Step 3: Dataset download (simulated)
-        print("   Step 3: Downloading datasets... ✅")
+        print("   Step 3: Downloading datasets... ")
         time.sleep(1.0)
         
         # Step 4: Parallel processing (simulated)
-        print("   Step 4: Parallel dual-GPU processing... 🔥")
+        print("   Step 4: Parallel dual-GPU processing... ")
         time.sleep(2.0)  # Simulate GPU processing
         
         # Step 5: Performance evaluation (simulated)
-        print("   Step 5: Performance evaluation... ✅")
+        print("   Step 5: Performance evaluation... ")
         time.sleep(0.5)
         
         total_time = time.time() - start_time
@@ -283,19 +283,19 @@ def demo_comprehensive_training_with_optimization():
         return True
         
     except Exception as e:
-        print(f"❌ Comprehensive training demo failed: {e}")
+        print(f" Comprehensive training demo failed: {e}")
         return False
 
 def demo_performance_comparison():
     """Demonstrate performance comparison between CPU and GPU training."""
-    print("\n📊 Performance Comparison Demo")
+    print("\n Performance Comparison Demo")
     print("=" * 40)
     
     print("🏃 CPU vs Dual-GPU Performance Comparison:")
     print()
     
     # Simulate CPU baseline performance
-    print("💻 CPU Baseline Performance:")
+    print(" CPU Baseline Performance:")
     cpu_start = time.time()
     time.sleep(2.7)  # Simulate CPU processing time per brain
     cpu_time = time.time() - cpu_start
@@ -303,7 +303,7 @@ def demo_performance_comparison():
     print(f"   Estimated time for 1000 brains: {cpu_time * 1000 / 3600:.1f} hours")
     
     # Simulate dual-GPU performance
-    print("\n🔥 Dual-GPU Accelerated Performance:")
+    print("\n Dual-GPU Accelerated Performance:")
     gpu_start = time.time()
     time.sleep(0.15)  # Simulate GPU processing time per brain
     gpu_time = time.time() - gpu_start
@@ -313,7 +313,7 @@ def demo_performance_comparison():
     print(f"   Speedup: {speedup:.1f}x faster!")
     
     # Performance breakdown
-    print("\n⚡ Performance Breakdown:")
+    print("\n Performance Breakdown:")
     print("   AMD Radeon 780M (Integrated):")
     print("     - Network training & preprocessing")
     print("     - Quality control & validation")
@@ -325,7 +325,7 @@ def demo_performance_comparison():
     print("     - Model optimization")
     
     # Training scale estimates
-    print("\n📈 Training Scale Estimates:")
+    print("\n Training Scale Estimates:")
     scales = [100, 500, 1000, 5000, 10000]
     
     for scale in scales:
@@ -364,7 +364,7 @@ Demo Options:
     
     args = parser.parse_args()
     
-    print("🔥 Parallel Training Optimization Demo")
+    print(" Parallel Training Optimization Demo")
     print("=" * 50)
     print("Advanced Dual-GPU Training for 3D Brain Model Generator")
     print("Targeting AMD Radeon 780M + RX 7700S simultaneous utilization")
@@ -372,11 +372,11 @@ Demo Options:
     
     # Check system requirements
     if not check_system_requirements():
-        print("\n❌ System requirements not met")
+        print("\n System requirements not met")
         print("Please install required dependencies and ensure GPU drivers are installed")
         return False
     
-    print("\n✅ System requirements satisfied")
+    print("\n System requirements satisfied")
     
     success_count = 0
     total_demos = 0
@@ -415,13 +415,13 @@ Demo Options:
     
     if success_count == total_demos:
         print("🎉 All demos completed successfully!")
-        print("\n💡 Your dual AMD GPU setup is ready for:")
+        print("\n Your dual AMD GPU setup is ready for:")
         print("   - 18x+ speedup over CPU baseline")
         print("   - Parallel training on thousands of brain volumes")
         print("   - Production-scale 3D brain model training")
         print("   - Real-time brain analysis with trained models")
     else:
-        print("⚠️ Some demos encountered issues")
+        print(" Some demos encountered issues")
         print("Check error messages above for troubleshooting")
     
     return success_count == total_demos

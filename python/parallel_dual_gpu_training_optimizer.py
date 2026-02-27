@@ -95,7 +95,7 @@ class DualGPUTrainingPipeline:
         self.gpu_workers = []
         self.pipeline_active = False
         
-        print("🔥 Initializing Advanced Dual-GPU Training Pipeline...")
+        print(" Initializing Advanced Dual-GPU Training Pipeline...")
         print(f"   Primary GPU (780M): {self.config.primary_gpu_ratio:.1%} workload")
         print(f"   Secondary GPU (RX 7700S): {self.config.secondary_gpu_ratio:.1%} workload")
         
@@ -114,12 +114,12 @@ class DualGPUTrainingPipeline:
                     break
             
             if not amd_platform:
-                print("⚠️ AMD OpenCL platform not found")
+                print(" AMD OpenCL platform not found")
                 return False
             
             devices = amd_platform.get_devices(cl.device_type.GPU)
             if len(devices) < 2:
-                print("⚠️ Need at least 2 AMD GPUs for dual-GPU training")
+                print(" Need at least 2 AMD GPUs for dual-GPU training")
                 return False
             
             # Create separate contexts for each GPU (critical for true parallelism)
@@ -138,23 +138,23 @@ class DualGPUTrainingPipeline:
             
             self.gpu_devices = devices[:2]
             
-            print("✅ Dual AMD GPU contexts initialized for parallel training")
+            print(" Dual AMD GPU contexts initialized for parallel training")
             print(f"   GPU 0: {devices[0].name} - Network training & preprocessing")
             print(f"   GPU 1: {devices[1].name} - Feature extraction & optimization")
             
             return True
             
         except Exception as e:
-            print(f"❌ GPU initialization failed: {e}")
+            print(f" GPU initialization failed: {e}")
             return False
     
     def start_async_training_pipeline(self):
         """Start the asynchronous dual-GPU training pipeline."""
         if not HAS_OPENCL or not self.gpu_contexts:
-            print("⚠️ GPU acceleration not available - falling back to CPU")
+            print(" GPU acceleration not available - falling back to CPU")
             return False
         
-        print("🚀 Starting Asynchronous Dual-GPU Training Pipeline...")
+        print(" Starting Asynchronous Dual-GPU Training Pipeline...")
         
         self.pipeline_active = True
         
@@ -175,8 +175,8 @@ class DualGPUTrainingPipeline:
         for worker in self.gpu_workers:
             worker.start()
         
-        print("✅ Dual-GPU training workers started")
-        print("📊 Monitor Task Manager to see both GPUs working simultaneously!")
+        print(" Dual-GPU training workers started")
+        print(" Monitor Task Manager to see both GPUs working simultaneously!")
         
         return True
     
@@ -185,7 +185,7 @@ class DualGPUTrainingPipeline:
         GPU 0 (AMD Radeon 780M) worker thread.
         Handles: Network training, preprocessing, lightweight computations
         """
-        print("🔥 GPU 0 (780M) Training Worker: STARTED")
+        print(" GPU 0 (780M) Training Worker: STARTED")
         
         while self.pipeline_active:
             try:
@@ -214,7 +214,7 @@ class DualGPUTrainingPipeline:
                 # No tasks available, continue polling
                 continue
             except Exception as e:
-                print(f"❌ GPU 0 worker error: {e}")
+                print(f" GPU 0 worker error: {e}")
                 continue
         
         print("🛑 GPU 0 (780M) Training Worker: STOPPED")
@@ -224,7 +224,7 @@ class DualGPUTrainingPipeline:
         GPU 1 (AMD Radeon RX 7700S) worker thread.  
         Handles: Feature extraction, heavy computations, model optimization
         """
-        print("🔥 GPU 1 (RX 7700S) Training Worker: STARTED")
+        print(" GPU 1 (RX 7700S) Training Worker: STARTED")
         
         while self.pipeline_active:
             try:
@@ -253,7 +253,7 @@ class DualGPUTrainingPipeline:
                 # No tasks available, continue polling
                 continue
             except Exception as e:
-                print(f"❌ GPU 1 worker error: {e}")
+                print(f" GPU 1 worker error: {e}")
                 continue
         
         print("🛑 GPU 1 (RX 7700S) Training Worker: STOPPED")
@@ -384,7 +384,7 @@ class DualGPUTrainingPipeline:
             if not self.start_async_training_pipeline():
                 return self._fallback_cpu_training(brain_data_list, model_config)
         
-        print("🧠 Starting Parallel Dual-GPU Brain Model Training...")
+        print(" Starting Parallel Dual-GPU Brain Model Training...")
         print(f"   Training on {len(brain_data_list)} brain volumes")
         print(f"   GPU Workload Distribution: {self.config.primary_gpu_ratio:.1%} / {self.config.secondary_gpu_ratio:.1%}")
         
@@ -401,8 +401,8 @@ class DualGPUTrainingPipeline:
         # Generate comprehensive training summary
         summary = self._generate_training_summary(results, training_time)
         
-        print(f"✅ Parallel training completed in {training_time:.2f}s")
-        print(f"🚀 Dual-GPU acceleration: {summary['speedup_estimate']:.1f}x over CPU")
+        print(f" Parallel training completed in {training_time:.2f}s")
+        print(f" Dual-GPU acceleration: {summary['speedup_estimate']:.1f}x over CPU")
         
         return summary
     
@@ -414,7 +414,7 @@ class DualGPUTrainingPipeline:
         gpu0_task_count = int(total_tasks * self.config.primary_gpu_ratio)
         gpu1_task_count = total_tasks - gpu0_task_count
         
-        print(f"📊 Task Distribution:")
+        print(f" Task Distribution:")
         print(f"   GPU 0 (780M): {gpu0_task_count} tasks ({gpu0_task_count/total_tasks:.1%})")
         print(f"   GPU 1 (RX 7700S): {gpu1_task_count} tasks ({gpu1_task_count/total_tasks:.1%})")
         
@@ -464,7 +464,7 @@ class DualGPUTrainingPipeline:
         results = []
         collected = 0
         
-        print("🔄 Collecting training results from both GPUs...")
+        print(" Collecting training results from both GPUs...")
         
         while collected < expected_results:
             try:
@@ -473,13 +473,13 @@ class DualGPUTrainingPipeline:
                 collected += 1
                 
                 if collected % 10 == 0:
-                    print(f"   📊 Collected {collected}/{expected_results} results")
+                    print(f"    Collected {collected}/{expected_results} results")
                 
             except Empty:
-                print("⚠️ Timeout waiting for results")
+                print(" Timeout waiting for results")
                 break
         
-        print(f"✅ Collected {len(results)} training results")
+        print(f" Collected {len(results)} training results")
         return results
     
     def _generate_training_summary(self, results: List[Dict], training_time: float) -> Dict:
@@ -521,7 +521,7 @@ class DualGPUTrainingPipeline:
     def _fallback_cpu_training(self, brain_data_list: List[Dict], 
                              model_config: Dict = None) -> Dict:
         """Fallback to CPU training if GPU acceleration is not available."""
-        print("⚠️ GPU acceleration not available - using CPU fallback")
+        print(" GPU acceleration not available - using CPU fallback")
         
         start_time = time.time()
         
@@ -553,7 +553,7 @@ class DualGPUTrainingPipeline:
             if worker.is_alive():
                 worker.join(timeout=2.0)
         
-        print("✅ Dual-GPU training pipeline stopped")
+        print(" Dual-GPU training pipeline stopped")
     
     def get_performance_metrics(self) -> Dict:
         """Get detailed performance metrics from the training session."""
@@ -580,9 +580,9 @@ class BrainModelParallelTrainer:
         
         if self.use_dual_gpu and HAS_OPENCL:
             self.gpu_pipeline = DualGPUTrainingPipeline()
-            print("✅ Dual-GPU parallel training initialized")
+            print(" Dual-GPU parallel training initialized")
         else:
-            print("⚠️ Dual-GPU training not available - using standard training")
+            print(" Dual-GPU training not available - using standard training")
     
     def train_on_dataset(self, brain_volumes: List[str], 
                         atlas_name: str = 'harvard_oxford',
@@ -598,7 +598,7 @@ class BrainModelParallelTrainer:
         Returns:
             Training results with performance metrics
         """
-        print(f"🧠 Training on {len(brain_volumes)} brain volumes")
+        print(f" Training on {len(brain_volumes)} brain volumes")
         print(f"   Atlas: {atlas_name}")
         print(f"   Max regions: {max_regions}")
         print(f"   Dual-GPU acceleration: {'ENABLED' if self.gpu_pipeline else 'DISABLED'}")
@@ -621,7 +621,7 @@ class BrainModelParallelTrainer:
     
     def _standard_training(self, training_data: List[Dict]) -> Dict:
         """Standard training without GPU acceleration."""
-        print("⚠️ Using standard (CPU) training mode")
+        print(" Using standard (CPU) training mode")
         
         start_time = time.time()
         
@@ -650,7 +650,7 @@ class BrainModelParallelTrainer:
 # Demo function
 def demo_parallel_dual_gpu_training():
     """Demonstrate parallel dual-GPU training optimization."""
-    print("🔥 Parallel Dual-GPU Training Optimization Demo")
+    print(" Parallel Dual-GPU Training Optimization Demo")
     print("=" * 60)
     
     # Initialize parallel trainer
@@ -667,7 +667,7 @@ def demo_parallel_dual_gpu_training():
             max_regions=200
         )
         
-        print("\n📊 Training Results:")
+        print("\n Training Results:")
         print(f"   Volumes processed: {results['training_summary']['total_volumes']}")
         print(f"   Training time: {results['training_summary']['training_time']:.2f}s")
         print(f"   Speedup estimate: {results['training_summary']['speedup_estimate']:.1f}x")

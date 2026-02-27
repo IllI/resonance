@@ -23,19 +23,19 @@ try:
     platforms = cl.get_platforms()
     if len(platforms) > 0:
         HAS_OPENCL = True
-        print("✅ OpenCL available for real GPU acceleration")
+        print("SUCCESS: OpenCL available for real GPU acceleration")
         print(f"   Found {len(platforms)} OpenCL platform(s)")
         for i, platform in enumerate(platforms):
             print(f"   Platform {i}: {platform.name}")
     else:
         HAS_OPENCL = False
-        print("⚠️ OpenCL installed but no platforms found")
+        print("WARNING: OpenCL installed but no platforms found")
 except ImportError as e:
     HAS_OPENCL = False
-    print(f"⚠️ OpenCL not available: {e}")
+    print(f"WARNING: OpenCL not available: {e}")
 except Exception as e:
     HAS_OPENCL = False
-    print(f"⚠️ OpenCL error: {e}")
+    print(f"WARNING: OpenCL error: {e}")
 
 # Import our Phase 2 modules
 try:
@@ -44,7 +44,7 @@ try:
     from fmri_data_loader import fMRIDataLoader
     HAS_PHASE2_MODULES = True
 except ImportError as e:
-    print(f"⚠️ Phase 2 modules not available: {e}")
+    print(f"WARNING: Phase 2 modules not available: {e}")
     HAS_PHASE2_MODULES = False
 
 class EnhancedDualGPUBrainAnalyzer:
@@ -82,7 +82,7 @@ class EnhancedDualGPUBrainAnalyzer:
         self.gpu1_times = []  # Discrete GPU (RX 7700S)
         self.cpu_times = []
         
-        print("🔥 Initializing Enhanced Dual-GPU Brain Analyzer...")
+        print("Initializing Enhanced Dual-GPU Brain Analyzer...")
         print("   Targeting AMD Radeon 780M + RX 7700S simultaneous utilization")
         
         # Initialize OpenCL contexts for real GPU acceleration
@@ -91,7 +91,7 @@ class EnhancedDualGPUBrainAnalyzer:
         
         # Load GPU library (we'll use the simple demo for now)
         if self._initialize_components():
-            print("✅ Enhanced dual-GPU system ready!")
+            print("SUCCESS: Enhanced dual-GPU system ready!")
             
     def _initialize_opencl_contexts(self):
         """Initialize OpenCL contexts for both AMD GPUs."""
@@ -106,11 +106,11 @@ class EnhancedDualGPUBrainAnalyzer:
                     break
             
             if amd_platform is None:
-                print("⚠️ AMD OpenCL platform not found")
+                print("WARNING: AMD OpenCL platform not found")
                 return False
             
             devices = amd_platform.get_devices(cl.device_type.GPU)
-            print(f"🔍 Found {len(devices)} AMD GPU devices:")
+            print(f"Found {len(devices)} AMD GPU devices:")
             
             for i, device in enumerate(devices):
                 print(f"   GPU {i}: {device.name} - {device.global_mem_size // (1024**3)} GB")
@@ -123,22 +123,22 @@ class EnhancedDualGPUBrainAnalyzer:
                 self.gpu0_queue = cl.CommandQueue(self.gpu0_context)
                 self.gpu1_queue = cl.CommandQueue(self.gpu1_context)
                 
-                print("✅ Dual AMD GPU OpenCL contexts initialized")
+                print("SUCCESS: Dual AMD GPU OpenCL contexts initialized")
                 print("   GPU 0: AMD Radeon 780M (integrated) - Network metrics & preprocessing")
                 print("   GPU 1: AMD Radeon RX 7700S (discrete) - Correlation matrices & heavy compute")
                 return True
             else:
-                print("⚠️ Need at least 2 AMD GPUs for dual-GPU acceleration")
+                print("WARNING: Need at least 2 AMD GPUs for dual-GPU acceleration")
                 return False
                 
         except Exception as e:
-            print(f"⚠️ OpenCL initialization failed: {e}")
+            print(f"WARNING: OpenCL initialization failed: {e}")
             return False
     
     def _initialize_components(self):
         """Initialize Phase 2 analysis components."""
         if not HAS_PHASE2_MODULES:
-            print("⚠️ Phase 2 modules not available - limited functionality")
+            print("WARNING: Phase 2 modules not available - limited functionality")
             return True
         
         try:
@@ -147,11 +147,11 @@ class EnhancedDualGPUBrainAnalyzer:
             self.atlas_manager = BrainAtlasManager('harvard_oxford')
             self.data_loader = fMRIDataLoader()
             
-            print("✅ Phase 2 components initialized")
+            print("SUCCESS: Phase 2 components initialized")
             return True
             
         except Exception as e:
-            print(f"⚠️ Error initializing Phase 2 components: {e}")
+            print(f"WARNING: Error initializing Phase 2 components: {e}")
             return False
     
     def analyze_fmri_data_dual_gpu(self, fmri_data: np.ndarray) -> Dict:
@@ -169,7 +169,7 @@ class EnhancedDualGPUBrainAnalyzer:
         Returns:
             Comprehensive analysis results with dual-GPU performance metrics
         """
-        print("🔥 Starting Enhanced Dual-GPU fMRI Analysis...")
+        print("Starting Enhanced Dual-GPU fMRI Analysis...")
         print("   AMD Radeon 780M: Handling preprocessing & network metrics")
         print("   AMD Radeon RX 7700S: Computing correlation matrices")
         
@@ -191,7 +191,7 @@ class EnhancedDualGPUBrainAnalyzer:
         }
         
         # PHASE 1: Dual-GPU Preprocessing
-        print("\n🔥 Phase 1: Dual-GPU Preprocessing")
+        print("\nPhase 1: Dual-GPU Preprocessing")
         preprocessing_start = time.time()
         
         # Simulate GPU 0 (780M) preprocessing
@@ -201,18 +201,18 @@ class EnhancedDualGPUBrainAnalyzer:
         results['preprocessing_time'] = preprocessing_time
         
         # PHASE 2: Dual-GPU Analysis
-        print("\n🔥 Phase 2: Dual-GPU Analysis Pipeline")
+        print("\nPhase 2: Dual-GPU Analysis Pipeline")
         
         if HAS_OPENCL and self.gpu0_context and self.gpu1_context:
             # Real dual-GPU parallel processing with OpenCL
-            print("   🚀 Using REAL OpenCL dual-GPU acceleration")
-            print("   📊 Monitor Task Manager to see both GPUs working!")
+            print("   Using REAL OpenCL dual-GPU acceleration")
+            print("   Monitor Task Manager to see both GPUs working!")
             
             # FIXED: Don't split data - give full dataset to both GPUs for different operations
             # This ensures each GPU has sufficient data for processing
             
-            print(f"   📊 Full dataset: {preprocessed_data.shape} - both GPUs process complete data")
-            print("   🔥 LAUNCHING DUAL GPU KERNELS - CHECK TASK MANAGER NOW!")
+            print(f"   Full dataset: {preprocessed_data.shape} - both GPUs process complete data")
+            print("   LAUNCHING DUAL GPU KERNELS - CHECK TASK MANAGER NOW!")
             
             # Use ThreadPoolExecutor for true parallel GPU execution
             with ThreadPoolExecutor(max_workers=2) as executor:
@@ -222,13 +222,13 @@ class EnhancedDualGPUBrainAnalyzer:
                 # GPU 1 (RX 7700S): Correlation matrix on FULL dataset
                 gpu1_future = executor.submit(self._gpu1_opencl_compute, preprocessed_data, 'correlation_matrix')
                 
-                print("   ⚡ Both AMD GPUs are now computing in parallel...")
+                print("   Both AMD GPUs are now computing in parallel...")
                 
                 # Wait for both GPUs to complete their heavy workloads
                 gpu0_results = gpu0_future.result()
                 gpu1_results = gpu1_future.result()
             
-            print("   🎉 Dual GPU computation completed!")
+            print("   Dual GPU computation completed!")
             
             # Combine results from both GPUs
             network_metrics = gpu0_results
@@ -236,7 +236,7 @@ class EnhancedDualGPUBrainAnalyzer:
             
         else:
             # Fallback to CPU simulation
-            print("   💻 Using CPU simulation (OpenCL not available)")
+            print("   Using CPU simulation (OpenCL not available)")
             with ThreadPoolExecutor(max_workers=2) as executor:
                 # GPU 0 (780M): Network metrics computation
                 gpu0_future = executor.submit(self._gpu0_network_metrics, preprocessed_data)
@@ -253,7 +253,7 @@ class EnhancedDualGPUBrainAnalyzer:
         
         # PHASE 3: Advanced Analysis (Phase 2 Integration)
         if self.network_analyzer is not None:
-            print("\n🔗 Phase 3: Advanced Neural Network Analysis")
+            print("\nPhase 3: Advanced Neural Network Analysis")
             
             # Load data into network analyzer
             self.network_analyzer.load_time_series(preprocessed_data)
@@ -272,7 +272,7 @@ class EnhancedDualGPUBrainAnalyzer:
         
         # PHASE 4: Brain atlas integration
         if self.atlas_manager is not None:
-            print("\n🗺️ Phase 4: Brain Atlas Integration")
+            print("\nPhase 4: Brain Atlas Integration")
             
             # Map connectivity to atlas
             mapped_connectivity = self.atlas_manager.map_connectivity_to_atlas(correlation_matrix)
@@ -285,13 +285,13 @@ class EnhancedDualGPUBrainAnalyzer:
         
         # PHASE 5: Blue Brain Atlas Dual-GPU Processing
         if HAS_BLUE_BRAIN and self.blue_brain_integrator is not None:
-            print("\n🧠 Phase 5: Blue Brain Atlas Dual-GPU Processing")
+            print("\nPhase 5: Blue Brain Atlas Dual-GPU Processing")
             
             # Extract cellular composition data for GPU processing
             cellular_data = self.blue_brain_integrator.get_cellular_composition_matrix()
             
             if cellular_data is not None and HAS_OPENCL and self.gpu0_context and self.gpu1_context:
-                print("   🚀 Using dual-GPU for Blue Brain cellular analysis")
+                print("   Using dual-GPU for Blue Brain cellular analysis")
                 
                 with ThreadPoolExecutor(max_workers=2) as executor:
                     # GPU 0 (780M): Cellular density mapping
@@ -310,7 +310,7 @@ class EnhancedDualGPUBrainAnalyzer:
                 
                 # Spatiotemporal registration using dual-GPU
                 if self.spatiotemporal_registrator is not None:
-                    print("   🔄 Dual-GPU spatiotemporal registration")
+                    print("   Dual-GPU spatiotemporal registration")
                     
                     # Create mock brain model with cellular data
                     brain_model = {
@@ -330,7 +330,7 @@ class EnhancedDualGPUBrainAnalyzer:
                     results['blue_brain_registration'] = registration_results
                     
             else:
-                print("   💻 Using CPU fallback for Blue Brain processing")
+                print("   Using CPU fallback for Blue Brain processing")
                 # CPU fallback for Blue Brain processing
                 if cellular_data is not None:
                     results['blue_brain_cellular_density'] = {
@@ -344,7 +344,7 @@ class EnhancedDualGPUBrainAnalyzer:
         results['total_analysis_time'] = total_time
         results['performance_summary'] = self._get_dual_gpu_performance_summary()
         
-        print(f"\n🎉 Enhanced Dual-GPU Analysis Completed!")
+        print(f"\nEnhanced Dual-GPU Analysis Completed!")
         print(f"   Total Time: {total_time:.2f} seconds")
         print(f"   AMD Radeon 780M: {len(self.gpu0_times)} operations")
         print(f"   AMD Radeon RX 7700S: {len(self.gpu1_times)} operations")
@@ -352,10 +352,10 @@ class EnhancedDualGPUBrainAnalyzer:
         # Blue Brain processing summary
         if HAS_BLUE_BRAIN and self.blue_brain_integrator is not None:
             if 'blue_brain_cellular_density' in results:
-                print(f"   🧠 Blue Brain Cellular Processing: Completed")
-                print(f"   📊 Cellular Regions Processed: {results.get('blue_brain_cellular_density', {}).get('regions_processed', 'N/A')}")
+                print(f"   Blue Brain Cellular Processing: Completed")
+                print(f"   Cellular Regions Processed: {results.get('blue_brain_cellular_density', {}).get('regions_processed', 'N/A')}")
             if 'blue_brain_registration' in results:
-                print(f"   🔄 Spatiotemporal Registration: Enhanced with Blue Brain data")
+                print(f"   Spatiotemporal Registration: Enhanced with Blue Brain data")
         
         # Mark as successful
         results['success'] = True
@@ -371,7 +371,7 @@ class EnhancedDualGPUBrainAnalyzer:
         Optimized for network metrics and preprocessing operations.
         """
         start_time = time.time()
-        print(f"   🖥️ GPU 0 (780M): Starting {operation} on data shape {data.shape}")
+        print(f"   GPU 0 (780M): Starting {operation} on data shape {data.shape}")
         
         if not HAS_OPENCL or self.gpu0_context is None:
             return self._gpu0_network_metrics(data)
@@ -381,7 +381,7 @@ class EnhancedDualGPUBrainAnalyzer:
             
             # Validate data dimensions for OpenCL processing
             if n_regions < 1 or n_timepoints < 10:  # Reduced minimum requirements
-                print(f"   ⚠️ Data too small for GPU processing: {data.shape}, using CPU fallback")
+                print(f"   WARNING: Data too small for GPU processing: {data.shape}, using CPU fallback")
                 return self._gpu0_network_metrics(data)
             
             # Ensure data is contiguous and properly sized
@@ -466,7 +466,7 @@ class EnhancedDualGPUBrainAnalyzer:
                 computation_time = time.time() - start_time
                 self.gpu0_times.append(computation_time)
                 
-                print(f"   ✅ GPU 0 (780M): {operation} completed in {computation_time:.3f}s")
+                print(f"   SUCCESS: GPU 0 (780M): {operation} completed in {computation_time:.3f}s")
                 
                 return {
                     'node_strength': node_strength,
@@ -479,7 +479,7 @@ class EnhancedDualGPUBrainAnalyzer:
                 raise Exception("GPU queue not available")
             
         except Exception as e:
-            print(f"   ⚠️ GPU 0 OpenCL error: {e}, falling back to CPU")
+            print(f"   WARNING: GPU 0 OpenCL error: {e}, falling back to CPU")
             # Handle different operation types for fallback
             if operation == 'cellular_density':
                 return self._gpu0_cellular_density_fallback(data)
@@ -518,7 +518,7 @@ class EnhancedDualGPUBrainAnalyzer:
         Optimized for correlation matrix computation and heavy parallel workloads.
         """
         start_time = time.time()
-        print(f"   🎮 GPU 1 (RX 7700S): Starting {operation} on data shape {data.shape}")
+        print(f"   GPU 1 (RX 7700S): Starting {operation} on data shape {data.shape}")
         
         if not HAS_OPENCL or self.gpu1_context is None:
             return self._gpu1_correlation_matrix(data)
@@ -532,7 +532,7 @@ class EnhancedDualGPUBrainAnalyzer:
             
             # Validate data dimensions for OpenCL processing
             if n_regions < 1 or n_timepoints < 10:  # Reduced minimum requirements
-                print(f"   ⚠️ Data too small for GPU processing: {data.shape}, using CPU fallback")
+                print(f"   WARNING: Data too small for GPU processing: {data.shape}, using CPU fallback")
                 return self._gpu1_correlation_matrix(data)
             
             # Ensure data is contiguous and properly sized
@@ -629,14 +629,14 @@ class EnhancedDualGPUBrainAnalyzer:
                 computation_time = time.time() - start_time
                 self.gpu1_times.append(computation_time)
                 
-                print(f"   ✅ GPU 1 (RX 7700S): {operation} completed in {computation_time:.3f}s")
+                print(f"   SUCCESS: GPU 1 (RX 7700S): {operation} completed in {computation_time:.3f}s")
                 
                 return correlation_matrix
             else:
                 raise Exception("GPU queue not available")
             
         except Exception as e:
-            print(f"   ⚠️ GPU 1 OpenCL error: {e}, falling back to CPU")
+            print(f"   WARNING: GPU 1 OpenCL error: {e}, falling back to CPU")
             return self._gpu1_correlation_matrix(data)
     
     def _gpu1_cellular_correlation_compute(self, data: np.ndarray) -> np.ndarray:
@@ -649,7 +649,7 @@ class EnhancedDualGPUBrainAnalyzer:
             fmri_data = data[:, :mid_point]
             cellular_data = data[:, mid_point:]
             
-            print(f"   🧠 GPU 1: Processing fMRI {fmri_data.shape} vs cellular {cellular_data.shape}")
+            print(f"   GPU 1: Processing fMRI {fmri_data.shape} vs cellular {cellular_data.shape}")
             
             # Compute cross-correlation between fMRI and cellular data
             cross_correlation = np.corrcoef(fmri_data.T, cellular_data.T)
@@ -663,12 +663,12 @@ class EnhancedDualGPUBrainAnalyzer:
             gpu_time = time.time() - start_time
             self.gpu1_times.append(gpu_time)
             
-            print(f"   ✅ GPU 1 (RX 7700S): Blue Brain cellular correlation {fmri_cellular_corr.shape} completed in {gpu_time:.3f}s")
+            print(f"   SUCCESS: GPU 1 (RX 7700S): Blue Brain cellular correlation {fmri_cellular_corr.shape} completed in {gpu_time:.3f}s")
             
             return fmri_cellular_corr
             
         except Exception as e:
-            print(f"   ⚠️ GPU 1 cellular correlation error: {e}, using fallback")
+            print(f"   WARNING: GPU 1 cellular correlation error: {e}, using fallback")
             # Fallback to simple correlation
             return np.corrcoef(data.T)
     
@@ -678,7 +678,7 @@ class EnhancedDualGPUBrainAnalyzer:
         
         In real implementation, this would use OpenCL kernels on GPU 0.
         """
-        print("   🖥️ GPU 0 (AMD Radeon 780M): Preprocessing time series...")
+        print("   GPU 0 (AMD Radeon 780M): Preprocessing time series...")
         start_time = time.time()
         
         # Simulate GPU preprocessing (detrending, filtering, standardization)
@@ -694,14 +694,14 @@ class EnhancedDualGPUBrainAnalyzer:
         gpu0_time = time.time() - start_time
         self.gpu0_times.append(gpu0_time)
         
-        print(f"   ✅ GPU 0 preprocessing: {gpu0_time*1000:.2f} ms")
+        print(f"   SUCCESS: GPU 0 preprocessing: {gpu0_time*1000:.2f} ms")
         return processed
     
     def _gpu0_network_metrics(self, data: np.ndarray) -> Dict:
         """
         Simulate AMD Radeon 780M network metrics computation.
         """
-        print("   🖥️ GPU 0 (AMD Radeon 780M): Computing network metrics...")
+        print("   GPU 0 (AMD Radeon 780M): Computing network metrics...")
         start_time = time.time()
         
         # Simulate network metrics calculation
@@ -712,7 +712,7 @@ class EnhancedDualGPUBrainAnalyzer:
         gpu0_time = time.time() - start_time
         self.gpu0_times.append(gpu0_time)
         
-        print(f"   ✅ GPU 0 network metrics: {gpu0_time*1000:.2f} ms")
+        print(f"   SUCCESS: GPU 0 network metrics: {gpu0_time*1000:.2f} ms")
         
         return {
             'node_strength': node_strength,
@@ -727,7 +727,7 @@ class EnhancedDualGPUBrainAnalyzer:
         This GPU has more memory and different compute characteristics,
         making it ideal for large matrix operations.
         """
-        print("   🖥️ GPU 1 (AMD Radeon RX 7700S): Computing correlation matrix...")
+        print("   GPU 1 (AMD Radeon RX 7700S): Computing correlation matrix...")
         start_time = time.time()
         
         # Simulate high-performance correlation matrix computation
@@ -744,8 +744,8 @@ class EnhancedDualGPUBrainAnalyzer:
         gpu1_time = time.time() - start_time
         self.gpu1_times.append(gpu1_time)
         
-        print(f"   ✅ GPU 1 correlation matrix: {gpu1_time*1000:.2f} ms")
-        print(f"   📊 Matrix size: {correlation_matrix.shape}")
+        print(f"   SUCCESS: GPU 1 correlation matrix: {gpu1_time*1000:.2f} ms")
+        print(f"   Matrix size: {correlation_matrix.shape}")
         
         return correlation_matrix
     
@@ -792,7 +792,7 @@ class EnhancedDualGPUBrainAnalyzer:
 
 def main():
     """Test the enhanced dual-GPU brain analyzer."""
-    print("🔥 Enhanced Dual-GPU Brain Analysis Test")
+    print("Enhanced Dual-GPU Brain Analysis Test")
     print("Utilizing BOTH AMD Radeon 780M + RX 7700S simultaneously!")
     print("=" * 70)
     
@@ -802,7 +802,7 @@ def main():
         
         if HAS_PHASE2_MODULES:
             # Full integration test with real fMRI data
-            print("\n🧠 Loading real fMRI data...")
+            print("\n Loading real fMRI data...")
             
             # Get sample data
             loader = fMRIDataLoader()
@@ -814,7 +814,7 @@ def main():
             # Run complete dual-GPU accelerated analysis
             results = analyzer.analyze_fmri_data_dual_gpu(sample_data)
             
-            print(f"\n📊 Enhanced Dual-GPU Analysis Results:")
+            print(f"\n Enhanced Dual-GPU Analysis Results:")
             print(f"   Data shape: {results['data_shape']}")
             print(f"   Dual-GPU acceleration: {results['dual_gpu_acceleration']}")
             print(f"   Integrated GPU: {results['gpu_utilization']['integrated_gpu']}")
@@ -823,7 +823,7 @@ def main():
             
         else:
             # Mock data test
-            print("\n🧠 Testing with mock data...")
+            print("\n Testing with mock data...")
             
             n_regions, n_timepoints = 200, 100
             mock_data = np.random.randn(n_regions, n_timepoints)
@@ -832,7 +832,7 @@ def main():
             
         # Performance summary
         perf = results['performance_summary']
-        print(f"\n⚡ Dual-GPU Performance Summary:")
+        print(f"\n Dual-GPU Performance Summary:")
         print(f"   AMD Radeon 780M operations: {perf['gpu0_operations']}")
         print(f"   AMD Radeon RX 7700S operations: {perf['gpu1_operations']}")
         
@@ -844,10 +844,10 @@ def main():
             print(f"     Load balanced: {dist['load_balanced']}")
         
         print("\n🎉 Enhanced Dual-GPU Brain Analysis Complete!")
-        print("✅ BOTH AMD GPUs successfully utilized for brain analysis!")
+        print(" BOTH AMD GPUs successfully utilized for brain analysis!")
         
     except Exception as e:
-        print(f"❌ Test failed: {e}")
+        print(f" Test failed: {e}")
         import traceback
         traceback.print_exc()
         return False

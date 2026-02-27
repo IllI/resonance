@@ -157,13 +157,13 @@ class TemporalPatternAnalyzer:
             Dictionary of temporal features
         """
         # CRITICAL FIX: Properly extract time series from ROI
-        print(f"   🔍 Extracting ROI time series from fMRI shape: {time_series.shape}, mask shape: {region_mask.shape}")
+        print(f"    Extracting ROI time series from fMRI shape: {time_series.shape}, mask shape: {region_mask.shape}")
         
         # Find voxels in the ROI mask
         roi_voxels = np.where(region_mask > 0)
         
         if len(roi_voxels[0]) == 0:
-            print("   ⚠️ No voxels found in ROI mask, using default features")
+            print("    No voxels found in ROI mask, using default features")
             # Return default features to prevent crashes
             return {
                 'dominant_frequency': np.array([0.1]),
@@ -184,7 +184,7 @@ class TemporalPatternAnalyzer:
         n_timepoints = time_series.shape[0]
         n_voxels = len(roi_voxels[0])
         
-        print(f"   📊 Found {n_voxels} voxels in ROI, extracting {n_timepoints} timepoints")
+        print(f"    Found {n_voxels} voxels in ROI, extracting {n_timepoints} timepoints")
         
         # Create matrix: timepoints x voxels
         roi_timeseries_matrix = np.zeros((n_timepoints, n_voxels))
@@ -194,16 +194,16 @@ class TemporalPatternAnalyzer:
             if (x < time_series.shape[1] and y < time_series.shape[2] and z < time_series.shape[3]):
                 roi_timeseries_matrix[:, i] = time_series[:, x, y, z]
             else:
-                print(f"   ⚠️ Skipping out-of-bounds voxel ({x}, {y}, {z})")
+                print(f"    Skipping out-of-bounds voxel ({x}, {y}, {z})")
         
         # Average across voxels to get single time series
         roi_timeseries = np.mean(roi_timeseries_matrix, axis=1)
         
-        print(f"   ✅ Extracted ROI time series: {roi_timeseries.shape} (length: {len(roi_timeseries)})")
+        print(f"    Extracted ROI time series: {roi_timeseries.shape} (length: {len(roi_timeseries)})")
         
         # Validate time series length for signal processing
         if len(roi_timeseries) < 50:
-            print(f"   ⚠️ Time series too short ({len(roi_timeseries)} samples), padding to minimum length")
+            print(f"    Time series too short ({len(roi_timeseries)} samples), padding to minimum length")
             # Pad with mean to reach minimum length
             mean_val = np.mean(roi_timeseries)
             padding_needed = 50 - len(roi_timeseries)
@@ -383,7 +383,7 @@ class NoiseReductionSystem:
         """Wiener filter for noise reduction."""
         # Validate signal length
         if len(signal) < 10:
-            print(f"   ⚠️ Signal too short for Wiener filter ({len(signal)} samples), returning original")
+            print(f"    Signal too short for Wiener filter ({len(signal)} samples), returning original")
             return signal
             
         # Estimate signal and noise power
@@ -413,7 +413,7 @@ class NoiseReductionSystem:
                                                                    polyorder=min(3, window_length-1))
             noise_power = np.var(high_freq_signal)
         except Exception as e:
-            print(f"   ⚠️ Savgol filter failed: {e}, using simple high-pass estimate")
+            print(f"    Savgol filter failed: {e}, using simple high-pass estimate")
             # Fallback: use simple difference as high-frequency estimate
             high_freq_signal = np.diff(signal, prepend=signal[0])
             noise_power = np.var(high_freq_signal)
@@ -430,7 +430,7 @@ class NoiseReductionSystem:
         """Adaptive noise reduction filter."""
         # Validate signal length
         if len(signal) < 5:
-            print(f"   ⚠️ Signal too short for adaptive filter ({len(signal)} samples), returning original")
+            print(f"    Signal too short for adaptive filter ({len(signal)} samples), returning original")
             return signal
             
         # Use median filter for impulse noise (ensure kernel size is appropriate)
@@ -465,7 +465,7 @@ class NoiseReductionSystem:
                                                             window_length=window_length,
                                                             polyorder=min(3, window_length-1))
             except Exception as e:
-                print(f"   ⚠️ Savgol filter failed in adaptive filter: {e}, using median only")
+                print(f"    Savgol filter failed in adaptive filter: {e}, using median only")
                 savgol_filtered = median_filtered
         else:
             savgol_filtered = median_filtered
@@ -541,7 +541,7 @@ class LAMSTARCoordinator:
         # Initialize weights: give equal importance initially
         self.spatial_weight = 0.5
         self.temporal_weight = 0.5
-        print("💡 Initialized LAMSTAR Coordinator with Feature Weighting")
+        print(" Initialized LAMSTAR Coordinator with Feature Weighting")
 
     def train(self, feature_vector: np.ndarray, label: NetworkState):
         """
@@ -561,7 +561,7 @@ class LAMSTARCoordinator:
             self.memory[label] = []
         
         self.memory[label].append(norm_vector)
-        print(f"   🧠 Memorized pattern for: {label.value}")
+        print(f"    Memorized pattern for: {label.value}")
 
     def predict(self, feature_vector: np.ndarray) -> Tuple[NetworkState, float]:
         """
@@ -661,7 +661,7 @@ class SignalProcessingROIDetector:
         self.roi_templates = roi_templates or self._create_default_templates()
         self.noise_reduction = noise_reduction
         
-        print("🧠 Initialized Signal Processing ROI Detector")
+        print(" Initialized Signal Processing ROI Detector")
         print("   • CNN-like spatial feature extraction")
         print("   • LSTM-inspired temporal analysis")
         print("   • Hearing-aid-style noise reduction")
@@ -717,7 +717,7 @@ class SignalProcessingROIDetector:
             roi_mask: A 3D boolean mask defining the labeled ROI.
             label: The ground-truth NetworkState for this ROI.
         """
-        print(f"\n🔬 Training on labeled ROI for: {label.value}")
+        print(f"\n Training on labeled ROI for: {label.value}")
         # 1. Spatio-temporal analysis of the entire volume
         spatial_features_over_time = [self.spatial_extractor.extract_features(fmri_data[t]) for t in range(fmri_data.shape[0])]
         combined_spatial_features = self._combine_temporal_spatial_features(spatial_features_over_time)
@@ -736,7 +736,7 @@ class SignalProcessingROIDetector:
         if self.coordinator is not None:
             self.coordinator.train(feature_vector, label)
         else:
-            print("   ⚠️ Coordinator not initialized, skipping training")
+            print("    Coordinator not initialized, skipping training")
 
     def _create_feature_vector(self, 
                                spatial_features: Dict[str, np.ndarray],
@@ -795,7 +795,7 @@ class SignalProcessingROIDetector:
         Returns:
             List of detected ROIs
         """
-        print(f"🔍 Detecting ROIs in fMRI data: {fmri_data.shape}")
+        print(f" Detecting ROIs in fMRI data: {fmri_data.shape}")
         
         detections = []
         n_timepoints = fmri_data.shape[0]
@@ -835,7 +835,7 @@ class SignalProcessingROIDetector:
         # Sort by confidence
         detections.sort(key=lambda x: x.confidence, reverse=True)
         
-        print(f"✅ Detected {len(detections)} ROIs with confidence >= {confidence_threshold}")
+        print(f" Detected {len(detections)} ROIs with confidence >= {confidence_threshold}")
         
         return detections
     
@@ -923,20 +923,20 @@ class SignalProcessingROIDetector:
             return None
 
         # CRITICAL FIX: Properly extract time series from 4D fMRI data
-        print(f"   🔍 Extracting candidate ROI time series from fMRI shape: {fmri_data.shape}, mask shape: {mask.shape}")
+        print(f"    Extracting candidate ROI time series from fMRI shape: {fmri_data.shape}, mask shape: {mask.shape}")
         
         # Find voxels in the ROI mask
         roi_voxels = np.where(mask > 0)
         
         if len(roi_voxels[0]) == 0:
-            print("   ⚠️ No voxels found in candidate ROI mask")
+            print("    No voxels found in candidate ROI mask")
             return None
         
         # Extract time series correctly: for each timepoint, get values from ROI voxels
         n_timepoints = fmri_data.shape[0]
         n_voxels = len(roi_voxels[0])
         
-        print(f"   📊 Found {n_voxels} voxels in candidate ROI, extracting {n_timepoints} timepoints")
+        print(f"    Found {n_voxels} voxels in candidate ROI, extracting {n_timepoints} timepoints")
         
         # Create matrix: timepoints x voxels
         roi_timeseries_matrix = np.zeros((n_timepoints, n_voxels))
@@ -946,16 +946,16 @@ class SignalProcessingROIDetector:
             if (x < fmri_data.shape[1] and y < fmri_data.shape[2] and z < fmri_data.shape[3]):
                 roi_timeseries_matrix[:, i] = fmri_data[:, x, y, z]
             else:
-                print(f"   ⚠️ Skipping out-of-bounds candidate voxel ({x}, {y}, {z})")
+                print(f"    Skipping out-of-bounds candidate voxel ({x}, {y}, {z})")
         
         # Average across voxels to get single time series
         roi_timeseries = np.mean(roi_timeseries_matrix, axis=1)
         
-        print(f"   ✅ Extracted candidate ROI time series: {roi_timeseries.shape} (length: {len(roi_timeseries)})")
+        print(f"    Extracted candidate ROI time series: {roi_timeseries.shape} (length: {len(roi_timeseries)})")
         
         # Validate time series length for signal processing
         if len(roi_timeseries) < 50:
-            print(f"   ⚠️ Candidate time series too short ({len(roi_timeseries)} samples), padding to minimum length")
+            print(f"    Candidate time series too short ({len(roi_timeseries)} samples), padding to minimum length")
             # Pad with mean to reach minimum length
             mean_val = np.mean(roi_timeseries) if len(roi_timeseries) > 0 else 0.0
             padding_needed = 50 - len(roi_timeseries)
@@ -1062,7 +1062,7 @@ AIROIDetector = SignalProcessingROIDetector
 
 def main():
     """Test the signal processing ROI detector with LAMSTAR learning."""
-    print("🧪 Testing Signal Processing ROI Detector with LAMSTAR Learning")
+    print(" Testing Signal Processing ROI Detector with LAMSTAR Learning")
     
     # --- 1. Initialize Detector ---
     detector = SignalProcessingROIDetector(noise_reduction=True)
@@ -1106,7 +1106,7 @@ def main():
     # --- 6. Generate and Print Report ---
     report = detector.generate_report(detections)
     
-    print(f"\n📊 Detection Results:")
+    print(f"\n Detection Results:")
     print(f"   Total ROIs: {report['total_rois_detected']}")
     print(f"   Mean confidence: {report['confidence_stats']['mean']:.3f}")
     print(f"   Network distribution: {report['network_distribution']}")

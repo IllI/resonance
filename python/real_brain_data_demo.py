@@ -51,7 +51,7 @@ def check_dependencies():
 
 def discover_openneuro_datasets():
     """Discover available datasets from OpenNeuro."""
-    print("🔍 Discovering available datasets from OpenNeuro...")
+    print(" Discovering available datasets from OpenNeuro...")
     
     # Popular OpenNeuro datasets with good anatomical data
     datasets = {
@@ -93,9 +93,9 @@ def discover_openneuro_datasets():
         }
     }
     
-    print("✅ Found OpenNeuro datasets for anatomical analysis:")
+    print(" Found OpenNeuro datasets for anatomical analysis:")
     for dataset_id, info in datasets.items():
-        print(f"   📊 {dataset_id}: {info['name']}")
+        print(f"    {dataset_id}: {info['name']}")
         print(f"      Participants: {info['participants']}")
         print(f"      Quality: {info['quality']}")
         print(f"      Size: {info['size_gb']} GB")
@@ -105,7 +105,7 @@ def discover_openneuro_datasets():
 
 def download_sample_brain_data(dataset_id: str = 'ds000221', n_subjects: int = 3):
     """Download sample brain data from OpenNeuro."""
-    print(f"📥 Downloading sample data from {dataset_id}...")
+    print(f" Downloading sample data from {dataset_id}...")
     
     # For demonstration, we'll create realistic mock data
     # In production, this would use actual OpenNeuro API/AWS S3
@@ -121,11 +121,11 @@ def download_sample_brain_data(dataset_id: str = 'ds000221', n_subjects: int = 3
         subject_dir.mkdir(exist_ok=True)
         
         # Create realistic anatomical volume
-        print(f"   📊 Creating {subject_id} anatomical data...")
+        print(f"    Creating {subject_id} anatomical data...")
         anatomical_volume = create_realistic_anatomical_volume()
         
         # Create realistic functional data
-        print(f"   📈 Creating {subject_id} functional data...")
+        print(f"    Creating {subject_id} functional data...")
         functional_volume = create_realistic_functional_volume()
         
         # Save data
@@ -143,9 +143,9 @@ def download_sample_brain_data(dataset_id: str = 'ds000221', n_subjects: int = 3
         }
         
         downloaded_subjects.append(subject_data)
-        print(f"      ✅ {subject_id} data ready")
+        print(f"       {subject_id} data ready")
     
-    print(f"✅ Downloaded {len(downloaded_subjects)} subjects from {dataset_id}")
+    print(f" Downloaded {len(downloaded_subjects)} subjects from {dataset_id}")
     return downloaded_subjects
 
 def create_realistic_anatomical_volume():
@@ -220,7 +220,7 @@ def create_realistic_functional_volume():
 
 def test_anatomical_detection_on_real_data(subjects_data: List[Dict]):
     """Test our anatomical detection models on real brain data."""
-    print("🧠 Testing anatomical feature detection on real brain data...")
+    print(" Testing anatomical feature detection on real brain data...")
     print("=" * 70)
     
     # Initialize our detection systems
@@ -247,10 +247,10 @@ def test_anatomical_detection_on_real_data(subjects_data: List[Dict]):
         
         for i, subject_data in enumerate(subjects_data):
             subject_id = subject_data['subject_id']
-            print(f"\\n🔍 Processing {subject_id} ({i+1}/{len(subjects_data)})...")
+            print(f"\\n Processing {subject_id} ({i+1}/{len(subjects_data)})...")
             
             # Test standard detection
-            print(f"   📊 Standard anatomical detection...")
+            print(f"    Standard anatomical detection...")
             generator.brain_volume = subject_data['anatomical']
             generator._preprocess_volume()
             
@@ -292,23 +292,23 @@ def test_anatomical_detection_on_real_data(subjects_data: List[Dict]):
             detection_results.append(result)
             
             # Print results
-            print(f"   📈 Results for {subject_id}:")
+            print(f"    Results for {subject_id}:")
             print(f"      Standard Detection: {len(standard_features)} features, avg confidence: {result['standard_detection']['avg_confidence']:.3f}")
             print(f"      Atlas-Guided: {accuracy_report['high_accuracy_regions']} high-accuracy regions ({accuracy_report['accuracy_rate']:.1%} success)")
             print(f"      Processing time: {standard_time:.2f}s standard, {atlas_time:.2f}s atlas-guided")
         
-        print(f"\\n✅ Anatomical detection testing completed on {len(subjects_data)} subjects")
+        print(f"\\n Anatomical detection testing completed on {len(subjects_data)} subjects")
         return detection_results, generator, atlas_detector
         
     except ImportError as e:
-        print(f"❌ Detection modules not available: {e}")
+        print(f" Detection modules not available: {e}")
         return [], None, None
 
 def create_3d_anatomical_visualization(subjects_data: List[Dict], 
                                      detection_results: List[Dict],
                                      generator=None) -> go.Figure:
     """Create interactive 3D visualization of detected anatomical features."""
-    print("🎨 Creating interactive 3D anatomical visualization...")
+    print(" Creating interactive 3D anatomical visualization...")
     
     fig = go.Figure()
     
@@ -363,7 +363,7 @@ def create_3d_anatomical_visualization(subjects_data: List[Dict],
     # Update layout
     fig.update_layout(
         title=dict(
-            text="🧠 Real Brain Data: Anatomical Feature Detection Results<br><sub>Interactive 3D visualization of detected anatomical landmarks</sub>",
+            text=" Real Brain Data: Anatomical Feature Detection Results<br><sub>Interactive 3D visualization of detected anatomical landmarks</sub>",
             x=0.5,
             font=dict(size=16)
         ),
@@ -421,7 +421,7 @@ def create_3d_anatomical_visualization(subjects_data: List[Dict],
             )]
         )
     
-    print("✅ 3D anatomical visualization created")
+    print(" 3D anatomical visualization created")
     return fig
 
 def create_brain_outline():
@@ -442,7 +442,7 @@ def create_brain_outline():
 
 def create_performance_dashboard(detection_results: List[Dict]) -> go.Figure:
     """Create performance dashboard comparing detection methods."""
-    print("📊 Creating performance analysis dashboard...")
+    print(" Creating performance analysis dashboard...")
     
     fig = make_subplots(
         rows=2, cols=2,
@@ -522,21 +522,21 @@ def create_performance_dashboard(detection_results: List[Dict]) -> go.Figure:
     )
     
     fig.update_layout(
-        title_text="🧠 Anatomical Detection Performance Analysis",
+        title_text=" Anatomical Detection Performance Analysis",
         showlegend=True,
         height=800,
         paper_bgcolor='white',
         font=dict(size=11)
     )
     
-    print("✅ Performance dashboard created")
+    print(" Performance dashboard created")
     return fig
 
 def save_results_and_visualizations(detection_results: List[Dict], 
                                   main_fig: go.Figure, 
                                   dashboard_fig: go.Figure):
     """Save all results and visualizations."""
-    print("💾 Saving results and visualizations...")
+    print(" Saving results and visualizations...")
     
     # Create output directory
     output_dir = Path("real_brain_analysis_results")
@@ -589,15 +589,15 @@ def save_results_and_visualizations(detection_results: List[Dict],
 3. Hover over anatomical features for detailed information
 """)
     
-    print(f"✅ Results saved to {output_dir}/")
-    print(f"   📊 Detection results: {results_file}")
-    print(f"   🎨 3D visualization: {viz_file}")
-    print(f"   📈 Performance dashboard: {dashboard_file}")
+    print(f" Results saved to {output_dir}/")
+    print(f"    Detection results: {results_file}")
+    print(f"    3D visualization: {viz_file}")
+    print(f"    Performance dashboard: {dashboard_file}")
     print(f"   📄 Summary report: {summary_file}")
 
 def main():
     """Main demonstration function."""
-    print("🧠 Real Brain Data Analysis Demonstration")
+    print(" Real Brain Data Analysis Demonstration")
     print("=" * 80)
     print("This system demonstrates:")
     print("1. Downloading real fMRI/MRI datasets from OpenNeuro")
@@ -609,7 +609,7 @@ def main():
     # Check dependencies
     missing_deps = check_dependencies()
     if missing_deps:
-        print(f"❌ Missing dependencies: {', '.join(missing_deps)}")
+        print(f" Missing dependencies: {', '.join(missing_deps)}")
         print("Please install: pip install nibabel boto3 plotly")
         print("Note: Brain analysis modules should be available in the python/ directory")
         print("\\nContinuing with available functionality...")
@@ -635,7 +635,7 @@ def main():
     detection_results, generator, atlas_detector = test_anatomical_detection_on_real_data(subjects_data)
     
     if not detection_results:
-        print("⚠️ Detection modules not available - using mock results for visualization")
+        print(" Detection modules not available - using mock results for visualization")
         # Create mock results for demonstration
         detection_results = []
         for subject_data in subjects_data:
@@ -678,14 +678,14 @@ def main():
     # Summary
     print("\\n🎉 REAL BRAIN DATA ANALYSIS COMPLETED!")
     print("=" * 60)
-    print("✅ Key Achievements:")
-    print(f"   📊 Analyzed {len(subjects_data)} real brain subjects")
+    print(" Key Achievements:")
+    print(f"    Analyzed {len(subjects_data)} real brain subjects")
     print(f"   🧩 Tested atlas-guided detection achieving >99.9% accuracy")
-    print(f"   🎨 Created interactive 3D anatomical visualization")
-    print(f"   📈 Generated comprehensive performance analysis")
-    print(f"   💾 Exported results for research and presentation")
+    print(f"    Created interactive 3D anatomical visualization")
+    print(f"    Generated comprehensive performance analysis")
+    print(f"    Exported results for research and presentation")
     
-    print("\\n🔬 Next Steps:")
+    print("\\n Next Steps:")
     print("   1. Open the HTML visualizations in your web browser")
     print("   2. Explore anatomical features interactively in 3D")
     print("   3. Analyze performance metrics in the dashboard")
@@ -695,4 +695,4 @@ def main():
 
 if __name__ == "__main__":
     success = main()
-    print(f"\\n{'✅ Demo completed successfully!' if success else '❌ Demo failed.'}")
+    print(f"\\n{' Demo completed successfully!' if success else ' Demo failed.'}")

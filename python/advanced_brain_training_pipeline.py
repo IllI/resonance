@@ -528,7 +528,7 @@ class BrainModelTrainingPipeline:
         Returns:
             Complete training results
         """
-        logger.info("🚀 Starting full brain model training pipeline...")
+        logger.info(" Starting full brain model training pipeline...")
         start_time = time.time()
         
         # Step 1: Download datasets
@@ -592,7 +592,7 @@ class BrainModelTrainingPipeline:
 
 def main():
     """Run the advanced brain model training pipeline."""
-    print("🧠 Advanced Brain Model Training Pipeline")
+    print(" Advanced Brain Model Training Pipeline")
     print("=" * 60)
     
     # Check dependencies
@@ -603,7 +603,7 @@ def main():
         missing_deps.append("boto3")
     
     if missing_deps:
-        print(f"❌ Missing dependencies: {', '.join(missing_deps)}")
+        print(f" Missing dependencies: {', '.join(missing_deps)}")
         print("Install with: pip install " + " ".join(missing_deps))
         return False
     
@@ -611,20 +611,20 @@ def main():
     pipeline = BrainModelTrainingPipeline()
     
     # Run training (demo with limited subjects)
-    print("\n🚀 Starting training pipeline demonstration...")
+    print("\n Starting training pipeline demonstration...")
     print("   Note: Using limited subjects for demo (50 total)")
     print("   For production, increase target_subjects to 1000+")
     
     results = pipeline.run_full_training_pipeline(target_subjects=50)
     
     if results['status'] == 'success':
-        print("\n✅ Training pipeline completed successfully!")
+        print("\n Training pipeline completed successfully!")
         print(f"   Datasets trained: {results['datasets_trained']}")
         print(f"   Subjects processed: {results['total_subjects_processed']}")
         print(f"   Features extracted: {results['total_features_extracted']}")
         print(f"   Average success rate: {results['average_success_rate']:.1%}")
     else:
-        print("\n❌ Training pipeline failed")
+        print("\n Training pipeline failed")
         print(f"   Reason: {results.get('reason', 'Unknown')}")
     
     return results['status'] == 'success'

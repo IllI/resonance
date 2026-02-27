@@ -100,7 +100,7 @@ class BrainDatasetManager:
         # Define available datasets
         self.available_datasets = self._get_available_datasets()
         
-        print(f"🧠 Brain Dataset Manager initialized")
+        print(f" Brain Dataset Manager initialized")
         print(f"   Data directory: {self.data_dir}")
         print(f"   Available datasets: {len(self.available_datasets)}")
     
@@ -175,14 +175,14 @@ class BrainDatasetManager:
     
     def list_datasets(self):
         """List all available datasets with details."""
-        print("\n📊 Available Brain Datasets for Training:")
+        print("\n Available Brain Datasets for Training:")
         print("=" * 80)
         
         total_participants = 0
         total_size = 0.0
         
         for name, dataset in self.available_datasets.items():
-            print(f"\n🧠 {dataset.name}")
+            print(f"\n {dataset.name}")
             print(f"   Source: {dataset.source}")
             print(f"   Participants: {dataset.participants:,}")
             print(f"   Modalities: {', '.join(dataset.modalities)}")
@@ -193,7 +193,7 @@ class BrainDatasetManager:
             total_participants += dataset.participants
             total_size += dataset.download_size_gb
         
-        print(f"\n📈 Total Training Data Available:")
+        print(f"\n Total Training Data Available:")
         print(f"   Participants: {total_participants:,}")
         print(f"   Total Size: {total_size:.1f} GB")
         print(f"   Datasets: {len(self.available_datasets)}")
@@ -210,13 +210,13 @@ class BrainDatasetManager:
             Success status
         """
         if dataset_name not in self.available_datasets:
-            print(f"❌ Dataset '{dataset_name}' not found")
+            print(f" Dataset '{dataset_name}' not found")
             return False
         
         dataset = self.available_datasets[dataset_name]
         dataset_path = self.data_dir / dataset_name
         
-        print(f"📥 Downloading {dataset.name}...")
+        print(f" Downloading {dataset.name}...")
         print(f"   Source: {dataset.source}")
         print(f"   Expected size: {dataset.download_size_gb:.1f} GB")
         print(f"   Participants: {dataset.participants}")
@@ -236,17 +236,17 @@ class BrainDatasetManager:
             elif dataset.source == "Human Connectome Project":
                 return self._download_hcp_dataset(dataset, dataset_path, max_subjects)
             else:
-                print(f"❌ Unknown dataset source: {dataset.source}")
+                print(f" Unknown dataset source: {dataset.source}")
                 return False
                 
         except Exception as e:
-            print(f"❌ Error downloading {dataset_name}: {e}")
+            print(f" Error downloading {dataset_name}: {e}")
             return False
     
     def _download_openneuro_dataset(self, dataset: DatasetInfo, 
                                    dataset_path: Path, max_subjects: Optional[int]) -> bool:
         """Download OpenNeuro dataset using AWS S3."""
-        print("   🌐 Downloading from OpenNeuro (AWS S3)...")
+        print("    Downloading from OpenNeuro (AWS S3)...")
         
         # For demo purposes, create mock data structure
         # In production, this would use aws s3 sync or openneuro-cli
@@ -267,7 +267,7 @@ class BrainDatasetManager:
     def _download_hcp_dataset(self, dataset: DatasetInfo,
                              dataset_path: Path, max_subjects: Optional[int]) -> bool:
         """Download HCP dataset sample."""
-        print("   🧠 Downloading from Human Connectome Project...")
+        print("    Downloading from Human Connectome Project...")
         
         # For demo purposes, create mock data
         self._create_mock_dataset(dataset_path, dataset.participants, max_subjects)
@@ -279,7 +279,7 @@ class BrainDatasetManager:
         """Create mock dataset for testing."""
         n_subjects = min(total_subjects, max_subjects or total_subjects)
         
-        print(f"   📁 Creating mock dataset with {n_subjects} subjects...")
+        print(f"    Creating mock dataset with {n_subjects} subjects...")
         
         for subject_id in range(1, n_subjects + 1):
             subject_dir = dataset_path / f"sub-{subject_id:04d}"
@@ -324,7 +324,7 @@ class BrainDatasetManager:
                 func_img = nib.Nifti1Image(mock_func_nifti, affine=np.eye(4))
                 nib.save(func_img, func_dir / f"sub-{subject_id:04d}_task-rest_bold.nii.gz")
                 
-                print(f"     ✅ Created 4D fMRI: {mock_func_nifti.shape} (x,y,z,time)")
+                print(f"      Created 4D fMRI: {mock_func_nifti.shape} (x,y,z,time)")
             
             if subject_id % 10 == 0:
                 print(f"     📄 Created {subject_id}/{n_subjects} subjects...")
@@ -347,11 +347,11 @@ class BrainModelTrainer:
             if use_gpu:
                 try:
                     self.gpu_analyzer = EnhancedDualGPUBrainAnalyzer()
-                    print("✅ Dual AMD GPU acceleration enabled for training")
+                    print(" Dual AMD GPU acceleration enabled for training")
                     print("   AMD Radeon 780M: Preprocessing & network metrics")
                     print("   AMD Radeon RX 7700S: Correlation matrices & heavy compute")
                 except Exception as e:
-                    print(f"⚠️ GPU acceleration unavailable: {e}")
+                    print(f" GPU acceleration unavailable: {e}")
                     self.gpu_analyzer = None
             else:
                 self.gpu_analyzer = None
@@ -375,15 +375,15 @@ class BrainModelTrainer:
         print(f"\n🎓 Training brain model on {dataset_name}...")
         
         if not HAS_BRAIN_MODULES:
-            print("❌ Brain analysis modules not available")
+            print(" Brain analysis modules not available")
             return None
         
         # Download dataset if needed
         dataset_path = self.data_manager.data_dir / dataset_name
         if not dataset_path.exists():
-            print(f"   📥 Dataset not found, downloading...")
+            print(f"    Dataset not found, downloading...")
             if not self.data_manager.download_dataset(dataset_name, max_subjects):
-                print(f"❌ Failed to download {dataset_name}")
+                print(f" Failed to download {dataset_name}")
                 return None
         
         start_time = time.time()
@@ -393,16 +393,16 @@ class BrainModelTrainer:
         
         # If no functional data, try T1w as fallback
         if len(func_files) == 0:
-            print("   ⚠️ No functional fMRI data found, trying anatomical T1w...")
+            print("    No functional fMRI data found, trying anatomical T1w...")
             func_files = list(dataset_path.glob("**/anat/*_T1w.nii.gz"))
         
         if max_subjects:
             func_files = func_files[:max_subjects]
         
-        print(f"   📊 Found {len(func_files)} brain images for training")
+        print(f"    Found {len(func_files)} brain images for training")
         
         if len(func_files) == 0:
-            print("❌ No brain images found in dataset")
+            print(" No brain images found in dataset")
             return None
         
         # Training data collection
@@ -414,11 +414,11 @@ class BrainModelTrainer:
             subject_id = brain_file.parent.parent.name
             
             try:
-                print(f"   🧠 Processing {subject_id} ({i+1}/{len(func_files)})...")
+                print(f"    Processing {subject_id} ({i+1}/{len(func_files)})...")
                 
                 # Create a custom mock generator for demo mode with proper fMRI time series
                 if 'mock' in dataset_name.lower() or not brain_file.exists():
-                    print(f"     🎭 Creating mock fMRI time series for {subject_id}...")
+                    print(f"      Creating mock fMRI time series for {subject_id}...")
                     
                     # Create realistic 4D fMRI time series
                     n_timepoints = 100
@@ -449,7 +449,7 @@ class BrainModelTrainer:
                     roi_detector = SignalProcessingROIDetector(noise_reduction=False)
                     detections = roi_detector.detect_rois(mock_fmri, confidence_threshold=0.3)
                     
-                    print(f"     ✅ Detected {len(detections)} ROIs from time series")
+                    print(f"      Detected {len(detections)} ROIs from time series")
                     
                     # Convert ROI detections to features
                     if detections:
@@ -464,9 +464,9 @@ class BrainModelTrainer:
                             all_labels.append(detection.region_name)
                         
                         successful_subjects += 1
-                        print(f"     ✅ Added {len(detections)} features from {subject_id}")
+                        print(f"      Added {len(detections)} features from {subject_id}")
                     else:
-                        print(f"     ⚠️ No features detected for {subject_id}")
+                        print(f"      No features detected for {subject_id}")
                 
                 else:
                     # Load real MRI file (fallback to 3D anatomical approach)
@@ -487,24 +487,24 @@ class BrainModelTrainer:
                                 all_labels.append(feature.name)
                             
                             successful_subjects += 1
-                            print(f"     ✅ Added {len(features)} features from {subject_id}")
+                            print(f"      Added {len(features)} features from {subject_id}")
                 
                 if successful_subjects % 3 == 0:
-                    print(f"     📊 Progress: {successful_subjects} subjects, {len(all_features)} features")
+                    print(f"      Progress: {successful_subjects} subjects, {len(all_features)} features")
                 
             except Exception as e:
-                print(f"     ⚠️ Error processing {subject_id}: {e}")
+                print(f"      Error processing {subject_id}: {e}")
                 continue
         
         if len(all_features) == 0:
-            print("❌ No features extracted for training")
+            print(" No features extracted for training")
             return None
         
         # Convert to arrays
         X = np.array(all_features)
         y = np.array(all_labels)
         
-        print(f"   📊 Training data prepared:")
+        print(f"    Training data prepared:")
         print(f"      Subjects: {successful_subjects}")
         print(f"      Features: {len(all_features)}")
         print(f"      Feature vector size: {X.shape[1]}")
@@ -528,7 +528,7 @@ class BrainModelTrainer:
         
         self.training_results.append(result)
         
-        print(f"✅ Training completed on {dataset_name}:")
+        print(f" Training completed on {dataset_name}:")
         print(f"   Subjects processed: {successful_subjects}")
         print(f"   Features detected: {len(all_features)}")
         print(f"   Classification accuracy: {accuracy:.3f}")
@@ -559,14 +559,14 @@ class BrainModelTrainer:
     def _train_classifier(self, X: np.ndarray, y: np.ndarray, validation_split: float) -> float:
         """Train a classifier on extracted features."""
         if not HAS_SKLEARN:
-            print("   ⚠️ scikit-learn not available, skipping classification training")
+            print("    scikit-learn not available, skipping classification training")
             return 0.5  # Mock accuracy
         
         # Check if we have enough samples for each class to do stratified splitting
         unique_classes, class_counts = np.unique(y, return_counts=True)
         min_class_count = np.min(class_counts)
         
-        print(f"   📊 Training data analysis:")
+        print(f"    Training data analysis:")
         print(f"      Unique classes: {len(unique_classes)}")
         print(f"      Min samples per class: {min_class_count}")
         print(f"      Total samples: {len(y)}")
@@ -574,8 +574,8 @@ class BrainModelTrainer:
         # If any class has fewer than 2 samples, we can't use stratify
         # Also need enough samples to split properly
         if min_class_count < 2 or len(y) < 10:
-            print("   ⚠️ Insufficient data for proper train/validation split")
-            print("   🔄 Using mock training results (insufficient real data)")
+            print("    Insufficient data for proper train/validation split")
+            print("    Using mock training results (insufficient real data)")
             
             # Return a reasonable mock accuracy based on class distribution
             if len(unique_classes) == 1:
@@ -591,13 +591,13 @@ class BrainModelTrainer:
                 X, y, test_size=validation_split, random_state=42, stratify=y
             )
         except ValueError as e:
-            print(f"   ⚠️ Stratified split failed: {e}")
-            print("   🔄 Using simple random split instead")
+            print(f"    Stratified split failed: {e}")
+            print("    Using simple random split instead")
             X_train, X_val, y_train, y_val = train_test_split(
                 X, y, test_size=validation_split, random_state=42, stratify=None
             )
         
-        print(f"   🎯 Training classifier:")
+        print(f"    Training classifier:")
         print(f"      Training samples: {len(X_train)}")
         print(f"      Validation samples: {len(X_val)}")
         
@@ -612,7 +612,7 @@ class BrainModelTrainer:
     
     def train_on_all_datasets(self, max_subjects_per_dataset: int = 50) -> List[TrainingResult]:
         """Train on all available datasets."""
-        print(f"\n🚀 Training on all available datasets...")
+        print(f"\n Training on all available datasets...")
         print(f"   Max subjects per dataset: {max_subjects_per_dataset}")
         
         all_results = []
@@ -633,7 +633,7 @@ class BrainModelTrainer:
             avg_accuracy = np.mean([r.accuracy_score for r in all_results])
             total_time = sum(r.processing_time for r in all_results)
             
-            print(f"📊 Overall Training Results:")
+            print(f" Overall Training Results:")
             print(f"   Datasets trained: {len(all_results)}")
             print(f"   Total subjects: {total_subjects}")
             print(f"   Total features: {total_features}")
@@ -641,7 +641,7 @@ class BrainModelTrainer:
             print(f"   Total processing time: {total_time:.1f}s")
             
             # Detailed results per dataset
-            print(f"\n📈 Per-Dataset Results:")
+            print(f"\n Per-Dataset Results:")
             for result in all_results:
                 print(f"   {result.dataset_name}:")
                 print(f"     Subjects: {result.n_subjects}")
@@ -668,11 +668,11 @@ class BrainModelTrainer:
         with open(output_path, 'w') as f:
             json.dump(results_dict, f, indent=2)
         
-        print(f"✅ Training results saved to {output_path}")
+        print(f" Training results saved to {output_path}")
 
 def main():
     """Demonstrate the brain dataset training system."""
-    print("🧠 Brain Dataset Training System")
+    print(" Brain Dataset Training System")
     print("=" * 60)
     
     # Initialize components
@@ -688,7 +688,7 @@ def main():
     
     # Train on a subset for demonstration
     print(f"\n{'='*60}")
-    print("🚀 TRAINING DEMONSTRATION")
+    print(" TRAINING DEMONSTRATION")
     print("=" * 60)
     
     # Train on multiple datasets with limited subjects for demo

@@ -38,7 +38,7 @@ import json
 
 def check_system_requirements():
     """Check if all required dependencies are available."""
-    print("🔍 Checking system requirements...")
+    print(" Checking system requirements...")
     
     required_packages = [
         'numpy', 'scipy', 'nibabel', 'plotly', 'pandas', 'requests'
@@ -57,43 +57,43 @@ def check_system_requirements():
     for package in required_packages:
         try:
             __import__(package)
-            print(f"  ✅ {package}")
+            print(f"   {package}")
         except ImportError:
             missing_required.append(package)
-            print(f"  ❌ {package}")
+            print(f"   {package}")
     
     # Check optional packages
     for package in optional_packages:
         try:
             __import__(package)
-            print(f"  ✅ {package} (optional)")
+            print(f"   {package} (optional)")
         except ImportError:
             missing_optional.append(package)
-            print(f"  ⚠️ {package} (optional)")
+            print(f"   {package} (optional)")
     
     if missing_required:
-        print(f"\n❌ Missing required packages: {', '.join(missing_required)}")
+        print(f"\n Missing required packages: {', '.join(missing_required)}")
         print(f"Install with: pip install {' '.join(missing_required)}")
         return False
     
     if missing_optional:
-        print(f"\n⚠️ Missing optional packages (may limit functionality): {', '.join(missing_optional)}")
+        print(f"\n Missing optional packages (may limit functionality): {', '.join(missing_optional)}")
         print(f"Install with: pip install {' '.join(missing_optional)}")
     
     # Check AWS CLI for faster downloads
     try:
         subprocess.run(['aws', '--version'], capture_output=True, check=True)
-        print("  ✅ AWS CLI (for fast downloads)")
+        print("   AWS CLI (for fast downloads)")
     except:
-        print("  ⚠️ AWS CLI not found (downloads will be slower)")
+        print("   AWS CLI not found (downloads will be slower)")
         print("     Install with: pip install awscli")
     
-    print("✅ System requirements check completed")
+    print(" System requirements check completed")
     return True
 
 def setup_training_environment(output_dir: str):
     """Set up the training environment and directories."""
-    print(f"📁 Setting up training environment in {output_dir}...")
+    print(f" Setting up training environment in {output_dir}...")
     
     base_dir = Path(output_dir)
     
@@ -109,14 +109,14 @@ def setup_training_environment(output_dir: str):
     
     for dir_path in dirs_to_create:
         dir_path.mkdir(parents=True, exist_ok=True)
-        print(f"  📂 Created: {dir_path}")
+        print(f"   Created: {dir_path}")
     
-    print("✅ Training environment setup completed")
+    print(" Training environment setup completed")
     return base_dir
 
 def run_demo_training():
     """Run a quick demo training with mock data."""
-    print("🎮 Running demo training with mock data...")
+    print(" Running demo training with mock data...")
     
     try:
         from brain_dataset_trainer import BrainDatasetManager, BrainModelTrainer
@@ -125,32 +125,32 @@ def run_demo_training():
         data_manager = BrainDatasetManager()
         trainer = BrainModelTrainer(data_manager)
         
-        print("📊 Available datasets for training:")
+        print(" Available datasets for training:")
         data_manager.list_datasets()
         
         # Run training on limited subjects for demo
-        print("\n🚀 Starting demo training...")
+        print("\n Starting demo training...")
         results = trainer.train_on_all_datasets(max_subjects_per_dataset=5)
         
         if results:
-            print("\n✅ Demo training completed successfully!")
+            print("\n Demo training completed successfully!")
             for result in results:
-                print(f"  📊 {result.dataset_name}: {result.n_features_detected} features")
+                print(f"   {result.dataset_name}: {result.n_features_detected} features")
         
         return True
         
     except Exception as e:
-        print(f"❌ Demo training failed: {e}")
+        print(f" Demo training failed: {e}")
         return False
 
 def run_real_training(subjects: int, max_datasets: int, output_dir: str, use_gpu: bool = True):
     """Run real training on OpenNeuro datasets with GPU acceleration."""
-    print(f"🧠 Running real training on {subjects} subjects...")
+    print(f" Running real training on {subjects} subjects...")
     
     if use_gpu:
-        print("🔥 GPU acceleration enabled - utilizing AMD Radeon 780M + RX 7700S")
+        print(" GPU acceleration enabled - utilizing AMD Radeon 780M + RX 7700S")
     else:
-        print("💻 CPU-only training mode")
+        print(" CPU-only training mode")
     
     try:
         from openneuro_training_integration import RealBrainTrainingSystem
@@ -163,40 +163,40 @@ def run_real_training(subjects: int, max_datasets: int, output_dir: str, use_gpu
         )
         
         # Run comprehensive training
-        print("🚀 Starting comprehensive training...")
+        print(" Starting comprehensive training...")
         results = training_system.run_comprehensive_training(
             target_subjects=subjects,
             max_datasets=max_datasets
         )
         
         if results['status'] == 'success':
-            print("\n✅ Real training completed successfully!")
-            print(f"  📊 Datasets processed: {results['datasets_processed']}")
+            print("\n Real training completed successfully!")
+            print(f"   Datasets processed: {results['datasets_processed']}")
             print(f"  👥 Subjects processed: {results['total_subjects_processed']}")
-            print(f"  🧠 Features extracted: {results['total_features_extracted']}")
-            print(f"  📈 Success rate: {results['average_success_rate']:.1%}")
+            print(f"   Features extracted: {results['total_features_extracted']}")
+            print(f"   Success rate: {results['average_success_rate']:.1%}")
             
             # Save summary
             summary_file = Path(output_dir) / "training_summary.json"
             with open(summary_file, 'w') as f:
                 json.dump(results, f, indent=2, default=str)
             
-            print(f"  💾 Summary saved: {summary_file}")
+            print(f"   Summary saved: {summary_file}")
             return True
         else:
-            print(f"❌ Training failed: {results.get('reason', 'Unknown error')}")
+            print(f" Training failed: {results.get('reason', 'Unknown error')}")
             return False
         
     except Exception as e:
-        print(f"❌ Real training failed: {e}")
+        print(f" Real training failed: {e}")
         return False
 
 def run_comprehensive_training(subjects: int, max_datasets: int, output_dir: str, use_gpu: bool = True):
     """Run the full comprehensive training pipeline with GPU acceleration."""
-    print(f"🎯 Running comprehensive training pipeline...")
+    print(f" Running comprehensive training pipeline...")
     
     if use_gpu:
-        print("🔥 Dual-GPU acceleration enabled for maximum performance")
+        print(" Dual-GPU acceleration enabled for maximum performance")
     
     try:
         from comprehensive_brain_training_orchestrator import (
@@ -223,26 +223,26 @@ def run_comprehensive_training(subjects: int, max_datasets: int, output_dir: str
         )
         
         # Run comprehensive training
-        print("🚀 Starting comprehensive training orchestrator...")
+        print(" Starting comprehensive training orchestrator...")
         results = orchestrator.run_comprehensive_training()
         
-        print("\n✅ Comprehensive training completed successfully!")
+        print("\n Comprehensive training completed successfully!")
         print(f"  🆔 Training ID: {results.training_id}")
-        print(f"  ⏱️ Duration: {results.total_duration:.1f}s")
-        print(f"  📊 Datasets processed: {results.datasets_processed}")
+        print(f"   Duration: {results.total_duration:.1f}s")
+        print(f"   Datasets processed: {results.datasets_processed}")
         print(f"  👥 Subjects processed: {results.total_subjects_processed}")
-        print(f"  🧠 Features extracted: {results.total_features_extracted}")
-        print(f"  🎯 Model accuracy: {results.model_accuracy:.3f}")
+        print(f"   Features extracted: {results.total_features_extracted}")
+        print(f"   Model accuracy: {results.model_accuracy:.3f}")
         
         return True
         
     except Exception as e:
-        print(f"❌ Comprehensive training failed: {e}")
+        print(f" Comprehensive training failed: {e}")
         return False
 
 def generate_final_report(output_dir: str):
     """Generate final training report."""
-    print("📝 Generating final training report...")
+    print(" Generating final training report...")
     
     report_content = f"""
 # Brain Model Training Report
@@ -312,7 +312,7 @@ images, resulting in more accurate 3D brain representations.
     with open(report_file, 'w') as f:
         f.write(report_content)
     
-    print(f"✅ Final report generated: {report_file}")
+    print(f" Final report generated: {report_file}")
 
 def main():
     """Main execution function."""
@@ -344,7 +344,7 @@ Examples:
     
     args = parser.parse_args()
     
-    print("🧠 Brain Model Training System")
+    print(" Brain Model Training System")
     print("=" * 60)
     print("Train 3D brain modeling on real neuroimaging datasets")
     print("from OpenNeuro, HCP, OASIS, and other public repositories")
@@ -352,13 +352,13 @@ Examples:
     
     # Check system requirements
     if not check_system_requirements():
-        print("\n❌ System requirements not met. Please install missing packages.")
+        print("\n System requirements not met. Please install missing packages.")
         return False
     
     # Set up environment
     output_dir = setup_training_environment(args.output_dir)
     
-    print(f"\n🎯 Training Configuration:")
+    print(f"\n Training Configuration:")
     print(f"  Mode: {'Demo' if args.demo else 'Production' if args.production else 'Standard'}")
     print(f"  Target subjects: {args.subjects}")
     print(f"  Max datasets: {args.datasets}")
@@ -393,20 +393,20 @@ Examples:
             
             print("\n🎉 TRAINING COMPLETED SUCCESSFULLY!")
             print("="*60)
-            print(f"✅ Training outputs saved to: {output_dir}")
-            print(f"📊 Check reports for detailed results")
-            print(f"🧠 Trained models ready for deployment")
-            print(f"📝 See TRAINING_REPORT.md for summary")
+            print(f" Training outputs saved to: {output_dir}")
+            print(f" Check reports for detailed results")
+            print(f" Trained models ready for deployment")
+            print(f" See TRAINING_REPORT.md for summary")
             
         else:
-            print("\n❌ TRAINING FAILED")
+            print("\n TRAINING FAILED")
             print("See error messages above for details")
         
     except KeyboardInterrupt:
-        print("\n⚠️ Training interrupted by user")
+        print("\n Training interrupted by user")
         success = False
     except Exception as e:
-        print(f"\n❌ Unexpected error: {e}")
+        print(f"\n Unexpected error: {e}")
         success = False
     
     return success

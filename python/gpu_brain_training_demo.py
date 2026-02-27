@@ -18,13 +18,13 @@ from pathlib import Path
 
 def check_gpu_requirements():
     """Check if GPU acceleration is available."""
-    print("🔍 Checking GPU acceleration requirements...")
+    print(" Checking GPU acceleration requirements...")
     
     # Check OpenCL
     try:
         import pyopencl as cl
         platforms = cl.get_platforms()
-        print(f"✅ OpenCL available: {len(platforms)} platform(s)")
+        print(f" OpenCL available: {len(platforms)} platform(s)")
         
         amd_devices = []
         for platform in platforms:
@@ -32,72 +32,72 @@ def check_gpu_requirements():
                 devices = platform.get_devices(cl.device_type.GPU)
                 for device in devices:
                     amd_devices.append(device.name)
-                    print(f"   🎮 {device.name}")
+                    print(f"    {device.name}")
         
         if len(amd_devices) >= 2:
-            print("✅ Dual AMD GPU setup detected!")
+            print(" Dual AMD GPU setup detected!")
             return True
         else:
-            print("⚠️ Dual GPU setup not detected")
+            print(" Dual GPU setup not detected")
             return False
             
     except ImportError:
-        print("❌ OpenCL not available - install with: pip install pyopencl")
+        print(" OpenCL not available - install with: pip install pyopencl")
         return False
 
 def check_brain_modules():
     """Check if brain analysis modules are available."""
-    print("\n🧠 Checking brain analysis modules...")
+    print("\n Checking brain analysis modules...")
     
     missing_modules = []
     
     # Check core modules
     try:
         from brain_3d_model_generator import Brain3DModelGenerator
-        print("✅ Brain 3D Model Generator")
+        print(" Brain 3D Model Generator")
     except ImportError:
         missing_modules.append("brain_3d_model_generator")
     
     try:
         from enhanced_dual_gpu_analyzer import EnhancedDualGPUBrainAnalyzer
-        print("✅ Enhanced Dual GPU Analyzer")
+        print(" Enhanced Dual GPU Analyzer")
     except ImportError:
         missing_modules.append("enhanced_dual_gpu_analyzer")
     
     try:
         from openneuro_training_integration import RealBrainTrainingSystem
-        print("✅ OpenNeuro Training Integration")
+        print(" OpenNeuro Training Integration")
     except ImportError:
         missing_modules.append("openneuro_training_integration")
     
     if missing_modules:
-        print(f"❌ Missing modules: {', '.join(missing_modules)}")
+        print(f" Missing modules: {', '.join(missing_modules)}")
         return False
     
-    print("✅ All brain analysis modules available")
+    print(" All brain analysis modules available")
     return True
 
 def demonstrate_gpu_acceleration():
     """Demonstrate GPU acceleration capabilities."""
-    print("\n🔥 GPU Acceleration Demonstration")
+    print("\n GPU Acceleration Demonstration")
     print("=" * 50)
     
     try:
         from enhanced_dual_gpu_analyzer import EnhancedDualGPUBrainAnalyzer
         
         # Initialize dual-GPU analyzer
-        print("🚀 Initializing Enhanced Dual-GPU Brain Analyzer...")
+        print(" Initializing Enhanced Dual-GPU Brain Analyzer...")
         analyzer = EnhancedDualGPUBrainAnalyzer()
         
         # Create mock brain data for testing
         import numpy as np
         mock_data = np.random.randn(100, 200)  # 100 regions, 200 timepoints
         
-        print(f"📊 Testing with mock fMRI data: {mock_data.shape}")
-        print("🎮 This will utilize BOTH AMD GPUs simultaneously:")
+        print(f" Testing with mock fMRI data: {mock_data.shape}")
+        print(" This will utilize BOTH AMD GPUs simultaneously:")
         print("   AMD Radeon 780M: Preprocessing & network metrics")
         print("   AMD Radeon RX 7700S: Correlation matrices & heavy compute")
-        print("\n⚡ MONITOR TASK MANAGER TO SEE BOTH GPUS WORKING!")
+        print("\n MONITOR TASK MANAGER TO SEE BOTH GPUS WORKING!")
         
         # Run GPU analysis
         start_time = time.time()
@@ -105,8 +105,8 @@ def demonstrate_gpu_acceleration():
         duration = time.time() - start_time
         
         # Display results
-        print(f"\n✅ Dual-GPU analysis completed in {duration:.2f}s")
-        print(f"🎯 GPU utilization:")
+        print(f"\n Dual-GPU analysis completed in {duration:.2f}s")
+        print(f" GPU utilization:")
         
         perf = results.get('performance_summary', {})
         if perf:
@@ -122,7 +122,7 @@ def demonstrate_gpu_acceleration():
         return True
         
     except Exception as e:
-        print(f"❌ GPU demonstration failed: {e}")
+        print(f" GPU demonstration failed: {e}")
         return False
 
 def run_gpu_training_demo(max_subjects: int = 10):
@@ -135,33 +135,33 @@ def run_gpu_training_demo(max_subjects: int = 10):
         from brain_dataset_trainer import BrainDatasetManager, BrainModelTrainer
         
         # Initialize with GPU acceleration enabled
-        print("🔧 Initializing training components with GPU acceleration...")
+        print(" Initializing training components with GPU acceleration...")
         data_manager = BrainDatasetManager()
         trainer = BrainModelTrainer(data_manager, use_gpu=True)
         
         # Show available datasets
-        print("\n📊 Available training datasets:")
+        print("\n Available training datasets:")
         data_manager.list_datasets()
         
         # Run training on first dataset with GPU acceleration
-        print(f"\n🚀 Starting GPU-accelerated training...")
+        print(f"\n Starting GPU-accelerated training...")
         results = trainer.train_on_all_datasets(max_subjects_per_dataset=max_subjects)
         
         if results:
-            print("\n✅ GPU-accelerated training completed!")
+            print("\n GPU-accelerated training completed!")
             total_features = sum(r.n_features_detected for r in results)
-            print(f"📊 Results summary:")
+            print(f" Results summary:")
             print(f"   Datasets: {len(results)}")
             print(f"   Total features: {total_features}")
             print(f"   GPU acceleration: Enabled")
             
             for result in results:
-                print(f"   📈 {result.dataset_name}: {result.n_features_detected} features")
+                print(f"    {result.dataset_name}: {result.n_features_detected} features")
         
         return True
         
     except Exception as e:
-        print(f"❌ GPU training demo failed: {e}")
+        print(f" GPU training demo failed: {e}")
         return False
 
 def run_production_scale_demo():
@@ -173,14 +173,14 @@ def run_production_scale_demo():
         from openneuro_training_integration import RealBrainTrainingSystem
         
         # Initialize with GPU acceleration
-        print("🔧 Initializing production training system...")
+        print(" Initializing production training system...")
         training_system = RealBrainTrainingSystem(
             data_dir="gpu_training_data",
             results_dir="gpu_training_results", 
             use_gpu=True
         )
         
-        print("🌐 Production training capabilities:")
+        print(" Production training capabilities:")
         print("   • Download real datasets from OpenNeuro")
         print("   • Process 1000+ brain volumes with dual-GPU acceleration")
         print("   • Extract 200+ anatomical features per brain")
@@ -188,14 +188,14 @@ def run_production_scale_demo():
         print("   • Real-time progress monitoring")
         
         # Run small demo (would be much larger in production)
-        print(f"\n🚀 Running production demo (50 subjects)...")
+        print(f"\n Running production demo (50 subjects)...")
         results = training_system.run_comprehensive_training(
             target_subjects=50,
             max_datasets=2
         )
         
         if results['status'] == 'success':
-            print("✅ Production demo completed successfully!")
+            print(" Production demo completed successfully!")
             print(f"   Subjects processed: {results['total_subjects_processed']}")
             print(f"   Features extracted: {results['total_features_extracted']}")
             print(f"   GPU acceleration: Active")
@@ -203,7 +203,7 @@ def run_production_scale_demo():
         return True
         
     except Exception as e:
-        print(f"❌ Production demo failed: {e}")
+        print(f" Production demo failed: {e}")
         return False
 
 def main():
@@ -216,7 +216,7 @@ def main():
     
     args = parser.parse_args()
     
-    print("🔥 GPU-Accelerated Brain Training System Demo")
+    print(" GPU-Accelerated Brain Training System Demo")
     print("=" * 60)
     print("Utilizing AMD Radeon 780M + RX 7700S for maximum performance")
     print("=" * 60)
@@ -226,16 +226,16 @@ def main():
     modules_available = check_brain_modules()
     
     if not modules_available:
-        print("\n❌ Required modules not available. Please ensure brain analysis modules are installed.")
+        print("\n Required modules not available. Please ensure brain analysis modules are installed.")
         return False
     
     if not gpu_available:
-        print("\n⚠️ GPU acceleration not fully available, but demo will continue with CPU fallback.")
+        print("\n GPU acceleration not fully available, but demo will continue with CPU fallback.")
     
     success = False
     
     if args.mode == 'gpu-test':
-        print("\n🎮 Mode: GPU Acceleration Test")
+        print("\n Mode: GPU Acceleration Test")
         success = demonstrate_gpu_acceleration()
         
     elif args.mode == 'training':
@@ -250,21 +250,21 @@ def main():
     if success:
         print(f"\n🎉 {args.mode.upper()} DEMO COMPLETED SUCCESSFULLY!")
         print("=" * 60)
-        print("✅ Dual-GPU acceleration working")
-        print("✅ Brain training system operational")
-        print("✅ Ready for production deployment")
+        print(" Dual-GPU acceleration working")
+        print(" Brain training system operational")
+        print(" Ready for production deployment")
         
         if gpu_available:
-            print("\n💡 Your AMD Radeon 780M + RX 7700S setup is working perfectly!")
+            print("\n Your AMD Radeon 780M + RX 7700S setup is working perfectly!")
             print("   Both GPUs are being utilized for maximum brain analysis performance.")
         
-        print(f"\n🚀 Next steps:")
+        print(f"\n Next steps:")
         print(f"   1. Run full production training: --mode production")
         print(f"   2. Increase subject count: --subjects 1000")
         print(f"   3. Monitor GPU usage in Task Manager during processing")
         
     else:
-        print(f"\n❌ {args.mode.upper()} DEMO FAILED")
+        print(f"\n {args.mode.upper()} DEMO FAILED")
         print("See error messages above for troubleshooting.")
     
     return success

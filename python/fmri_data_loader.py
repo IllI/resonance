@@ -29,7 +29,7 @@ class fMRIDataLoader:
         """
         self.data_dir = Path(data_dir)
         self.data_dir.mkdir(exist_ok=True)
-        print(f"📁 Data directory: {self.data_dir.absolute()}")
+        print(f" Data directory: {self.data_dir.absolute()}")
     
     def load_nifti(self, filepath: str) -> Tuple[np.ndarray, nib.Nifti1Image]:
         """
@@ -44,14 +44,14 @@ class fMRIDataLoader:
         try:
             img = nib.load(filepath)
             data = img.get_fdata()
-            print(f"✅ Loaded NIfTI: {filepath}")
+            print(f" Loaded NIfTI: {filepath}")
             print(f"   Shape: {data.shape}")
             print(f"   Data type: {data.dtype}")
             print(f"   Voxel size: {img.header.get_zooms()}")
             return data, img
         
         except Exception as e:
-            print(f"❌ Error loading {filepath}: {e}")
+            print(f" Error loading {filepath}: {e}")
             raise
     
     def download_sample_data(self) -> Dict[str, Path]:
@@ -61,13 +61,13 @@ class fMRIDataLoader:
         Returns:
             Dictionary mapping dataset names to local paths
         """
-        print("📥 Downloading sample fMRI data...")
+        print(" Downloading sample fMRI data...")
         
         try:
             from nilearn import datasets
             
             # Download Haxby dataset (visual object recognition)
-            print("🧠 Fetching Haxby visual recognition dataset...")
+            print(" Fetching Haxby visual recognition dataset...")
             haxby = datasets.fetch_haxby(
                 subjects=[1], 
                 fetch_stimuli=True, 
@@ -84,14 +84,14 @@ class fMRIDataLoader:
             if hasattr(haxby, 'conditions_target') and haxby.conditions_target:
                 sample_data['haxby_conditions_target'] = Path(haxby.conditions_target[0])
             
-            print("✅ Sample data downloaded successfully:")
+            print(" Sample data downloaded successfully:")
             for name, path in sample_data.items():
                 print(f"   {name}: {path}")
                 
             return sample_data
             
         except Exception as e:
-            print(f"❌ Error downloading sample data: {e}")
+            print(f" Error downloading sample data: {e}")
             raise
     
     def inspect_dataset(self, nifti_path: str) -> Dict:
@@ -134,13 +134,13 @@ class fMRIDataLoader:
         """
         try:
             df = pd.read_csv(csv_path)
-            print(f"✅ Loaded behavioral data: {csv_path}")
+            print(f" Loaded behavioral data: {csv_path}")
             print(f"   Shape: {df.shape}")
             print(f"   Columns: {list(df.columns)}")
             return df
         
         except Exception as e:
-            print(f"❌ Error loading behavioral data: {e}")
+            print(f" Error loading behavioral data: {e}")
             raise
     
     def prepare_for_analysis(self, func_data: np.ndarray, mask: Optional[np.ndarray] = None) -> np.ndarray:
@@ -154,7 +154,7 @@ class fMRIDataLoader:
         Returns:
             Preprocessed data ready for analysis
         """
-        print("🔧 Preparing data for analysis...")
+        print(" Preparing data for analysis...")
         
         # Apply mask if provided
         if mask is not None:
@@ -183,7 +183,7 @@ class fMRIDataLoader:
         Returns:
             Tuple of (fmri_data, behavioral_data)
         """
-        print("🧪 Preparing sample analysis dataset...")
+        print(" Preparing sample analysis dataset...")
         
         # Download sample data
         sample_data = self.download_sample_data()
@@ -200,13 +200,13 @@ class fMRIDataLoader:
         # Prepare data for analysis
         analysis_data = self.prepare_for_analysis(func_data, mask_data)
         
-        print("✅ Sample analysis data prepared!")
+        print(" Sample analysis data prepared!")
         
         return analysis_data, behavioral_data
 
 def main():
     """Test the fMRI data loader."""
-    print("🧠 Testing fMRI Data Loader")
+    print(" Testing fMRI Data Loader")
     print("=" * 50)
     
     # Initialize loader
@@ -216,7 +216,7 @@ def main():
         # Get sample data for analysis
         fmri_data, behavioral_data = loader.get_sample_analysis_data()
         
-        print(f"\n📊 Analysis Data Summary:")
+        print(f"\n Analysis Data Summary:")
         print(f"   fMRI data shape: {fmri_data.shape}")
         print(f"   Behavioral data shape: {behavioral_data.shape}")
         print(f"   Data type: {fmri_data.dtype}")
@@ -225,7 +225,7 @@ def main():
         print("\n🎉 fMRI Data Loader test completed successfully!")
         
     except Exception as e:
-        print(f"❌ Test failed: {e}")
+        print(f" Test failed: {e}")
         return False
     
     return True

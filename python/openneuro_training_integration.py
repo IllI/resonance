@@ -206,7 +206,7 @@ class BrainDatasetProcessor:
         if use_gpu and self.has_brain_modules:
             try:
                 self.gpu_analyzer = EnhancedDualGPUBrainAnalyzer()
-                logger.info("✅ Dual AMD GPU acceleration enabled for training")
+                logger.info(" Dual AMD GPU acceleration enabled for training")
                 logger.info("   AMD Radeon 780M: Preprocessing & network metrics")
                 logger.info("   AMD Radeon RX 7700S: Correlation matrices & heavy compute")
             except Exception as e:
@@ -326,7 +326,7 @@ class BrainDatasetProcessor:
                         mock_fmri = np.random.randn(100, 50)  # 100 regions, 50 timepoints
                         
                         # Run dual-GPU accelerated analysis
-                        logger.debug(f"🔥 Running dual-GPU analysis for {t1w_file.name}")
+                        logger.debug(f" Running dual-GPU analysis for {t1w_file.name}")
                         gpu_results = self.gpu_analyzer.analyze_fmri_data_dual_gpu(mock_fmri)
                         
                         # Extract GPU performance metrics
@@ -387,7 +387,7 @@ class RealBrainTrainingSystem:
         Returns:
             Complete training results
         """
-        logger.info("🚀 Starting comprehensive real brain training...")
+        logger.info(" Starting comprehensive real brain training...")
         logger.info(f"Target subjects: {target_subjects}")
         logger.info(f"Max datasets: {max_datasets}")
         
@@ -498,7 +498,7 @@ class RealBrainTrainingSystem:
 
 def main():
     """Run the real brain training system."""
-    print("🧠 Real Brain Dataset Training System")
+    print(" Real Brain Dataset Training System")
     print("=" * 60)
     
     # Check for required tools
@@ -507,34 +507,34 @@ def main():
     # Check AWS CLI
     try:
         subprocess.run(['aws', '--version'], capture_output=True, check=True)
-        print("✅ AWS CLI available")
+        print(" AWS CLI available")
     except:
-        print("⚠️ AWS CLI not found - some downloads may be slower")
+        print(" AWS CLI not found - some downloads may be slower")
         print("   Install with: pip install awscli")
     
     # Check nibabel
     try:
         import nibabel
-        print("✅ nibabel available")
+        print(" nibabel available")
     except ImportError:
-        print("❌ nibabel required - install with: pip install nibabel")
+        print(" nibabel required - install with: pip install nibabel")
         return False
     
     # Check for GPU acceleration modules
     try:
         import pyopencl
         from enhanced_dual_gpu_analyzer import EnhancedDualGPUBrainAnalyzer
-        print("✅ GPU acceleration available")
+        print(" GPU acceleration available")
         print("   AMD Radeon 780M + RX 7700S dual-GPU support")
     except ImportError:
-        print("⚠️ GPU acceleration modules not found")
+        print(" GPU acceleration modules not found")
         print("   Training will use CPU processing")
     
     # Initialize training system
     training_system = RealBrainTrainingSystem()
     
     # Run training (demo with limited subjects)
-    print("\n🚀 Starting real brain dataset training...")
+    print("\n Starting real brain dataset training...")
     print("   Demo mode: Limited to 100 subjects across 3 datasets")
     print("   For full training, increase target_subjects to 1000+")
     
@@ -544,13 +544,13 @@ def main():
     )
     
     if results['status'] == 'success':
-        print("\n✅ Training completed successfully!")
+        print("\n Training completed successfully!")
         print(f"   Datasets processed: {results['datasets_processed']}")
         print(f"   Subjects processed: {results['total_subjects_processed']}")
         print(f"   Features extracted: {results['total_features_extracted']}")
         print(f"   Average success rate: {results['average_success_rate']:.1%}")
     else:
-        print(f"\n❌ Training failed: {results.get('reason', 'Unknown error')}")
+        print(f"\n Training failed: {results.get('reason', 'Unknown error')}")
     
     print("\n📚 Next steps for production training:")
     print("1. Install AWS CLI for faster downloads: pip install awscli")

@@ -84,11 +84,11 @@ class AdvancedAnatomicalDetector:
                 self.atlas_manager = BrainAtlasManager(atlas_name)
                 self.roi_detector = SignalProcessingROIDetector()
                 self.frequency_processor = FrequencyBrainProcessor()
-                print("✅ All components initialized successfully")
+                print(" All components initialized successfully")
             except Exception as e:
-                print(f"⚠️ Error initializing components: {e}")
+                print(f" Error initializing components: {e}")
         
-        print(f"🧠 Advanced Anatomical Detector initialized")
+        print(f" Advanced Anatomical Detector initialized")
         print(f"   Atlas: {atlas_name}")
         print(f"   Confidence threshold: {confidence_threshold}")
         print(f"   Max regions: {max_regions}")
@@ -108,7 +108,7 @@ class AdvancedAnatomicalDetector:
         Returns:
             List of detected anatomical features
         """
-        print("🔍 Detecting anatomical features with advanced AI...")
+        print(" Detecting anatomical features with advanced AI...")
         
         all_features = []
         
@@ -138,12 +138,12 @@ class AdvancedAnatomicalDetector:
         merged_features = self._merge_similar_features(all_features)
         final_features = self._filter_and_rank_features(merged_features)
         
-        print(f"✅ Detected {len(final_features)} high-confidence anatomical features")
+        print(f" Detected {len(final_features)} high-confidence anatomical features")
         return final_features
     
     def _detect_signal_based_features(self, brain_volume: np.ndarray) -> List[AnatomicalFeature]:
         """Detect features using signal processing ROI detector."""
-        print("   🎯 Signal-based ROI detection...")
+        print("    Signal-based ROI detection...")
         
         features = []
         
@@ -162,10 +162,10 @@ class AdvancedAnatomicalDetector:
                     if feature:
                         features.append(feature)
                 
-                print(f"     📊 Found {len(features)} signal-based features")
+                print(f"      Found {len(features)} signal-based features")
                 
             except Exception as e:
-                print(f"     ⚠️ Signal-based detection failed: {e}")
+                print(f"      Signal-based detection failed: {e}")
         
         return features
     
@@ -199,16 +199,16 @@ class AdvancedAnatomicalDetector:
                     )
                     features.append(feature)
                 
-                print(f"     📊 Found {len(features)} frequency-based features")
+                print(f"      Found {len(features)} frequency-based features")
                 
             except Exception as e:
-                print(f"     ⚠️ Frequency-based detection failed: {e}")
+                print(f"      Frequency-based detection failed: {e}")
         
         return features
     
     def _detect_tissue_features(self, tissue_maps: Dict[str, np.ndarray]) -> List[AnatomicalFeature]:
         """Detect features based on tissue probability maps."""
-        print("   🧠 Tissue-based feature detection...")
+        print("    Tissue-based feature detection...")
         
         features = []
         
@@ -250,7 +250,7 @@ class AdvancedAnatomicalDetector:
                 )
                 features.append(feature)
         
-        print(f"     📊 Found {len(features)} tissue-based features")
+        print(f"      Found {len(features)} tissue-based features")
         return features
     
     def _detect_atlas_guided_features(self, brain_volume: np.ndarray) -> List[AnatomicalFeature]:
@@ -312,16 +312,16 @@ class AdvancedAnatomicalDetector:
                             )
                             features.append(feature)
                 
-                print(f"     📊 Found {len(features)} atlas-guided features")
+                print(f"      Found {len(features)} atlas-guided features")
                 
             except Exception as e:
-                print(f"     ⚠️ Atlas-guided detection failed: {e}")
+                print(f"      Atlas-guided detection failed: {e}")
         
         return features
     
     def _detect_morphological_features(self, brain_volume: np.ndarray) -> List[AnatomicalFeature]:
         """Detect features using advanced morphological analysis."""
-        print("   🔬 Morphological feature detection...")
+        print("    Morphological feature detection...")
         
         features = []
         
@@ -361,7 +361,7 @@ class AdvancedAnatomicalDetector:
             )
             features.append(feature)
         
-        print(f"     📊 Found {len(features)} morphological features")
+        print(f"      Found {len(features)} morphological features")
         return features
     
     def _calculate_local_curvature(self, volume: np.ndarray) -> np.ndarray:
@@ -405,7 +405,7 @@ class AdvancedAnatomicalDetector:
     
     def _merge_similar_features(self, features: List[AnatomicalFeature]) -> List[AnatomicalFeature]:
         """Merge features that are spatially close and similar."""
-        print("   🔄 Merging similar features...")
+        print("    Merging similar features...")
         
         if not features:
             return features
@@ -432,12 +432,12 @@ class AdvancedAnatomicalDetector:
             if not merged:
                 merged_features.append(feature)
         
-        print(f"     📊 Merged {len(features)} → {len(merged_features)} features")
+        print(f"      Merged {len(features)} → {len(merged_features)} features")
         return merged_features
     
     def _filter_and_rank_features(self, features: List[AnatomicalFeature]) -> List[AnatomicalFeature]:
         """Filter features by confidence and rank by importance."""
-        print("   🎯 Filtering and ranking features...")
+        print("    Filtering and ranking features...")
         
         # Filter by confidence
         confident_features = [f for f in features if f.confidence >= self.confidence_threshold]
@@ -448,7 +448,7 @@ class AdvancedAnatomicalDetector:
         # Limit to max regions
         final_features = confident_features[:self.max_regions]
         
-        print(f"     📊 Final features: {len(final_features)} (confidence ≥ {self.confidence_threshold})")
+        print(f"      Final features: {len(final_features)} (confidence ≥ {self.confidence_threshold})")
         return final_features
     
     def _create_sphere_mask(self, center: Tuple[int, int, int], shape: Tuple[int, int, int], radius: int) -> np.ndarray:
@@ -505,12 +505,12 @@ class AdvancedAnatomicalDetector:
             return feature
         
         except Exception as e:
-            print(f"     ⚠️ Failed to convert ROI to feature: {e}")
+            print(f"      Failed to convert ROI to feature: {e}")
             return None
 
 def main():
     """Test the advanced anatomical detector."""
-    print("🧠 Testing Advanced Anatomical Detector")
+    print(" Testing Advanced Anatomical Detector")
     print("=" * 60)
     
     # Create detector
@@ -528,16 +528,16 @@ def main():
     # Ventricles (CSF)
     mock_volume[43:48, 50:60, 43:48] = 0.1
     
-    print(f"📊 Processing volume: {volume_shape}")
+    print(f" Processing volume: {volume_shape}")
     
     # Test feature detection
     features = detector.detect_anatomical_features(mock_volume)
     
-    print(f"\n✅ Detection Results:")
+    print(f"\n Detection Results:")
     print(f"   Total features detected: {len(features)}")
     
     # Show top features
-    print(f"\n🏆 Top 10 Features by Confidence:")
+    print(f"\n Top 10 Features by Confidence:")
     for i, feature in enumerate(features[:10]):
         print(f"   {i+1}. {feature.name}")
         print(f"      Confidence: {feature.confidence:.3f}")
@@ -552,7 +552,7 @@ def main():
         method = feature.properties.get('detection_method', 'unknown')
         methods[method] = methods.get(method, 0) + 1
     
-    print(f"📊 Detection Method Distribution:")
+    print(f" Detection Method Distribution:")
     for method, count in methods.items():
         print(f"   {method}: {count} features")
     

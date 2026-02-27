@@ -35,7 +35,7 @@ try:
     HAS_DEPENDENCIES = True
 except ImportError:
     HAS_DEPENDENCIES = False
-    print("⚠️ Warning: Some dependencies not available - limited functionality")
+    print(" Warning: Some dependencies not available - limited functionality")
 
 @dataclass
 class BrainModelInfo:
@@ -64,7 +64,7 @@ class Brain3DInterface:
             self.visualizer = Brain3DVisualizer()
             self.model_generator = Brain3DModelGenerator()
         
-        print("🎮 Brain 3D Interface System initialized")
+        print(" Brain 3D Interface System initialized")
         print("   Ready to load and visualize anatomically labeled brain models")
     
     def load_brain_model(self, model_path: str, model_name: Optional[str] = None) -> bool:
@@ -78,10 +78,10 @@ class Brain3DInterface:
         Returns:
             Success status
         """
-        print(f"📂 Loading brain model from {model_path}...")
+        print(f" Loading brain model from {model_path}...")
         
         if not self.model_generator:
-            print("❌ Model generator not available")
+            print(" Model generator not available")
             return False
         
         try:
@@ -117,7 +117,7 @@ class Brain3DInterface:
                 
                 self.current_model = model_name
                 
-                print(f"✅ Brain model '{model_name}' loaded successfully")
+                print(f" Brain model '{model_name}' loaded successfully")
                 print(f"   Features: {len(features)}")
                 print(f"   Volume shape: {brain_model['shape']}")
                 print(f"   Atlas: {self.model_generator.atlas_name}")
@@ -125,7 +125,7 @@ class Brain3DInterface:
                 return True
             
         except Exception as e:
-            print(f"❌ Error loading brain model: {e}")
+            print(f" Error loading brain model: {e}")
         
         return False
     
@@ -144,7 +144,7 @@ class Brain3DInterface:
         Returns:
             Success status
         """
-        print(f"🧠 Creating brain model '{model_name}' from MRI: {mri_path}...")
+        print(f" Creating brain model '{model_name}' from MRI: {mri_path}...")
         
         try:
             # Create new model generator
@@ -185,13 +185,13 @@ class Brain3DInterface:
                     
                     self.current_model = model_name
                     
-                    print(f"✅ Brain model '{model_name}' created successfully")
+                    print(f" Brain model '{model_name}' created successfully")
                     print(f"   Detected {len(features)} anatomical features")
                     
                     return True
             
         except Exception as e:
-            print(f"❌ Error creating brain model: {e}")
+            print(f" Error creating brain model: {e}")
         
         return False
     
@@ -212,10 +212,10 @@ class Brain3DInterface:
         model_name = model_name or self.current_model
         
         if not model_name or model_name not in self.loaded_models:
-            print("❌ No brain model available for visualization")
+            print(" No brain model available for visualization")
             return None
         
-        print(f"🎨 Creating 3D visualization of '{model_name}'...")
+        print(f" Creating 3D visualization of '{model_name}'...")
         
         model_data = self.loaded_models[model_name]
         features = model_data['features']
@@ -289,7 +289,7 @@ class Brain3DInterface:
             font=dict(color='white', size=12)
         )
         
-        print(f"✅ 3D visualization created with {len([f for f in features if f.confidence >= confidence_threshold])} features")
+        print(f" 3D visualization created with {len([f for f in features if f.confidence >= confidence_threshold])} features")
         return fig
     
     def _add_feature_connections(self, fig: go.Figure, coords: np.ndarray, 
@@ -328,10 +328,10 @@ class Brain3DInterface:
         model_name = model_name or self.current_model
         
         if not model_name or model_name not in self.loaded_models:
-            print("❌ No brain model available for dashboard")
+            print(" No brain model available for dashboard")
             return None
         
-        print(f"📊 Creating model dashboard for '{model_name}'...")
+        print(f" Creating model dashboard for '{model_name}'...")
         
         model_data = self.loaded_models[model_name]
         features = model_data['features']
@@ -436,7 +436,7 @@ class Brain3DInterface:
             font=dict(color='white')
         )
         
-        print(f"✅ Model dashboard created for '{model_name}'")
+        print(f" Model dashboard created for '{model_name}'")
         return fig
     
     def export_model_report(self, model_name: Optional[str] = None, 
@@ -445,14 +445,14 @@ class Brain3DInterface:
         model_name = model_name or self.current_model
         
         if not model_name or model_name not in self.loaded_models:
-            print("❌ No brain model available for export")
+            print(" No brain model available for export")
             return False
         
         output_path = output_path or f"reports/{model_name}_analysis_report.json"
         output_path = Path(output_path)
         output_path.parent.mkdir(parents=True, exist_ok=True)
         
-        print(f"📊 Exporting analysis report for '{model_name}'...")
+        print(f" Exporting analysis report for '{model_name}'...")
         
         model_data = self.loaded_models[model_name]
         features = model_data['features']
@@ -504,11 +504,11 @@ class Brain3DInterface:
             with open(output_path, 'w') as f:
                 json.dump(report, f, indent=2, default=str)
             
-            print(f"✅ Analysis report exported to {output_path}")
+            print(f" Analysis report exported to {output_path}")
             return True
             
         except Exception as e:
-            print(f"❌ Error exporting report: {e}")
+            print(f" Error exporting report: {e}")
             return False
     
     def list_loaded_models(self) -> List[str]:
@@ -525,28 +525,28 @@ class Brain3DInterface:
         """Switch the current active model."""
         if model_name in self.loaded_models:
             self.current_model = model_name
-            print(f"✅ Switched to model '{model_name}'")
+            print(f" Switched to model '{model_name}'")
             return True
         else:
-            print(f"❌ Model '{model_name}' not found")
+            print(f" Model '{model_name}' not found")
             return False
 
 def main():
     """Test the Brain 3D Interface System."""
-    print("🎮 Testing Brain 3D Interface System")
+    print(" Testing Brain 3D Interface System")
     print("=" * 60)
     
     # Create interface
     interface = Brain3DInterface()
     
     # Create a test brain model from mock data
-    print("\n🧠 Creating test brain model...")
+    print("\n Creating test brain model...")
     
     # Mock MRI data path (replace with real data if available)
     test_mri_path = "data/test_mri_volume.nii.gz"
     
     if not Path(test_mri_path).exists():
-        print(f"⚠️ Test MRI not found at {test_mri_path}")
+        print(f" Test MRI not found at {test_mri_path}")
         print("   Creating mock brain model for demonstration...")
         
         # Create a mock model using the generator directly
@@ -582,7 +582,7 @@ def main():
                 }
                 
                 interface.current_model = model_name
-                print(f"✅ Demo model created with {len(features)} features")
+                print(f" Demo model created with {len(features)} features")
     else:
         # Use real MRI data
         success = interface.create_brain_model_from_mri(
@@ -592,12 +592,12 @@ def main():
         )
         
         if not success:
-            print("❌ Failed to create brain model from MRI")
+            print(" Failed to create brain model from MRI")
             return False
     
     # Test visualization
     if interface.current_model:
-        print("\n🎨 Creating 3D visualization...")
+        print("\n Creating 3D visualization...")
         
         # Create 3D visualization
         fig = interface.visualize_brain_model(
@@ -606,23 +606,23 @@ def main():
         )
         
         if fig:
-            print("✅ 3D visualization created")
+            print(" 3D visualization created")
             # fig.show()  # Uncomment to display
         
         # Create dashboard
-        print("\n📊 Creating model dashboard...")
+        print("\n Creating model dashboard...")
         dashboard = interface.create_model_dashboard()
         
         if dashboard:
-            print("✅ Model dashboard created")
+            print(" Model dashboard created")
             # dashboard.show()  # Uncomment to display
         
         # Export report
-        print("\n📊 Exporting analysis report...")
+        print("\n Exporting analysis report...")
         success = interface.export_model_report()
         
         if success:
-            print("✅ Analysis report exported")
+            print(" Analysis report exported")
     
     # Show summary
     print("\n" + "=" * 60)
@@ -630,7 +630,7 @@ def main():
     print("=" * 60)
     
     loaded_models = interface.list_loaded_models()
-    print(f"\n📊 Interface Summary:")
+    print(f"\n Interface Summary:")
     print(f"   Loaded models: {len(loaded_models)}")
     
     for model_name in loaded_models:

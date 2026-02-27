@@ -21,7 +21,7 @@ try:
     from fmri_data_loader import fMRIDataLoader
     HAS_PHASE2_MODULES = True
 except ImportError as e:
-    print(f"⚠️ Phase 2 modules not available: {e}")
+    print(f" Phase 2 modules not available: {e}")
     HAS_PHASE2_MODULES = False
 
 class GPUAcceleratedBrainAnalyzer:
@@ -51,7 +51,7 @@ class GPUAcceleratedBrainAnalyzer:
         self.gpu_times = []
         self.cpu_times = []
         
-        print("🚀 Initializing GPU-Accelerated Brain Analyzer...")
+        print(" Initializing GPU-Accelerated Brain Analyzer...")
         
         # Load GPU library
         if self._load_gpu_library(gpu_lib_path):
@@ -67,7 +67,7 @@ class GPUAcceleratedBrainAnalyzer:
                 gpu_lib_path = current_dir / "build" / "bin" / "Release" / "brain_gpu_lib.dll"
             
             if not Path(gpu_lib_path).exists():
-                print(f"⚠️ GPU library not found at: {gpu_lib_path}")
+                print(f" GPU library not found at: {gpu_lib_path}")
                 print("   GPU acceleration will not be available")
                 return False
             
@@ -80,17 +80,17 @@ class GPUAcceleratedBrainAnalyzer:
             # Initialize GPU
             if self.gpu_lib.init_brain_gpu_accelerator():
                 self.gpu_initialized = True
-                print("✅ GPU acceleration library loaded successfully")
+                print(" GPU acceleration library loaded successfully")
                 
                 # Show GPU performance info
                 self.gpu_lib.gpu_get_performance_info()
                 return True
             else:
-                print("❌ Failed to initialize GPU accelerator")
+                print(" Failed to initialize GPU accelerator")
                 return False
                 
         except Exception as e:
-            print(f"❌ Error loading GPU library: {e}")
+            print(f" Error loading GPU library: {e}")
             return False
     
     def _define_gpu_functions(self):
@@ -138,7 +138,7 @@ class GPUAcceleratedBrainAnalyzer:
     def _initialize_phase2_components(self):
         """Initialize Phase 2 analysis components."""
         if not HAS_PHASE2_MODULES:
-            print("⚠️ Phase 2 modules not available - limited functionality")
+            print(" Phase 2 modules not available - limited functionality")
             return
         
         try:
@@ -147,10 +147,10 @@ class GPUAcceleratedBrainAnalyzer:
             self.atlas_manager = BrainAtlasManager('harvard_oxford')
             self.data_loader = fMRIDataLoader()
             
-            print("✅ Phase 2 components initialized")
+            print(" Phase 2 components initialized")
             
         except Exception as e:
-            print(f"⚠️ Error initializing Phase 2 components: {e}")
+            print(f" Error initializing Phase 2 components: {e}")
     
     def gpu_preprocess_timeseries(self, 
                                 time_series: np.ndarray,
@@ -168,7 +168,7 @@ class GPUAcceleratedBrainAnalyzer:
             Preprocessed time series data
         """
         if not self.gpu_initialized:
-            print("⚠️ GPU not initialized, falling back to CPU")
+            print(" GPU not initialized, falling back to CPU")
             return self._cpu_preprocess_timeseries(time_series, filter_low, filter_high)
         
         print("🖥️ GPU-accelerated preprocessing...")
@@ -194,10 +194,10 @@ class GPUAcceleratedBrainAnalyzer:
         
         if success:
             result = output_data.T  # Convert back to timepoints x regions
-            print(f"✅ GPU preprocessing completed in {gpu_time*1000:.2f} ms")
+            print(f" GPU preprocessing completed in {gpu_time*1000:.2f} ms")
             return result
         else:
-            print("❌ GPU preprocessing failed, falling back to CPU")
+            print(" GPU preprocessing failed, falling back to CPU")
             return self._cpu_preprocess_timeseries(time_series, filter_low, filter_high)
     
     def gpu_compute_correlation_matrix(self, time_series: np.ndarray) -> np.ndarray:
@@ -211,7 +211,7 @@ class GPUAcceleratedBrainAnalyzer:
             Correlation matrix (regions x regions)
         """
         if not self.gpu_initialized:
-            print("⚠️ GPU not initialized, falling back to CPU")
+            print(" GPU not initialized, falling back to CPU")
             return self._cpu_compute_correlation_matrix(time_series)
         
         print("🖥️ GPU-accelerated correlation matrix computation...")
@@ -235,10 +235,10 @@ class GPUAcceleratedBrainAnalyzer:
         self.gpu_times.append(gpu_time)
         
         if success:
-            print(f"✅ GPU correlation matrix computed in {gpu_time*1000:.2f} ms")
+            print(f" GPU correlation matrix computed in {gpu_time*1000:.2f} ms")
             return correlation_matrix.astype(np.float64)  # Convert back to double precision
         else:
-            print("❌ GPU correlation computation failed, falling back to CPU")
+            print(" GPU correlation computation failed, falling back to CPU")
             return self._cpu_compute_correlation_matrix(time_series)
     
     def gpu_compute_network_metrics(self, 
@@ -255,7 +255,7 @@ class GPUAcceleratedBrainAnalyzer:
             Tuple of (node_strength, clustering_coefficients)
         """
         if not self.gpu_initialized:
-            print("⚠️ GPU not initialized, falling back to CPU")
+            print(" GPU not initialized, falling back to CPU")
             return self._cpu_compute_network_metrics(correlation_matrix, threshold)
         
         print("🖥️ GPU-accelerated network metrics computation...")
@@ -281,10 +281,10 @@ class GPUAcceleratedBrainAnalyzer:
         self.gpu_times.append(gpu_time)
         
         if success:
-            print(f"✅ GPU network metrics computed in {gpu_time*1000:.2f} ms")
+            print(f" GPU network metrics computed in {gpu_time*1000:.2f} ms")
             return node_strength.astype(np.float64), clustering_coeff.astype(np.float64)
         else:
-            print("❌ GPU network metrics computation failed, falling back to CPU")
+            print(" GPU network metrics computation failed, falling back to CPU")
             return self._cpu_compute_network_metrics(correlation_matrix, threshold)
     
     def analyze_fmri_data_accelerated(self, 
@@ -300,7 +300,7 @@ class GPUAcceleratedBrainAnalyzer:
         Returns:
             Comprehensive analysis results
         """
-        print("🧠 Starting GPU-accelerated fMRI analysis...")
+        print(" Starting GPU-accelerated fMRI analysis...")
         analysis_start = time.time()
         
         # Transpose to timepoints x regions for consistency
@@ -340,7 +340,7 @@ class GPUAcceleratedBrainAnalyzer:
         
         # Step 4: Phase 2 analysis integration
         if self.network_analyzer is not None:
-            print("🔗 Integrating with Phase 2 analysis...")
+            print(" Integrating with Phase 2 analysis...")
             
             # Load data into network analyzer
             self.network_analyzer.load_time_series(preprocessed_data)
@@ -376,7 +376,7 @@ class GPUAcceleratedBrainAnalyzer:
         results['gpu_times'] = self.gpu_times.copy()
         results['performance_summary'] = self.get_performance_summary()
         
-        print(f"✅ GPU-accelerated analysis completed in {total_time:.2f} seconds")
+        print(f" GPU-accelerated analysis completed in {total_time:.2f} seconds")
         
         return results
     
@@ -400,7 +400,7 @@ class GPUAcceleratedBrainAnalyzer:
         correlation_matrix = np.corrcoef(time_series.T)
         cpu_time = time.time() - start_time
         self.cpu_times.append(cpu_time)
-        print(f"✅ CPU correlation matrix computed in {cpu_time*1000:.2f} ms")
+        print(f" CPU correlation matrix computed in {cpu_time*1000:.2f} ms")
         return correlation_matrix
     
     def _cpu_compute_network_metrics(self, correlation_matrix: np.ndarray, threshold: float) -> Tuple[np.ndarray, np.ndarray]:
@@ -418,7 +418,7 @@ class GPUAcceleratedBrainAnalyzer:
         
         cpu_time = time.time() - start_time
         self.cpu_times.append(cpu_time)
-        print(f"✅ CPU network metrics computed in {cpu_time*1000:.2f} ms")
+        print(f" CPU network metrics computed in {cpu_time*1000:.2f} ms")
         
         return node_strength, clustering_coeff
     
@@ -454,7 +454,7 @@ class GPUAcceleratedBrainAnalyzer:
 
 def main():
     """Test the GPU-accelerated brain analyzer."""
-    print("🚀 GPU-Accelerated Brain Analysis Test")
+    print(" GPU-Accelerated Brain Analysis Test")
     print("=" * 60)
     
     try:
@@ -462,7 +462,7 @@ def main():
         analyzer = GPUAcceleratedBrainAnalyzer()
         
         if not HAS_PHASE2_MODULES:
-            print("⚠️ Phase 2 modules not available - testing GPU functions only")
+            print(" Phase 2 modules not available - testing GPU functions only")
             
             # Create mock data for GPU testing
             n_regions, n_timepoints = 100, 200
@@ -477,14 +477,14 @@ def main():
             # Test GPU network metrics
             strength, clustering = analyzer.gpu_compute_network_metrics(correlation)
             
-            print(f"\n📊 GPU Test Results:")
+            print(f"\n GPU Test Results:")
             print(f"   Processed data shape: {processed.shape}")
             print(f"   Correlation matrix shape: {correlation.shape}")
             print(f"   Node strength range: [{strength.min():.3f}, {strength.max():.3f}]")
             
         else:
             # Full integration test with Phase 2
-            print("🧠 Loading sample fMRI data...")
+            print(" Loading sample fMRI data...")
             
             # Get sample data
             loader = fMRIDataLoader()
@@ -496,7 +496,7 @@ def main():
             # Run complete GPU-accelerated analysis
             results = analyzer.analyze_fmri_data_accelerated(sample_data, use_gpu=True)
             
-            print(f"\n📊 GPU-Accelerated Analysis Results:")
+            print(f"\n GPU-Accelerated Analysis Results:")
             print(f"   Data shape: {results['data_shape']}")
             print(f"   GPU acceleration used: {results['gpu_acceleration_used']}")
             print(f"   Correlation matrix: {results['correlation_matrix'].shape}")
@@ -507,14 +507,14 @@ def main():
         
         # Performance summary
         perf = analyzer.get_performance_summary()
-        print(f"\n⚡ Performance Summary:")
+        print(f"\n Performance Summary:")
         for key, value in perf.items():
             print(f"   {key}: {value}")
         
         print("\n🎉 GPU-accelerated brain analysis test completed!")
         
     except Exception as e:
-        print(f"❌ Test failed: {e}")
+        print(f" Test failed: {e}")
         import traceback
         traceback.print_exc()
         return False

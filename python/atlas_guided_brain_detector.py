@@ -100,7 +100,7 @@ class AtlasGuidedBrainDetector:
         start_time = time.time()
         
         if not HAS_DEPENDENCIES or self.primary_atlas is None:
-            print("❌ Atlas dependencies not available")
+            print(" Atlas dependencies not available")
             return []
         
         detected_regions = []
@@ -116,7 +116,7 @@ class AtlasGuidedBrainDetector:
             if i >= 100:  # Limit for demo
                 break
                 
-            print(f"     🔍 Processing {region_name} (region {i+1}/{min(len(atlas_coords), 100)})")
+            print(f"      Processing {region_name} (region {i+1}/{min(len(atlas_coords), 100)})")
             
             # Step 2a: Transform atlas coordinate to subject space
             subject_coord = self._transform_atlas_to_subject(
@@ -161,9 +161,9 @@ class AtlasGuidedBrainDetector:
                 )
                 
                 detected_regions.append(atlas_region)
-                print(f"       ✅ {region_name}: {confidence:.4f} confidence")
+                print(f"        {region_name}: {confidence:.4f} confidence")
             else:
-                print(f"       ❌ {region_name}: {confidence:.4f} < {self.accuracy_threshold}")
+                print(f"        {region_name}: {confidence:.4f} < {self.accuracy_threshold}")
         
         # Step 3: 4D temporal consistency (if fMRI provided)
         if fmri_4d is not None:
@@ -174,7 +174,7 @@ class AtlasGuidedBrainDetector:
         duration = time.time() - start_time
         high_accuracy_count = len([r for r in detected_regions if r.confidence_score >= self.accuracy_threshold])
         
-        print(f"✅ Atlas-guided detection completed in {duration:.2f}s")
+        print(f" Atlas-guided detection completed in {duration:.2f}s")
         print(f"   Regions detected: {len(detected_regions)}")
         print(f"   High accuracy (>{self.accuracy_threshold}): {high_accuracy_count}")
         print(f"   Average confidence: {np.mean([r.confidence_score for r in detected_regions]):.4f}")
@@ -456,11 +456,11 @@ class AtlasGuidedBrainDetector:
                         region.validation_metrics['temporal_consistency'] = min_temporal_score
                         consistent_regions.append(region)
             
-            print(f"     📊 Temporal consistency: {len(consistent_regions)}/{len(regions)} regions maintained >{self.accuracy_threshold} accuracy")
+            print(f"      Temporal consistency: {len(consistent_regions)}/{len(regions)} regions maintained >{self.accuracy_threshold} accuracy")
             return consistent_regions
             
         except Exception as e:
-            print(f"     ⚠️ Temporal consistency check failed: {e}")
+            print(f"      Temporal consistency check failed: {e}")
             return regions
     
     def get_high_accuracy_regions(self) -> List[AtlasGuidedRegion]:
@@ -496,7 +496,7 @@ def demo_atlas_guided_detection():
     )
     
     # Create realistic brain volume
-    print("🧠 Creating realistic brain volume...")
+    print(" Creating realistic brain volume...")
     brain_volume = np.random.rand(91, 109, 91) * 0.3 + 0.5
     
     # Add anatomical structures
@@ -505,7 +505,7 @@ def demo_atlas_guided_detection():
     brain_volume[28:38, 28:38, 22:32] = 0.1   # Ventricles
     
     # Optional: Create 4D fMRI for temporal consistency
-    print("📈 Creating 4D fMRI for temporal consistency...")
+    print(" Creating 4D fMRI for temporal consistency...")
     n_timepoints = 50
     fmri_4d = np.random.rand(n_timepoints, 91, 109, 91) * 0.1 + 0.3
     
@@ -525,14 +525,14 @@ def demo_atlas_guided_detection():
     report = detector.generate_accuracy_report()
     
     # Display results
-    print(f"\n📊 Atlas-Guided Detection Results:")
+    print(f"\n Atlas-Guided Detection Results:")
     print(f"   Total regions detected: {report['total_regions_detected']}")
     print(f"   High accuracy regions (>{report['accuracy_threshold']}): {report['high_accuracy_regions']}")
     print(f"   Success rate: {report['accuracy_rate']:.1%}")
     print(f"   Average confidence: {report['average_confidence']:.4f}")
     
     if regions:
-        print(f"\n🏆 Top 5 High-Accuracy Regions:")
+        print(f"\n Top 5 High-Accuracy Regions:")
         sorted_regions = sorted(regions, key=lambda r: r.confidence_score, reverse=True)[:5]
         for i, region in enumerate(sorted_regions, 1):
             print(f"   {i}. Atlas region (confidence: {region.confidence_score:.4f})")
@@ -540,7 +540,7 @@ def demo_atlas_guided_detection():
             print(f"      Subject coords: {region.subject_coordinates}")
             print(f"      Validation metrics: {region.validation_metrics}")
     
-    print("\n✅ Atlas-guided detection demo completed!")
+    print("\n Atlas-guided detection demo completed!")
     return regions, report
 
 if __name__ == "__main__":

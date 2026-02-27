@@ -61,15 +61,15 @@ class SpatioTemporalBrainRegistrator:
             try:
                 from blue_brain_atlas_integrator import BlueBrainAtlasIntegrator
                 self.bb_integrator = BlueBrainAtlasIntegrator()
-                print("🔬 Blue Brain Cell Atlas integrator initialized")
+                print(" Blue Brain Cell Atlas integrator initialized")
             except ImportError:
-                print("⚠️ Blue Brain Atlas integrator not available, using standard registration")
+                print(" Blue Brain Atlas integrator not available, using standard registration")
                 self.enable_blue_brain = False
                 self.bb_integrator = None
         else:
             self.bb_integrator = None
         
-        print("🧠 Initializing 4D Spatial-Temporal Brain Registration System")
+        print(" Initializing 4D Spatial-Temporal Brain Registration System")
         print(f"   Registration method: {registration_method}")
         print(f"   Blue Brain Atlas enhanced: {self.enable_blue_brain}")
         if self.enable_blue_brain:
@@ -91,7 +91,7 @@ class SpatioTemporalBrainRegistrator:
         Returns:
             List of registration results for each timepoint
         """
-        print(f"🔄 Registering 3D model to 4D fMRI sequence: {fmri_4d.shape}")
+        print(f" Registering 3D model to 4D fMRI sequence: {fmri_4d.shape}")
         
         # Extract reference anatomy from 3D model
         reference_volume = brain_model.get('volume', brain_model.get('labeled_volume'))
@@ -101,7 +101,7 @@ class SpatioTemporalBrainRegistrator:
         # Extract cellular composition if available from Blue Brain Atlas
         self.cellular_composition = brain_model.get('cellular_composition', {})
         if self.enable_blue_brain and self.cellular_composition:
-            print(f"🔬 Using Blue Brain cellular data for {len(self.cellular_composition)} regions")
+            print(f" Using Blue Brain cellular data for {len(self.cellular_composition)} regions")
             # Enhance anatomical features with cellular information
             anatomical_features = self._enhance_features_with_cellular_data(anatomical_features)
         
@@ -144,9 +144,9 @@ class SpatioTemporalBrainRegistrator:
             
             if (t + 1) % 20 == 0:
                 avg_score = np.mean([r.alignment_score for r in results[-20:]])
-                print(f"     📈 Average alignment score (last 20): {avg_score:.3f}")
+                print(f"      Average alignment score (last 20): {avg_score:.3f}")
         
-        print(f"✅ 4D registration completed: {len(results)} timepoints processed")
+        print(f" 4D registration completed: {len(results)} timepoints processed")
         return results
     
     def _enhance_features_with_cellular_data(self, features: List[Dict]) -> List[Dict]:
@@ -589,7 +589,7 @@ class SpatioTemporalBrainRegistrator:
         Returns:
             Dictionary mapping anatomical regions to their temporal signals
         """
-        print("🧬 Extracting anatomical attribution from 4D registration...")
+        print(" Extracting anatomical attribution from 4D registration...")
         
         # Collect all unique anatomical regions
         all_regions = set()
@@ -631,7 +631,7 @@ class SpatioTemporalBrainRegistrator:
             
             region_signals[region_name] = np.array(temporal_signal)
         
-        print(f"✅ Extracted signals for {len(region_signals)} anatomical regions")
+        print(f" Extracted signals for {len(region_signals)} anatomical regions")
         return region_signals
     
     def save_registration_results(self, 
@@ -665,7 +665,7 @@ class SpatioTemporalBrainRegistrator:
         with open(output_path, 'w') as f:
             json.dump(output_data, f, indent=2)
         
-        print(f"💾 Registration results saved to {output_path}")
+        print(f" Registration results saved to {output_path}")
 
 
 def demo_4d_registration():
@@ -674,7 +674,7 @@ def demo_4d_registration():
     print("=" * 60)
     
     # Create mock 3D brain model
-    print("🧠 Creating mock 3D brain model...")
+    print(" Creating mock 3D brain model...")
     brain_model = {
         'volume': np.random.rand(64, 64, 48),
         'shape': (64, 64, 48),
@@ -695,7 +695,7 @@ def demo_4d_registration():
     print(f"   Created model with {len(anatomical_features)} anatomical features")
     
     # Create mock 4D fMRI data
-    print("📈 Creating mock 4D fMRI time series...")
+    print(" Creating mock 4D fMRI time series...")
     n_timepoints = 20
     fmri_4d = np.random.rand(n_timepoints, 64, 64, 48)
     
@@ -713,11 +713,11 @@ def demo_4d_registration():
     print(f"   Created 4D fMRI data: {fmri_4d.shape}")
     
     # Initialize registration system
-    print("🔄 Initializing registration system...")
+    print(" Initializing registration system...")
     registrator = SpatioTemporalBrainRegistrator(registration_method='mutual_information')
     
     # Perform 4D registration
-    print("⚡ Performing 4D spatial-temporal registration...")
+    print(" Performing 4D spatial-temporal registration...")
     start_time = time.time()
     
     registration_results = registrator.register_model_to_fmri_sequence(
@@ -727,17 +727,17 @@ def demo_4d_registration():
     registration_time = time.time() - start_time
     
     # Extract anatomical attribution
-    print("🧬 Extracting anatomical attribution...")
+    print(" Extracting anatomical attribution...")
     region_signals = registrator.get_anatomical_attribution(fmri_4d, registration_results)
     
     # Display results
-    print("\n📊 Registration Results:")
+    print("\n Registration Results:")
     print(f"   Timepoints processed: {len(registration_results)}")
     print(f"   Registration time: {registration_time:.2f}s")
     print(f"   Average alignment score: {np.mean([r.alignment_score for r in registration_results]):.3f}")
     print(f"   Average confidence: {np.mean([r.confidence for r in registration_results]):.3f}")
     
-    print(f"\n🧬 Anatomical Attribution:")
+    print(f"\n Anatomical Attribution:")
     print(f"   Regions tracked: {len(region_signals)}")
     for region_name, signal in list(region_signals.items())[:5]:
         print(f"   {region_name}: signal std = {np.std(signal):.4f}")
@@ -746,7 +746,7 @@ def demo_4d_registration():
     output_path = "demo_4d_registration_results.json"
     registrator.save_registration_results(registration_results, output_path)
     
-    print(f"\n✅ 4D Registration Demo Completed!")
+    print(f"\n 4D Registration Demo Completed!")
     print(f"   Results saved to: {output_path}")
     
     return registration_results, region_signals

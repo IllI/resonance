@@ -213,7 +213,7 @@ class ComprehensiveBrainTrainingOrchestrator:
         if HAS_TRAINING_MODULES and config.use_gpu_acceleration:
             try:
                 self.parallel_trainer = BrainModelParallelTrainer(use_dual_gpu=config.use_gpu_acceleration)
-                logger.info("✅ Dual-GPU parallel training system initialized")
+                logger.info(" Dual-GPU parallel training system initialized")
                 logger.info(f"   AMD Radeon 780M + RX 7700S acceleration enabled")
                 logger.info(f"   Parallel training: {'ENABLED' if config.enable_parallel_training else 'DISABLED'}")
             except Exception as e:
@@ -234,7 +234,7 @@ class ComprehensiveBrainTrainingOrchestrator:
     
     def discover_all_available_datasets(self) -> List[Dict]:
         """Discover brain datasets from all available sources."""
-        logger.info("🔍 Discovering brain datasets from all sources...")
+        logger.info(" Discovering brain datasets from all sources...")
         
         all_datasets = []
         
@@ -266,7 +266,7 @@ class ComprehensiveBrainTrainingOrchestrator:
         Returns:
             Selected datasets for training
         """
-        logger.info("🎯 Selecting optimal datasets for training...")
+        logger.info(" Selecting optimal datasets for training...")
         
         selected_datasets = []
         total_subjects = 0
@@ -306,7 +306,7 @@ class ComprehensiveBrainTrainingOrchestrator:
     
     def download_selected_datasets(self, selected_datasets: List[Dict]) -> List[Dict]:
         """Download all selected datasets in parallel."""
-        logger.info("📥 Downloading selected datasets...")
+        logger.info(" Downloading selected datasets...")
         
         downloaded_datasets = []
         
@@ -326,9 +326,9 @@ class ComprehensiveBrainTrainingOrchestrator:
                     result = future.result()
                     if result['success']:
                         downloaded_datasets.append(result['dataset_info'])
-                        logger.info(f"✅ Downloaded {dataset['id']}")
+                        logger.info(f" Downloaded {dataset['id']}")
                     else:
-                        logger.warning(f"❌ Failed to download {dataset['id']}")
+                        logger.warning(f" Failed to download {dataset['id']}")
                 
                 except Exception as e:
                     logger.error(f"Error downloading {dataset['id']}: {e}")
@@ -368,7 +368,7 @@ class ComprehensiveBrainTrainingOrchestrator:
     
     def process_all_datasets(self, downloaded_datasets: List[Dict]) -> List[DatasetResult]:
         """Process all downloaded datasets with all atlas types."""
-        logger.info("🧠 Processing all datasets with multiple atlases...")
+        logger.info(" Processing all datasets with multiple atlases...")
         
         all_results = []
         
@@ -402,7 +402,7 @@ class ComprehensiveBrainTrainingOrchestrator:
             
             # Use parallel GPU training if available
             if self.parallel_trainer and self.config.enable_parallel_training:
-                logger.info("🔥 Using dual-GPU parallel processing")
+                logger.info(" Using dual-GPU parallel processing")
                 
                 # Convert brain volume paths to strings for the parallel trainer
                 volume_paths = [str(vol) for vol in brain_volumes]
@@ -421,12 +421,12 @@ class ComprehensiveBrainTrainingOrchestrator:
                 total_features = processed_subjects * 150  # Estimate features per volume
                 success_rate = 0.95  # High success rate with GPU acceleration
                 
-                logger.info(f"✅ Parallel GPU processing completed in {processing_time:.2f}s")
-                logger.info(f"🚀 Speedup: {training_results['training_summary'].get('speedup_estimate', 1):.1f}x")
+                logger.info(f" Parallel GPU processing completed in {processing_time:.2f}s")
+                logger.info(f" Speedup: {training_results['training_summary'].get('speedup_estimate', 1):.1f}x")
                 
             else:
                 # Fallback to standard processing
-                logger.info("⚠️ Using standard CPU processing")
+                logger.info(" Using standard CPU processing")
                 
                 # Use the real brain training system processor
                 processing_result = self.openneuro_system.processor.process_dataset(
@@ -463,7 +463,7 @@ class ComprehensiveBrainTrainingOrchestrator:
     
     def evaluate_model_performance(self, dataset_results: List[DatasetResult]) -> Dict:
         """Evaluate overall model performance across all datasets."""
-        logger.info("📊 Evaluating overall model performance...")
+        logger.info(" Evaluating overall model performance...")
         
         if not dataset_results:
             return {'error': 'No results to evaluate'}
@@ -504,7 +504,7 @@ class ComprehensiveBrainTrainingOrchestrator:
     
     def generate_comprehensive_report(self, results: ComprehensiveTrainingResults):
         """Generate comprehensive training report."""
-        logger.info("📝 Generating comprehensive training report...")
+        logger.info(" Generating comprehensive training report...")
         
         report_file = self.reports_dir / f"{self.training_id}_comprehensive_report.json"
         
@@ -544,7 +544,7 @@ class ComprehensiveBrainTrainingOrchestrator:
     
     def run_comprehensive_training(self) -> ComprehensiveTrainingResults:
         """Run the complete comprehensive training pipeline."""
-        logger.info("🚀 Starting comprehensive brain model training...")
+        logger.info(" Starting comprehensive brain model training...")
         logger.info(f"Configuration: {self.config}")
         
         start_time = time.time()
@@ -626,7 +626,7 @@ class ComprehensiveBrainTrainingOrchestrator:
             
             self.generate_comprehensive_report(results)
             
-            logger.info("✅ Comprehensive training completed successfully!")
+            logger.info(" Comprehensive training completed successfully!")
             logger.info(f"Total time: {results.total_duration:.1f}s")
             logger.info(f"Subjects processed: {results.total_subjects_processed}")
             logger.info(f"Features extracted: {results.total_features_extracted}")
@@ -635,12 +635,12 @@ class ComprehensiveBrainTrainingOrchestrator:
             if self.parallel_trainer:
                 logger.info("🛑 Shutting down parallel training system...")
                 self.parallel_trainer.shutdown()
-                logger.info("✅ Parallel training system shutdown complete")
+                logger.info(" Parallel training system shutdown complete")
             
             return results
             
         except Exception as e:
-            logger.error(f"❌ Comprehensive training failed: {e}")
+            logger.error(f" Comprehensive training failed: {e}")
             
             # Cleanup on error
             if hasattr(self, 'parallel_trainer') and self.parallel_trainer:
@@ -662,7 +662,7 @@ def main():
     
     args = parser.parse_args()
     
-    print("🧠 Comprehensive Brain Model Training System")
+    print(" Comprehensive Brain Model Training System")
     print("=" * 60)
     print(f"Target subjects: {args.subjects}")
     print(f"Max datasets: {args.datasets}")
@@ -695,7 +695,7 @@ def main():
         return True
         
     except Exception as e:
-        print(f"\n❌ FAILED: {e}")
+        print(f"\n FAILED: {e}")
         return False
 
 if __name__ == "__main__":

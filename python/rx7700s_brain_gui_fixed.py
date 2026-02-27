@@ -22,7 +22,7 @@ class RX7700SBrainGUIFixed:
     def __init__(self):
         """Initialize the fixed brain GUI."""
         self.root = tk.Tk()
-        self.root.title("🧠 RX 7700S Brain Analyzer - Fixed Version")
+        self.root.title(" RX 7700S Brain Analyzer - Fixed Version")
         self.root.geometry("1200x800")
         self.root.configure(bg='#1a1a1a')
         
@@ -45,7 +45,7 @@ class RX7700SBrainGUIFixed:
         title_frame.pack(fill=tk.X, padx=20, pady=10)
         
         title_label = tk.Label(title_frame, 
-                              text="🧠 RX 7700S Brain Analyzer - Fixed Version",
+                              text=" RX 7700S Brain Analyzer - Fixed Version",
                               bg='#1a1a1a', fg='#00ff88',
                               font=('Arial', 18, 'bold'))
         title_label.pack()
@@ -85,7 +85,7 @@ class RX7700SBrainGUIFixed:
     def setup_control_panel(self, parent):
         """Setup the control panel."""
         # GPU Info Section
-        gpu_frame = tk.LabelFrame(parent, text="🎯 GPU Information", 
+        gpu_frame = tk.LabelFrame(parent, text=" GPU Information", 
                                  bg='#2a2a2a', fg='white',
                                  font=('Arial', 12, 'bold'))
         gpu_frame.pack(fill=tk.X, padx=10, pady=10)
@@ -95,7 +95,7 @@ class RX7700SBrainGUIFixed:
         self.gpu_info_text.pack(fill=tk.X, padx=5, pady=5)
         
         # Data Loading Section
-        data_frame = tk.LabelFrame(parent, text="📁 Brain Data", 
+        data_frame = tk.LabelFrame(parent, text=" Brain Data", 
                                   bg='#2a2a2a', fg='white',
                                   font=('Arial', 12, 'bold'))
         data_frame.pack(fill=tk.X, padx=10, pady=10)
@@ -120,7 +120,7 @@ class RX7700SBrainGUIFixed:
         self.data_info_label.pack(pady=5)
         
         # Analysis Section
-        analysis_frame = tk.LabelFrame(parent, text="🧠 Brain Analysis", 
+        analysis_frame = tk.LabelFrame(parent, text=" Brain Analysis", 
                                       bg='#2a2a2a', fg='white',
                                       font=('Arial', 12, 'bold'))
         analysis_frame.pack(fill=tk.X, padx=10, pady=10)
@@ -143,7 +143,7 @@ class RX7700SBrainGUIFixed:
         surface_check.pack(anchor='w', padx=5, pady=5)
         
         # Analyze button
-        self.analyze_btn = tk.Button(analysis_frame, text="🚀 Analyze on RX 7700S",
+        self.analyze_btn = tk.Button(analysis_frame, text=" Analyze on RX 7700S",
                                     command=self.start_analysis,
                                     bg='#ff6b35', fg='white',
                                     font=('Arial', 12, 'bold'),
@@ -158,16 +158,34 @@ class RX7700SBrainGUIFixed:
         self.progress_label.pack(pady=5)
         
         # Monitor GPU button
-        monitor_btn = tk.Button(parent, text="📊 Monitor GPU Usage",
+        monitor_btn = tk.Button(parent, text=" Monitor GPU Usage",
                                command=self.open_task_manager,
                                bg='#9C27B0', fg='white',
                                font=('Arial', 11, 'bold'))
         monitor_btn.pack(fill=tk.X, padx=10, pady=10)
+
+        # Cellular View Section (New)
+        cellular_frame = tk.LabelFrame(parent, text=" Cellular View", 
+                                      bg='#2a2a2a', fg='white',
+                                      font=('Arial', 12, 'bold'))
+        cellular_frame.pack(fill=tk.X, padx=10, pady=10)
+        
+        self.neuroglancer_btn = tk.Button(cellular_frame, text="Explore H01 Sample",
+                                         command=self.launch_neuroglancer,
+                                         bg='#E91E63', fg='white',
+                                         font=('Arial', 11, 'bold'),
+                                         height=2)
+        self.neuroglancer_btn.pack(fill=tk.X, padx=5, pady=5)
+        
+        self.cellular_info = tk.Label(cellular_frame, text="View 8nm resolution EM data",
+                                     bg='#2a2a2a', fg='gray',
+                                     font=('Arial', 9))
+        self.cellular_info.pack(pady=2)
     
     def setup_results_panel(self, parent):
         """Setup the results panel."""
         # Results title
-        results_title = tk.Label(parent, text="📊 Analysis Results",
+        results_title = tk.Label(parent, text=" Analysis Results",
                                 bg='#2a2a2a', fg='white',
                                 font=('Arial', 14, 'bold'))
         results_title.pack(pady=10)
@@ -184,7 +202,7 @@ class RX7700SBrainGUIFixed:
         scrollbar.config(command=self.results_text.yview)
         
         # Initial message
-        self.log_result("🧠 RX 7700S Brain Analyzer - Fixed Version")
+        self.log_result(" RX 7700S Brain Analyzer - Fixed Version")
         self.log_result("=" * 50)
         self.log_result("This version uses successful GPU selection methods:")
         self.log_result("• HIP/ROCm environment variables")
@@ -221,7 +239,7 @@ class RX7700SBrainGUIFixed:
     
     def on_analyzer_initialized(self, device_info):
         """Called when analyzer is successfully initialized."""
-        self.status_label.config(text=f"✅ RX 7700S Ready: {device_info['name']}", fg='lightgreen')
+        self.status_label.config(text=f" RX 7700S Ready: {device_info['name']}", fg='lightgreen')
         
         # Update GPU info panel
         self.gpu_info_text.delete(1.0, tk.END)
@@ -236,7 +254,7 @@ class RX7700SBrainGUIFixed:
         self.load_btn.config(state=tk.NORMAL)
         self.generate_btn.config(state=tk.NORMAL)
         
-        self.log_result("✅ RX 7700S analyzer initialized successfully!")
+        self.log_result(" RX 7700S analyzer initialized successfully!")
         self.log_result(f"   Device: {device_info['name']}")
         self.log_result(f"   Memory: {device_info['memory_gb']} GB")
         self.log_result(f"   Compute Units: {device_info['compute_units']}")
@@ -245,7 +263,7 @@ class RX7700SBrainGUIFixed:
     
     def on_analyzer_failed(self, error):
         """Called when analyzer initialization fails."""
-        self.status_label.config(text=f"❌ RX 7700S initialization failed", fg='red')
+        self.status_label.config(text=f" RX 7700S initialization failed", fg='red')
         
         self.gpu_info_text.delete(1.0, tk.END)
         self.gpu_info_text.insert(tk.END, f"ERROR: {error}\n\n")
@@ -254,7 +272,7 @@ class RX7700SBrainGUIFixed:
         self.gpu_info_text.insert(tk.END, "2. Restart computer\n")
         self.gpu_info_text.insert(tk.END, "3. Check Device Manager")
         
-        self.log_result(f"❌ RX 7700S initialization failed: {error}")
+        self.log_result(f" RX 7700S initialization failed: {error}")
         self.log_result("")
         self.log_result("Troubleshooting steps:")
         self.log_result("1. Update AMD drivers to latest version")
@@ -276,7 +294,7 @@ class RX7700SBrainGUIFixed:
             return
         
         try:
-            self.brain_data = np.load(file_path)
+            self.brain_data = np.load(file_path, allow_pickle=True)
             
             if len(self.brain_data.shape) != 3:
                 messagebox.showerror("Error", "Brain data must be 3D volume")
@@ -285,18 +303,18 @@ class RX7700SBrainGUIFixed:
             self.data_info_label.config(text=f"Loaded: {self.brain_data.shape}")
             self.analyze_btn.config(state=tk.NORMAL)
             
-            self.log_result(f"📁 Loaded brain data: {self.brain_data.shape}")
+            self.log_result(f" Loaded brain data: {self.brain_data.shape}")
             self.log_result(f"   File: {Path(file_path).name}")
             self.log_result(f"   Size: {self.brain_data.size:,} voxels")
             
         except Exception as e:
             messagebox.showerror("Error", f"Failed to load brain data: {e}")
-            self.log_result(f"❌ Failed to load brain data: {e}")
+            self.log_result(f" Failed to load brain data: {e}")
     
     def generate_test_data(self):
         """Generate synthetic test brain data."""
         try:
-            self.log_result("🧪 Generating synthetic brain data...")
+            self.log_result(" Generating synthetic brain data...")
             
             # Create brain-like volume
             size = 128
@@ -321,13 +339,13 @@ class RX7700SBrainGUIFixed:
             self.data_info_label.config(text=f"Generated: {self.brain_data.shape}")
             self.analyze_btn.config(state=tk.NORMAL)
             
-            self.log_result(f"✅ Generated synthetic brain data: {self.brain_data.shape}")
+            self.log_result(f" Generated synthetic brain data: {self.brain_data.shape}")
             self.log_result(f"   Brain voxels: {brain_voxels:,}")
             self.log_result(f"   Ready for RX 7700S analysis!")
             
         except Exception as e:
             messagebox.showerror("Error", f"Failed to generate test data: {e}")
-            self.log_result(f"❌ Failed to generate test data: {e}")
+            self.log_result(f" Failed to generate test data: {e}")
     
     def start_analysis(self):
         """Start brain analysis on RX 7700S."""
@@ -341,7 +359,7 @@ class RX7700SBrainGUIFixed:
         def analysis_thread():
             try:
                 self.log_result("")
-                self.log_result("🚀 STARTING RX 7700S BRAIN ANALYSIS")
+                self.log_result(" STARTING RX 7700S BRAIN ANALYSIS")
                 self.log_result("=" * 50)
                 self.log_result("*** WATCH TASK MANAGER → PERFORMANCE → GPU 1 ***")
                 self.log_result("")
@@ -371,9 +389,9 @@ class RX7700SBrainGUIFixed:
         self.analysis_results = results
         
         if results['success']:
-            self.progress_var.set("✅ Analysis completed!")
+            self.progress_var.set(" Analysis completed!")
             
-            self.log_result("✅ RX 7700S BRAIN ANALYSIS COMPLETED!")
+            self.log_result(" RX 7700S BRAIN ANALYSIS COMPLETED!")
             self.log_result("=" * 50)
             self.log_result(f"Total time: {results['total_processing_time']:.2f} seconds")
             self.log_result(f"GPU used: {results['gpu_device']}")
@@ -383,7 +401,7 @@ class RX7700SBrainGUIFixed:
             # Segmentation results
             if 'segmentation' in results:
                 seg = results['segmentation']
-                self.log_result("🔍 SEGMENTATION RESULTS:")
+                self.log_result(" SEGMENTATION RESULTS:")
                 self.log_result(f"   Brain voxels: {seg['brain_voxels']:,}")
                 self.log_result(f"   Processing time: {seg['processing_time']:.3f}s")
                 self.log_result("")
@@ -392,7 +410,7 @@ class RX7700SBrainGUIFixed:
             if 'classification' in results:
                 cls = results['classification']
                 if cls['success']:
-                    self.log_result("🧬 TISSUE CLASSIFICATION:")
+                    self.log_result(" TISSUE CLASSIFICATION:")
                     self.log_result(f"   Gray matter: {cls['gray_percentage']:.1f}%")
                     self.log_result(f"   White matter: {cls['white_percentage']:.1f}%")
                     self.log_result(f"   CSF: {cls['csf_percentage']:.1f}%")
@@ -403,7 +421,7 @@ class RX7700SBrainGUIFixed:
             if 'surface' in results:
                 surf = results['surface']
                 if surf['success']:
-                    self.log_result("🎨 3D SURFACE GENERATION:")
+                    self.log_result(" 3D SURFACE GENERATION:")
                     self.log_result(f"   Vertices: {surf['vertex_count']:,}")
                     self.log_result(f"   Faces: {surf['face_count']:,}")
                     self.log_result(f"   Quality: {surf['quality']}")
@@ -413,7 +431,7 @@ class RX7700SBrainGUIFixed:
             if 'metrics' in results:
                 met = results['metrics']
                 if met['success']:
-                    self.log_result("📊 BRAIN METRICS:")
+                    self.log_result(" BRAIN METRICS:")
                     self.log_result(f"   Mean intensity: {met['mean_intensity']:.3f}")
                     self.log_result(f"   Brain volume: {met['brain_volume_percentage']:.1f}%")
                     self.log_result(f"   Intensity range: {met['min_intensity']:.3f} - {met['max_intensity']:.3f}")
@@ -423,33 +441,81 @@ class RX7700SBrainGUIFixed:
             self.log_result("   Check Task Manager to verify GPU 1 was used")
             
         else:
-            self.progress_var.set("❌ Analysis failed")
-            self.log_result(f"❌ Analysis failed: {results['error']}")
+            self.progress_var.set(" Analysis failed")
+            self.log_result(f" Analysis failed: {results['error']}")
     
     def on_analysis_failed(self, error):
         """Called when analysis fails."""
         self.is_processing = False
         self.analyze_btn.config(state=tk.NORMAL)
-        self.progress_var.set("❌ Analysis failed")
+        self.progress_var.set(" Analysis failed")
         
-        self.log_result(f"❌ RX 7700S analysis failed: {error}")
-    
+        self.log_result(f" RX 7700S analysis failed: {error}")
+
     def open_task_manager(self):
         """Open Task Manager to monitor GPU usage."""
         try:
             import subprocess
             subprocess.Popen(['taskmgr'])
-            self.log_result("📊 Task Manager opened - check Performance → GPU 1")
+            self.log_result(" Task Manager opened - check Performance → GPU 1")
         except Exception as e:
-            self.log_result(f"❌ Failed to open Task Manager: {e}")
-    
+            self.log_result(f" Failed to open Task Manager: {e}")
+
+    def launch_neuroglancer(self):
+        """Launch Neuroglancer viewer."""
+        self.log_result("")
+        self.log_result(" Launching Cellular View...")
+        
+        def launch_thread():
+            try:
+                # 1. Check for data
+                data_path = Path("data/h01_sample")
+                if not (data_path / "image" / "info").exists():
+                    self.log_result(" Data not found. Downloading/Generating...")
+                    self.root.after(0, lambda: self.cellular_info.config(text="Generating data...", fg="yellow"))
+                    
+                    # Import download script dynamically
+                    import sys
+                    sys.path.append(str(Path.cwd() / "python"))
+                    from download_h01_sample import download_h01_sample
+                    
+                    success = download_h01_sample()
+                    if not success:
+                        raise Exception("Failed to generate data")
+                    self.log_result(" Data ready.")
+                
+                # 2. Start Server
+                self.log_result(" Starting Neuroglancer server...")
+                self.root.after(0, lambda: self.cellular_info.config(text="Starting server...", fg="yellow"))
+                
+                import sys
+                sys.path.append(str(Path.cwd() / "python"))
+                from neuroglancer_server import start_neuroglancer_server
+                
+                url = start_neuroglancer_server(str(data_path))
+                
+                # 3. Open Browser
+                import webbrowser
+                webbrowser.open(url)
+                
+                self.log_result(f" Neuroglancer running at: {url}")
+                self.log_result("   Browser opened.")
+                
+                self.root.after(0, lambda: self.cellular_info.config(text="Running", fg="lightgreen"))
+                
+            except Exception as e:
+                self.log_result(f" Failed to launch Neuroglancer: {e}")
+                self.root.after(0, lambda: self.cellular_info.config(text="Error", fg="red"))
+        
+        threading.Thread(target=launch_thread, daemon=True).start()
+
     def run(self):
         """Run the GUI."""
         self.root.mainloop()
 
 def main():
     """Main function."""
-    print("🧠 RX 7700S Brain GUI - Fixed Version")
+    print("RX 7700S Brain GUI - Fixed Version")
     print("=" * 50)
     print("This GUI uses successful GPU selection methods")
     print("to ensure RX 7700S is used for brain processing.")
@@ -459,7 +525,7 @@ def main():
         app = RX7700SBrainGUIFixed()
         app.run()
     except Exception as e:
-        print(f"❌ Failed to start GUI: {e}")
+        print(f"Failed to start GUI: {e}")
         input("Press Enter to exit...")
 
 if __name__ == "__main__":

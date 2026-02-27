@@ -43,11 +43,11 @@ class FrequencyBrainProcessor:
             FrequencyBand.ULTRA_HIGH: (10.0, 50.0)
         }
         
-        print("🌊 Frequency Brain Processor initialized")
+        print("Frequency Brain Processor initialized")
     
     def advanced_noise_reduction(self, volume: np.ndarray) -> np.ndarray:
         """Apply advanced noise reduction while preserving signal characteristics."""
-        print("   🔧 Applying signal-preserving noise reduction...")
+        print("   Applying signal-preserving noise reduction...")
         
         # Multi-scale noise reduction
         volume_fine = scipy.ndimage.gaussian_filter(volume, sigma=0.3)
@@ -67,7 +67,7 @@ class FrequencyBrainProcessor:
     
     def signal_aware_normalization(self, volume: np.ndarray) -> np.ndarray:
         """Normalize volume while preserving signal characteristics."""
-        print("   📊 Applying signal-aware normalization...")
+        print("   Applying signal-aware normalization...")
         
         # Robust normalization using percentiles
         p1, p99 = np.percentile(volume, [1, 99])
@@ -86,7 +86,7 @@ class FrequencyBrainProcessor:
     
     def create_frequency_volume(self, volume: np.ndarray) -> Dict[str, np.ndarray]:
         """Create frequency-domain representation of the brain volume."""
-        print("   🌊 Creating frequency-domain brain representation...")
+        print("   Creating frequency-domain brain representation...")
         
         frequency_volume = {}
         
@@ -116,7 +116,7 @@ class FrequencyBrainProcessor:
     
     def generate_tissue_probability_maps(self, volume: np.ndarray) -> Dict[str, np.ndarray]:
         """Generate probability maps for different tissue types using signal analysis."""
-        print("   🧠 Generating tissue probability maps...")
+        print("   Generating tissue probability maps...")
         
         tissue_maps = {}
         
@@ -149,7 +149,7 @@ class FrequencyBrainProcessor:
     
     def detect_frequency_based_features(self, frequency_volume: Dict[str, np.ndarray]) -> List[Dict]:
         """Detect anatomical features based on frequency characteristics."""
-        print("   🎯 Frequency-based feature detection...")
+        print("   Frequency-based feature detection...")
         
         features = []
         
@@ -177,7 +177,7 @@ class FrequencyBrainProcessor:
                 }
                 features.append(feature)
         
-        print(f"     📊 Found {len(features)} frequency-based features")
+        print(f"     Found {len(features)} frequency-based features")
         return features
     
     def analyze_signal_characteristics(self, volume: np.ndarray, coordinates: Tuple[int, int, int], 
@@ -216,7 +216,7 @@ class FrequencyBrainProcessor:
 
 def main():
     """Test the frequency brain processor."""
-    print("🌊 Testing Frequency Brain Processor")
+    print("Testing Frequency Brain Processor")
     print("=" * 60)
     
     # Create processor
@@ -234,36 +234,36 @@ def main():
     # CSF regions
     mock_volume[45:46, 45:65, 45:46] = 0.1
     
-    print(f"📊 Processing volume: {volume_shape}")
+    print(f"Processing volume: {volume_shape}")
     
     # Test noise reduction
     denoised = processor.advanced_noise_reduction(mock_volume)
-    print(f"✅ Noise reduction: {np.mean(np.abs(mock_volume - denoised)):.6f} change")
+    print(f"Noise reduction: {np.mean(np.abs(mock_volume - denoised)):.6f} change")
     
     # Test normalization
     normalized = processor.signal_aware_normalization(denoised)
-    print(f"✅ Normalization: range [{np.min(normalized):.3f}, {np.max(normalized):.3f}]")
+    print(f"Normalization: range [{np.min(normalized):.3f}, {np.max(normalized):.3f}]")
     
     # Test frequency analysis
     freq_volume = processor.create_frequency_volume(normalized)
-    print(f"✅ Frequency decomposition: {len(freq_volume)} bands")
+    print(f"Frequency decomposition: {len(freq_volume)} bands")
     
     # Test tissue maps
     tissue_maps = processor.generate_tissue_probability_maps(normalized)
-    print(f"✅ Tissue maps: {list(tissue_maps.keys())}")
+    print(f"Tissue maps: {list(tissue_maps.keys())}")
     
     # Test feature detection
     features = processor.detect_frequency_based_features(freq_volume)
-    print(f"✅ Feature detection: {len(features)} features")
+    print(f"Feature detection: {len(features)} features")
     
     # Test signal analysis
     test_coords = (45, 55, 45)
     characteristics = processor.analyze_signal_characteristics(normalized, test_coords)
-    print(f"✅ Signal analysis at {test_coords}:")
+    print(f"Signal analysis at {test_coords}:")
     for key, value in characteristics.items():
         print(f"   {key}: {value:.4f}")
     
-    print("\n🎉 Frequency Brain Processor test completed!")
+    print("\nFrequency Brain Processor test completed!")
     return True
 
 if __name__ == "__main__":

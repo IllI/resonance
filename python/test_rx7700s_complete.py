@@ -14,7 +14,7 @@ from pathlib import Path
 
 def test_environment_setup():
     """Test RX 7700S environment setup."""
-    print("🔧 Testing RX 7700S Environment Setup")
+    print(" Testing RX 7700S Environment Setup")
     print("=" * 50)
     
     try:
@@ -23,16 +23,16 @@ def test_environment_setup():
         setup = RX7700SEnvironmentSetup()
         success = setup.full_setup()
         
-        print(f"\nEnvironment setup: {'✅ SUCCESS' if success else '❌ FAILED'}")
+        print(f"\nEnvironment setup: {' SUCCESS' if success else ' FAILED'}")
         return success
         
     except Exception as e:
-        print(f"❌ Environment setup test failed: {e}")
+        print(f" Environment setup test failed: {e}")
         return False
 
 def test_gpu_detection():
     """Test RX 7700S GPU detection."""
-    print("\n🎯 Testing RX 7700S GPU Detection")
+    print("\n Testing RX 7700S GPU Detection")
     print("=" * 50)
     
     try:
@@ -40,16 +40,16 @@ def test_gpu_detection():
         
         success = test_rx7700s_detection()
         
-        print(f"\nGPU detection: {'✅ SUCCESS' if success else '❌ FAILED'}")
+        print(f"\nGPU detection: {' SUCCESS' if success else ' FAILED'}")
         return success
         
     except Exception as e:
-        print(f"❌ GPU detection test failed: {e}")
+        print(f" GPU detection test failed: {e}")
         return False
 
 def test_brain_analyzer():
     """Test RX 7700S brain analyzer."""
-    print("\n🧠 Testing RX 7700S Brain Analyzer")
+    print("\n Testing RX 7700S Brain Analyzer")
     print("=" * 50)
     
     try:
@@ -57,16 +57,16 @@ def test_brain_analyzer():
         
         success = test_rx7700s_brain_analyzer()
         
-        print(f"\nBrain analyzer: {'✅ SUCCESS' if success else '❌ FAILED'}")
+        print(f"\nBrain analyzer: {' SUCCESS' if success else ' FAILED'}")
         return success
         
     except Exception as e:
-        print(f"❌ Brain analyzer test failed: {e}")
+        print(f" Brain analyzer test failed: {e}")
         return False
 
 def test_gpu_usage_monitoring():
     """Test GPU usage monitoring."""
-    print("\n📊 Testing GPU Usage Monitoring")
+    print("\n Testing GPU Usage Monitoring")
     print("=" * 50)
     
     try:
@@ -92,12 +92,12 @@ def test_gpu_usage_monitoring():
             print(result.stdout.strip())
             return True
         else:
-            print("⚠️ GPU usage monitoring not available")
+            print(" GPU usage monitoring not available")
             print("   Use Task Manager → Performance → GPU to monitor usage")
             return True  # Not a critical failure
             
     except Exception as e:
-        print(f"⚠️ GPU monitoring test failed: {e}")
+        print(f" GPU monitoring test failed: {e}")
         print("   Use Task Manager → Performance → GPU to monitor usage")
         return True  # Not a critical failure
 
@@ -122,12 +122,12 @@ def launch_brain_gui():
         return True
         
     except Exception as e:
-        print(f"❌ Failed to launch GUI: {e}")
+        print(f" Failed to launch GUI: {e}")
         return False
 
 def create_verification_report():
     """Create a verification report."""
-    print("\n📋 Creating Verification Report")
+    print("\n Creating Verification Report")
     print("=" * 50)
     
     try:
@@ -182,16 +182,16 @@ If RX 7700S is not being used:
         with open(report_file, 'w') as f:
             f.write(report_content)
         
-        print(f"✅ Verification report created: {report_file}")
+        print(f" Verification report created: {report_file}")
         return True
         
     except Exception as e:
-        print(f"❌ Failed to create report: {e}")
+        print(f" Failed to create report: {e}")
         return False
 
 def main():
     """Main test function."""
-    print("🧪 RX 7700S Complete Test Suite")
+    print(" RX 7700S Complete Test Suite")
     print("=" * 60)
     print("This will test all components of the fixed RX 7700S implementation")
     print()
@@ -210,11 +210,11 @@ def main():
     
     # Summary
     print("\n" + "=" * 60)
-    print("🎯 TEST SUITE SUMMARY")
+    print(" TEST SUITE SUMMARY")
     print("=" * 60)
     
     for test_name, success in results.items():
-        status = "✅ PASS" if success else "❌ FAIL"
+        status = " PASS" if success else " FAIL"
         print(f"{test_name.capitalize():15}: {status}")
     
     total_tests = len(results)
@@ -242,7 +242,7 @@ def main():
             print("python rx7700s_brain_gui_fixed.py")
             
     else:
-        print("\n⚠️ Some tests failed - RX 7700S may not work correctly")
+        print("\n Some tests failed - RX 7700S may not work correctly")
         print("\nTroubleshooting:")
         print("1. Update AMD drivers to latest version")
         print("2. Restart your computer")

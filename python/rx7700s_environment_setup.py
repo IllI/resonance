@@ -38,7 +38,7 @@ class RX7700SEnvironmentSetup:
     
     def apply_environment_variables(self):
         """Apply RX 7700S environment variables."""
-        print("🔧 Configuring RX 7700S Environment Variables")
+        print(" Configuring RX 7700S Environment Variables")
         print("=" * 50)
         
         applied_vars = []
@@ -47,11 +47,11 @@ class RX7700SEnvironmentSetup:
             try:
                 os.environ[var_name] = var_value
                 applied_vars.append((var_name, var_value))
-                print(f"✅ {var_name} = {var_value}")
+                print(f" {var_name} = {var_value}")
             except Exception as e:
-                print(f"❌ Failed to set {var_name}: {e}")
+                print(f" Failed to set {var_name}: {e}")
         
-        print(f"\n✅ Applied {len(applied_vars)} environment variables")
+        print(f"\n Applied {len(applied_vars)} environment variables")
         return applied_vars
     
     def configure_windows_graphics_settings(self):
@@ -75,7 +75,7 @@ class RX7700SEnvironmentSetup:
         }}
         
         Set-ItemProperty -Path $regPath -Name $app -Value $preference
-        Write-Host "✅ Set graphics preference for Python to High Performance"
+        Write-Host " Set graphics preference for Python to High Performance"
         '''
         
         try:
@@ -84,15 +84,15 @@ class RX7700SEnvironmentSetup:
             ], capture_output=True, text=True, shell=True)
             
             if result.returncode == 0:
-                print("✅ Windows Graphics Settings configured")
+                print(" Windows Graphics Settings configured")
                 print("   Python.exe set to High Performance (RX 7700S)")
                 return True
             else:
-                print(f"❌ PowerShell command failed: {result.stderr}")
+                print(f" PowerShell command failed: {result.stderr}")
                 return False
                 
         except Exception as e:
-            print(f"❌ Windows Graphics Settings configuration failed: {e}")
+            print(f" Windows Graphics Settings configuration failed: {e}")
             return False
     
     def configure_amd_software_settings(self):
@@ -118,24 +118,24 @@ class RX7700SEnvironmentSetup:
             try:
                 result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
                 if result.returncode == 0:
-                    print(f"✅ {cmd.split('/')[-3]} configured")
+                    print(f" {cmd.split('/')[-3]} configured")
                     success_count += 1
                 else:
-                    print(f"❌ Failed: {cmd}")
+                    print(f" Failed: {cmd}")
             except Exception as e:
-                print(f"❌ Registry command failed: {e}")
+                print(f" Registry command failed: {e}")
         
         if success_count > 0:
-            print(f"\n✅ AMD Software: {success_count}/{len(registry_commands)} settings applied")
+            print(f"\n AMD Software: {success_count}/{len(registry_commands)} settings applied")
             print("   Note: Restart may be required for full effect")
             return True
         else:
-            print("\n❌ AMD Software configuration failed")
+            print("\n AMD Software configuration failed")
             return False
     
     def verify_environment_setup(self):
         """Verify environment variables are set correctly."""
-        print("\n🔍 Environment Verification")
+        print("\n Environment Verification")
         print("=" * 50)
         
         verification_results = {}
@@ -144,20 +144,20 @@ class RX7700SEnvironmentSetup:
             actual_value = os.environ.get(var_name)
             
             if actual_value == expected_value:
-                print(f"✅ {var_name}: {actual_value}")
+                print(f" {var_name}: {actual_value}")
                 verification_results[var_name] = True
             else:
-                print(f"❌ {var_name}: Expected '{expected_value}', got '{actual_value}'")
+                print(f" {var_name}: Expected '{expected_value}', got '{actual_value}'")
                 verification_results[var_name] = False
         
         success_rate = sum(verification_results.values()) / len(verification_results) * 100
-        print(f"\n📊 Environment Setup: {success_rate:.1f}% successful")
+        print(f"\n Environment Setup: {success_rate:.1f}% successful")
         
         return verification_results
     
     def full_setup(self):
         """Execute complete RX 7700S environment setup."""
-        print("🚀 RX 7700S COMPLETE ENVIRONMENT SETUP")
+        print(" RX 7700S COMPLETE ENVIRONMENT SETUP")
         print("=" * 60)
         print("This will configure your system to use RX 7700S for GPU computing")
         print()
@@ -178,7 +178,7 @@ class RX7700SEnvironmentSetup:
         
         # Summary
         print("\n" + "=" * 60)
-        print("🎯 RX 7700S SETUP SUMMARY")
+        print(" RX 7700S SETUP SUMMARY")
         print("=" * 60)
         
         env_success = len(results['environment_vars']) > 0
@@ -186,10 +186,10 @@ class RX7700SEnvironmentSetup:
         amd_success = results['amd_software']
         verify_success = sum(results['verification'].values()) > len(results['verification']) * 0.8
         
-        print(f"Environment Variables: {'✅' if env_success else '❌'}")
-        print(f"Windows Graphics:      {'✅' if win_success else '❌'}")
-        print(f"AMD Software:          {'✅' if amd_success else '❌'}")
-        print(f"Verification:          {'✅' if verify_success else '❌'}")
+        print(f"Environment Variables: {'' if env_success else ''}")
+        print(f"Windows Graphics:      {'' if win_success else ''}")
+        print(f"AMD Software:          {'' if amd_success else ''}")
+        print(f"Verification:          {'' if verify_success else ''}")
         
         overall_success = env_success and (win_success or amd_success)
         
@@ -200,7 +200,7 @@ class RX7700SEnvironmentSetup:
             print("2. Monitor Task Manager → Performance → GPU 1")
             print("3. Run: python rx7700s_brain_analyzer_test.py")
         else:
-            print("\n⚠️ PARTIAL SUCCESS: Some configurations failed")
+            print("\n PARTIAL SUCCESS: Some configurations failed")
             print("The environment variables should still force RX 7700S usage")
         
         return overall_success

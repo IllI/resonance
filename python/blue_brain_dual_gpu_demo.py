@@ -29,7 +29,7 @@ try:
     from brain_atlas_manager import BrainAtlasManager
     HAS_DEPENDENCIES = True
 except ImportError as e:
-    print(f"⚠️ Some dependencies not available: {e}")
+    print(f" Some dependencies not available: {e}")
     HAS_DEPENDENCIES = False
 
 class BlueBrainDualGPUTrainingDemo:
@@ -45,7 +45,7 @@ class BlueBrainDualGPUTrainingDemo:
         self.training_orchestrator = None
         self.gpu_analyzer = None
         
-        print("🧠 Blue Brain Dual-GPU Training Demo")
+        print(" Blue Brain Dual-GPU Training Demo")
         print("=" * 60)
         print("Integrating Blue Brain Cell Atlas with AMD dual-GPU acceleration")
         print("for enhanced anatomical accuracy in brain model training")
@@ -56,10 +56,10 @@ class BlueBrainDualGPUTrainingDemo:
     def _initialize_components(self):
         """Initialize all system components."""
         if not HAS_DEPENDENCIES:
-            print("❌ Required dependencies not available")
+            print(" Required dependencies not available")
             return
         
-        print("🔧 Initializing components...")
+        print(" Initializing components...")
         
         try:
             # Initialize Blue Brain integrator
@@ -82,18 +82,18 @@ class BlueBrainDualGPUTrainingDemo:
             if self.use_gpu_acceleration:
                 self.gpu_analyzer = EnhancedDualGPUBrainAnalyzer()
             
-            print("✅ All components initialized successfully")
+            print(" All components initialized successfully")
             
         except Exception as e:
-            print(f"❌ Error initializing components: {e}")
+            print(f" Error initializing components: {e}")
     
     def demonstrate_blue_brain_atlas_loading(self) -> bool:
         """Demonstrate Blue Brain atlas loading and processing."""
-        print("\n📥 STEP 1: Blue Brain Cell Atlas Loading")
+        print("\n STEP 1: Blue Brain Cell Atlas Loading")
         print("-" * 40)
         
         if not self.blue_brain_integrator:
-            print("❌ Blue Brain integrator not available")
+            print(" Blue Brain integrator not available")
             return False
         
         # Load Blue Brain atlas
@@ -101,14 +101,14 @@ class BlueBrainDualGPUTrainingDemo:
         
         if success:
             atlas_data = self.blue_brain_integrator.atlas_data
-            print(f"✅ Blue Brain Atlas loaded successfully:")
+            print(f" Blue Brain Atlas loaded successfully:")
             print(f"   Total regions: {atlas_data.total_regions}")
             print(f"   Species: {atlas_data.species}")
             print(f"   Resolution: {atlas_data.resolution_um} μm")
             print(f"   Coordinate system: {atlas_data.coordinate_system}")
             
             # Show sample regions
-            print(f"\n🔬 Sample cellular regions:")
+            print(f"\n Sample cellular regions:")
             for i, region in enumerate(atlas_data.regions[:5]):
                 print(f"   {i+1}. {region.region_name}")
                 print(f"      Cell density: {region.cell_density:,.0f} cells/mm³")
@@ -122,11 +122,11 @@ class BlueBrainDualGPUTrainingDemo:
     
     def demonstrate_mri_extrapolation(self) -> Optional[Dict]:
         """Demonstrate extrapolation from mouse cellular data to human MRI."""
-        print("\n🔄 STEP 2: Mouse-to-Human MRI Extrapolation")
+        print("\n STEP 2: Mouse-to-Human MRI Extrapolation")
         print("-" * 40)
         
         if not self.blue_brain_integrator or not self.blue_brain_integrator.atlas_data:
-            print("❌ Blue Brain atlas not loaded")
+            print(" Blue Brain atlas not loaded")
             return None
         
         # Create mock human MRI volume (standard dimensions)
@@ -145,7 +145,7 @@ class BlueBrainDualGPUTrainingDemo:
         extrapolation_time = time.time() - start_time
         
         if extrapolation_results:
-            print(f"✅ Extrapolation completed in {extrapolation_time:.2f}s")
+            print(f" Extrapolation completed in {extrapolation_time:.2f}s")
             print(f"   Mapped regions: {extrapolation_results['total_extrapolated_regions']}")
             print(f"   Coverage: {extrapolation_results['quality_metrics']['coverage_percentage']:.1f}%")
             print(f"   Mean density: {extrapolation_results['quality_metrics']['mean_density']:.0f} cells/mm³")
@@ -156,11 +156,11 @@ class BlueBrainDualGPUTrainingDemo:
     
     def demonstrate_enhanced_detection(self, extrapolation_results: Dict) -> Optional[List]:
         """Demonstrate enhanced anatomical detection with Blue Brain guidance."""
-        print("\n🎯 STEP 3: Blue Brain Enhanced Anatomical Detection")
+        print("\n STEP 3: Blue Brain Enhanced Anatomical Detection")
         print("-" * 40)
         
         if not self.model_generator:
-            print("❌ Model generator not available")
+            print(" Model generator not available")
             return None
         
         # Create mock brain volume for detection
@@ -177,7 +177,7 @@ class BlueBrainDualGPUTrainingDemo:
         detection_time = time.time() - start_time
         
         if features:
-            print(f"✅ Detection completed in {detection_time:.2f}s")
+            print(f" Detection completed in {detection_time:.2f}s")
             print(f"   Total features detected: {len(features)}")
             
             # Analyze detection methods
@@ -191,12 +191,12 @@ class BlueBrainDualGPUTrainingDemo:
                 if 'blue_brain' in method:
                     blue_brain_features.append(feature)
             
-            print(f"\n📊 Detection method breakdown:")
+            print(f"\n Detection method breakdown:")
             for method, count in methods.items():
                 print(f"   {method}: {count} features")
             
             if blue_brain_features:
-                print(f"\n🧬 Blue Brain enhanced features:")
+                print(f"\n Blue Brain enhanced features:")
                 for i, feature in enumerate(blue_brain_features[:5]):
                     print(f"   {i+1}. {feature.name}")
                     print(f"      Confidence: {feature.confidence:.3f}")
@@ -209,11 +209,11 @@ class BlueBrainDualGPUTrainingDemo:
     
     def demonstrate_dual_gpu_integration(self, extrapolation_results: Dict) -> Dict:
         """Demonstrate integration with dual-GPU training pipeline."""
-        print("\n🚀 STEP 4: Dual-GPU Training Integration")
+        print("\n STEP 4: Dual-GPU Training Integration")
         print("-" * 40)
         
         if not self.use_gpu_acceleration:
-            print("⚠️ GPU acceleration disabled - using CPU fallback")
+            print(" GPU acceleration disabled - using CPU fallback")
             return self._cpu_training_fallback()
         
         print("Integrating Blue Brain data with AMD Radeon 780M + RX 7700S...")
@@ -236,7 +236,7 @@ class BlueBrainDualGPUTrainingDemo:
         
         # Simulate dual-GPU performance
         if self.gpu_analyzer:
-            print("\n⚡ Dual-GPU performance simulation:")
+            print("\n Dual-GPU performance simulation:")
             mock_fmri_data = np.random.rand(100, 200)  # 100 regions, 200 timepoints
             
             gpu_start = time.time()
@@ -248,7 +248,7 @@ class BlueBrainDualGPUTrainingDemo:
             print(f"   Estimated speedup: 18x over CPU baseline")
             print(f"   Both AMD GPUs utilized simultaneously")
         
-        print(f"\n✅ Integration completed:")
+        print(f"\n Integration completed:")
         print(f"   Status: {integration_results['status']}")
         print(f"   Blue Brain regions: {integration_results['blue_brain_regions_used']}")
         print(f"   Cellular features: {integration_results['cellular_features_extracted']}")
@@ -262,7 +262,7 @@ class BlueBrainDualGPUTrainingDemo:
         print("-" * 40)
         
         if not self.training_orchestrator:
-            print("❌ Training orchestrator not available")
+            print(" Training orchestrator not available")
             return {}
         
         print("Simulating production-scale training with Blue Brain cellular guidance...")
@@ -306,7 +306,7 @@ class BlueBrainDualGPUTrainingDemo:
             'simulation_time_seconds': training_time
         }
         
-        print(f"✅ Production training simulation completed:")
+        print(f" Production training simulation completed:")
         print(f"   Total subjects: {results['total_subjects']:,}")
         print(f"   Estimated training time: {results['training_time_hours']:.1f} hours")
         print(f"   Processing rate: {results['subjects_per_hour']} subjects/hour")
@@ -376,17 +376,17 @@ class BlueBrainDualGPUTrainingDemo:
         print("🎉 BLUE BRAIN DUAL-GPU INTEGRATION DEMO COMPLETED!")
         print("=" * 60)
         
-        print(f"\n📊 Demonstration Summary:")
+        print(f"\n Demonstration Summary:")
         print(f"   Steps completed: {len(results['steps_completed'])}/5")
         for step in results['steps_completed']:
-            print(f"   ✅ {step.replace('_', ' ').title()}")
+            print(f"    {step.replace('_', ' ').title()}")
         
         if results['final_results']:
-            print(f"\n🚀 Integration Achievements:")
+            print(f"\n Integration Achievements:")
             for key, value in results['final_results'].items():
                 print(f"   {key.replace('_', ' ').title()}: {value}")
         
-        print(f"\n💡 Next Steps for Production Deployment:")
+        print(f"\n Next Steps for Production Deployment:")
         print(f"   1. Set up Blue Brain API access for real data")
         print(f"   2. Configure dual-GPU system for 24/7 training")
         print(f"   3. Deploy on 5,000+ real brain volumes")
@@ -397,7 +397,7 @@ class BlueBrainDualGPUTrainingDemo:
 
 def main():
     """Main demonstration function."""
-    print("🧠 Blue Brain Project Integration with Dual-GPU Brain Analysis")
+    print(" Blue Brain Project Integration with Dual-GPU Brain Analysis")
     print("=" * 80)
     print("Demonstrating cellular-level anatomical enhancement")
     print("with AMD Radeon 780M + RX 7700S acceleration")
@@ -409,7 +409,7 @@ def main():
     
     # Check if user wants to see GPU performance details
     if results['demo_status'] == 'completed':
-        print(f"\n🎯 Ready for production deployment with:")
+        print(f"\n Ready for production deployment with:")
         print(f"   • Blue Brain Cell Atlas cellular precision")
         print(f"   • Dual AMD GPU 18x acceleration")
         print(f"   • >99.9% anatomical accuracy potential")

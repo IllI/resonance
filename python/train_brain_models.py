@@ -265,27 +265,27 @@ class BrainModelTrainer:
         print("=" * 60)
         
         if summary["status"] == "success":
-            print(f"✅ Status: {summary['status'].upper()}")
-            print(f"📊 Datasets Used: {len(summary['datasets_used'])}")
+            print(f" Status: {summary['status'].upper()}")
+            print(f" Datasets Used: {len(summary['datasets_used'])}")
             for dataset in summary['datasets_used']:
                 print(f"   - {dataset}")
-            print(f"🧠 Total Brain Volumes: {summary['total_volumes']}")
-            print(f"⏱️  Training Duration: {summary['training_duration_minutes']:.1f} minutes")
-            print(f"🎯 Average Accuracy: {summary['average_accuracy']:.3f}")
-            print(f"📈 Visualizations Created: {summary['visualization_count']}")
+            print(f" Total Brain Volumes: {summary['total_volumes']}")
+            print(f"  Training Duration: {summary['training_duration_minutes']:.1f} minutes")
+            print(f" Average Accuracy: {summary['average_accuracy']:.3f}")
+            print(f" Visualizations Created: {summary['visualization_count']}")
             
-            print("\n📁 Generated Files:")
-            print(f"   📋 Training Report: {summary['report_path']}")
+            print("\n Generated Files:")
+            print(f"    Training Report: {summary['report_path']}")
             print("   🤖 Model Files:")
             for model_name, model_path in summary['model_files'].items():
                 print(f"      - {model_name}: {Path(model_path).name}")
             
-            print(f"\n📂 All outputs saved to: {summary['output_directory']}")
+            print(f"\n All outputs saved to: {summary['output_directory']}")
             
         else:
-            print(f"❌ Status: {summary['status'].upper()}")
+            print(f" Status: {summary['status'].upper()}")
             print(f"💥 Error: {summary['error']}")
-            print(f"📂 Check logs in: {summary['output_directory']}")
+            print(f" Check logs in: {summary['output_directory']}")
         
         print("=" * 60)
 
@@ -367,8 +367,8 @@ Examples:
         return 0
     
     # Print header
-    print("🧠 Brain 3D Model Training System")
-    print("🔬 Training on OpenNeuro Brain Volume Datasets")
+    print(" Brain 3D Model Training System")
+    print(" Training on OpenNeuro Brain Volume Datasets")
     print("🤖 AI-Powered Anatomical Feature Detection")
     print()
     
@@ -391,7 +391,7 @@ Examples:
         return 0 if summary["status"] == "success" else 1
         
     except KeyboardInterrupt:
-        print("\n⚠️  Training interrupted by user")
+        print("\n  Training interrupted by user")
         return 1
     except Exception as e:
         logger.error(f"Unexpected error: {e}")

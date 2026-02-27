@@ -47,7 +47,7 @@ try:
     HAS_NETWORKX = True
 except ImportError:
     HAS_NETWORKX = False
-    print("⚠️ NetworkX not available - network metrics will be limited")
+    print(" NetworkX not available - network metrics will be limited")
 
 class BrainNetworkAnalyzer:
     """
@@ -67,7 +67,7 @@ class BrainNetworkAnalyzer:
         self.network_metrics = {}
         self.change_points = []
         
-        print(f"🧠 Initialized Brain Network Analyzer")
+        print(f" Initialized Brain Network Analyzer")
         print(f"   Sampling rate: {sampling_rate} Hz")
     
     def load_time_series(self, data: np.ndarray, roi_labels: Optional[List[str]] = None):
@@ -85,7 +85,7 @@ class BrainNetworkAnalyzer:
         self.n_timepoints, self.n_regions = data.shape
         self.roi_labels = roi_labels or [f"Region_{i:03d}" for i in range(self.n_regions)]
         
-        print(f"✅ Loaded time series data:")
+        print(f" Loaded time series data:")
         print(f"   Shape: {data.shape} (timepoints x regions)")
         print(f"   Duration: {self.n_timepoints / self.sampling_rate:.1f} seconds")
         print(f"   Regions: {self.n_regions}")
@@ -110,12 +110,12 @@ class BrainNetworkAnalyzer:
         if self.time_series is None:
             raise ValueError("No time series data loaded. Call load_time_series() first.")
         
-        print("🔧 Preprocessing time series data...")
+        print(" Preprocessing time series data...")
         processed_data = self.time_series.copy()
         
         # Detrending
         if detrend:
-            print("   📈 Removing linear trends...")
+            print("    Removing linear trends...")
             for i in range(self.n_regions):
                 processed_data[:, i] = signal.detrend(processed_data[:, i])
         
@@ -127,7 +127,7 @@ class BrainNetworkAnalyzer:
             # Validate signal length for filtering
             min_required_length = 60  # Minimum length for stable filtering
             if processed_data.shape[0] < min_required_length:
-                print(f"   ⚠️ Signal too short ({processed_data.shape[0]} samples) for bandpass filtering, skipping...")
+                print(f"    Signal too short ({processed_data.shape[0]} samples) for bandpass filtering, skipping...")
             else:
                 nyquist = self.sampling_rate / 2
                 low_norm = low_freq / nyquist
@@ -148,15 +148,15 @@ class BrainNetworkAnalyzer:
                         if len(processed_data[:, i]) > 3 * filter_order:
                             processed_data[:, i] = signal.filtfilt(b, a, processed_data[:, i])
                         else:
-                            print(f"   ⚠️ Region {i}: Signal too short for filtfilt, using simple filtering")
+                            print(f"    Region {i}: Signal too short for filtfilt, using simple filtering")
                             processed_data[:, i] = signal.lfilter(b, a, processed_data[:, i])
                             
                 except Exception as e:
-                    print(f"   ⚠️ Bandpass filtering failed: {e}, skipping filtering")
+                    print(f"    Bandpass filtering failed: {e}, skipping filtering")
         
         # Standardization
         if standardize:
-            print("   📊 Standardizing signals...")
+            print("    Standardizing signals...")
             if HAS_SKLEARN:
                 scaler = StandardScaler()
                 processed_data = scaler.fit_transform(processed_data)
@@ -173,7 +173,7 @@ class BrainNetworkAnalyzer:
                 slope, intercept, _, _, _ = stats.linregress(global_signal, processed_data[:, i])
                 processed_data[:, i] -= (slope * global_signal + intercept - np.mean(processed_data[:, i]))
         
-        print("✅ Preprocessing completed")
+        print(" Preprocessing completed")
         return processed_data
     
     def compute_connectivity_matrix(self, 
@@ -196,7 +196,7 @@ class BrainNetworkAnalyzer:
                 raise ValueError("No data provided and no time series loaded")
             data = self.time_series
         
-        print(f"🔗 Computing {method} connectivity matrix...")
+        print(f" Computing {method} connectivity matrix...")
         
         if method == 'pearson':
             connectivity = np.corrcoef(data.T)
@@ -208,7 +208,7 @@ class BrainNetworkAnalyzer:
                                                                    np.diag(precision_matrix)))
                 np.fill_diagonal(connectivity, 1.0)
             except np.linalg.LinAlgError:
-                print("⚠️ Singular matrix, falling back to Pearson correlation")
+                print(" Singular matrix, falling back to Pearson correlation")
                 connectivity = np.corrcoef(data.T)
         else:
             raise ValueError(f"Unknown connectivity method: {method}")
@@ -216,7 +216,7 @@ class BrainNetworkAnalyzer:
         # Remove NaN values
         connectivity = np.nan_to_num(connectivity)
         
-        print(f"✅ Connectivity matrix computed: {connectivity.shape}")
+        print(f" Connectivity matrix computed: {connectivity.shape}")
         return connectivity
     
     def dynamic_connectivity_analysis(self, 
@@ -237,7 +237,7 @@ class BrainNetworkAnalyzer:
         if data is None:
             data = self.time_series
         
-        print(f"🔄 Computing dynamic connectivity (window={window_size}, step={step_size})...")
+        print(f" Computing dynamic connectivity (window={window_size}, step={step_size})...")
         
         connectivity_matrices = []
         n_windows = (len(data) - window_size) // step_size + 1
@@ -251,7 +251,7 @@ class BrainNetworkAnalyzer:
             connectivity_matrices.append(conn_matrix)
         
         self.connectivity_matrices = connectivity_matrices
-        print(f"✅ Computed {len(connectivity_matrices)} connectivity matrices")
+        print(f" Computed {len(connectivity_matrices)} connectivity matrices")
         
         return connectivity_matrices
     
@@ -272,10 +272,10 @@ class BrainNetworkAnalyzer:
             connectivity_matrices = self.connectivity_matrices
         
         if len(connectivity_matrices) < 2:
-            print("⚠️ Need at least 2 connectivity matrices for change detection, returning no changes")
+            print(" Need at least 2 connectivity matrices for change detection, returning no changes")
             return []  # Return empty list instead of raising error
         
-        print(f"🔍 Detecting network changes (threshold={threshold})...")
+        print(f" Detecting network changes (threshold={threshold})...")
         
         # Compute matrix differences
         changes = []
@@ -298,7 +298,7 @@ class BrainNetworkAnalyzer:
                 change_points.append(i + 1)  # +1 because we started from index 1
         
         self.change_points = change_points
-        print(f"✅ Detected {len(change_points)} significant changes at timepoints: {change_points}")
+        print(f" Detected {len(change_points)} significant changes at timepoints: {change_points}")
         
         return change_points
     
@@ -321,10 +321,10 @@ class BrainNetworkAnalyzer:
             else:
                 raise ValueError("No connectivity matrix available")
         
-        print(f"📊 Computing network metrics (threshold={threshold})...")
+        print(f" Computing network metrics (threshold={threshold})...")
         
         if not HAS_NETWORKX:
-            print("⚠️ NetworkX not available - computing basic metrics only")
+            print(" NetworkX not available - computing basic metrics only")
             # Basic metrics without NetworkX
             binary_matrix = (np.abs(connectivity_matrix) > threshold).astype(int)
             np.fill_diagonal(binary_matrix, 0)
@@ -386,7 +386,7 @@ class BrainNetworkAnalyzer:
         
         self.network_metrics = metrics
         
-        print("✅ Network metrics computed:")
+        print(" Network metrics computed:")
         for key, value in metrics.items():
             print(f"   {key}: {value:.3f}")
         
@@ -411,10 +411,10 @@ class BrainNetworkAnalyzer:
             else:
                 raise ValueError("No connectivity matrix available")
         
-        print("🔍 Identifying network modules...")
+        print(" Identifying network modules...")
         
         if not HAS_SKLEARN:
-            print("⚠️ scikit-learn not available - using simple threshold-based clustering")
+            print(" scikit-learn not available - using simple threshold-based clustering")
             # Simple threshold-based clustering
             abs_matrix = np.abs(connectivity_matrix)
             threshold = np.percentile(abs_matrix, 75)  # Use 75th percentile as threshold
@@ -460,7 +460,7 @@ class BrainNetworkAnalyzer:
         cluster_labels = kmeans.fit_predict(abs_matrix)
         score = silhouette_score(abs_matrix, cluster_labels)
         
-        print(f"✅ Identified {optimal_k} modules with silhouette score: {score:.3f}")
+        print(f" Identified {optimal_k} modules with silhouette score: {score:.3f}")
         
         # Print module information
         for i in range(optimal_k):
@@ -490,7 +490,7 @@ class BrainNetworkAnalyzer:
             else:
                 raise ValueError("No connectivity matrix available")
         
-        print("📊 Creating connectivity matrix visualization...")
+        print(" Creating connectivity matrix visualization...")
         
         fig, ax = plt.subplots(figsize=(10, 8))
         
@@ -524,7 +524,7 @@ class BrainNetworkAnalyzer:
         Returns:
             Dictionary containing analysis summary
         """
-        print("📋 Generating analysis report...")
+        print(" Generating analysis report...")
         
         report = {
             'data_info': {
@@ -541,12 +541,12 @@ class BrainNetworkAnalyzer:
             'network_metrics': self.network_metrics
         }
         
-        print("✅ Analysis report generated")
+        print(" Analysis report generated")
         return report
 
 def main():
     """Test the Neural Network Analyzer with sample data."""
-    print("🧠 Testing Neural Network Analyzer")
+    print(" Testing Neural Network Analyzer")
     print("=" * 60)
     
     # Load sample data using our data loader
@@ -560,7 +560,7 @@ def main():
         # Subsample for faster testing (use first 1000 regions and 500 timepoints)
         sample_data = fmri_data[:1000, :500].T  # Transpose to timepoints x regions
         
-        print(f"\n📊 Using sample data: {sample_data.shape}")
+        print(f"\n Using sample data: {sample_data.shape}")
         
         # Initialize analyzer
         analyzer = BrainNetworkAnalyzer(sampling_rate=0.4)
@@ -594,7 +594,7 @@ def main():
         # Generate report
         report = analyzer.generate_analysis_report()
         
-        print(f"\n📋 Analysis Summary:")
+        print(f"\n Analysis Summary:")
         print(f"   Data duration: {report['data_info']['duration_seconds']:.1f} seconds")
         print(f"   Dynamic windows: {report['connectivity_analysis']['n_dynamic_matrices']}")
         print(f"   Changes detected: {report['connectivity_analysis']['n_changes_detected']}")
@@ -610,12 +610,12 @@ def main():
             )
             plt.show()
         except Exception as e:
-            print(f"⚠️ Visualization error: {e}")
+            print(f" Visualization error: {e}")
         
         print("\n🎉 Neural Network Analyzer test completed successfully!")
         
     except Exception as e:
-        print(f"❌ Test failed: {e}")
+        print(f" Test failed: {e}")
         import traceback
         traceback.print_exc()
         return False

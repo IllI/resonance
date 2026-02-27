@@ -22,28 +22,28 @@ warnings.filterwarnings("ignore")
 
 def demo_blue_brain_integration():
     """Main demonstration of Blue Brain Atlas integration."""
-    print("🧠 Blue Brain Atlas Integration Demo")
+    print(" Blue Brain Atlas Integration Demo")
     print("=" * 60)
     
     try:
         # Import Blue Brain integrator
         from blue_brain_atlas_integrator import BlueBrainAtlasIntegrator
         
-        print("✅ Blue Brain Atlas Integrator imported successfully")
+        print(" Blue Brain Atlas Integrator imported successfully")
         
         # Initialize integrator with mock data
-        print("\n🔬 Initializing Blue Brain Atlas Integrator...")
+        print("\n Initializing Blue Brain Atlas Integrator...")
         integrator = BlueBrainAtlasIntegrator(data_source="mock")
         
         # Get atlas summary
-        print("\n📊 Blue Brain Atlas Summary:")
+        print("\n Blue Brain Atlas Summary:")
         summary = integrator.get_atlas_summary()
         for key, value in summary.items():
             if key != "metadata":
                 print(f"   {key}: {value}")
         
         # Test region finding
-        print("\n🔍 Testing Region Finding:")
+        print("\n Testing Region Finding:")
         test_coordinates = [
             (0, -20, 60),    # Primary motor cortex
             (0, -80, 10),    # Primary visual cortex
@@ -77,7 +77,7 @@ def demo_blue_brain_integration():
                     print(f"     Glia: {astrocytes + oligodendrocytes + microglia:,}")
         
         # Test cellular signature extraction
-        print("\n🧬 Testing Cellular Signature Extraction:")
+        print("\n Testing Cellular Signature Extraction:")
         cortical_regions = integrator.get_regions_by_anatomical_level("cortical")
         if cortical_regions:
             region = cortical_regions[0]
@@ -89,7 +89,7 @@ def demo_blue_brain_integration():
                 print(f"     Sum: {np.sum(signature):.3f}")
         
         # Test enhanced registration
-        print("\n🔄 Testing Enhanced Registration:")
+        print("\n Testing Enhanced Registration:")
         
         # Create mock fMRI volume
         fmri_volume = np.random.randn(64, 64, 64)
@@ -125,7 +125,7 @@ def demo_blue_brain_integration():
         )
         
         if enhancement_results.get("enhanced"):
-            print(f"   ✅ Registration enhanced successfully!")
+            print(f"    Registration enhanced successfully!")
             print(f"   Enhanced features: {enhancement_results['total_regions_enhanced']}")
             print(f"   Blue Brain regions used: {enhancement_results['blue_brain_regions_used']}")
             print(f"   Enhancement score: {enhancement_results['enhancement_score']:.2f}")
@@ -140,13 +140,13 @@ def demo_blue_brain_integration():
                     print(f"       Anatomical level: {feature.get('anatomical_level', 'Unknown')}")
                     print(f"       Enhancement confidence: {feature.get('enhancement_confidence', 0):.2f}")
         else:
-            print(f"   ❌ Registration enhancement failed: {enhancement_results.get('reason', 'Unknown error')}")
+            print(f"    Registration enhancement failed: {enhancement_results.get('reason', 'Unknown error')}")
         
         # Test atlas export
-        print("\n💾 Testing Atlas Export:")
+        print("\n Testing Atlas Export:")
         export_path = "demo_blue_brain_atlas.json"
         if integrator.export_atlas_data(export_path):
-            print(f"   ✅ Atlas exported to {export_path}")
+            print(f"    Atlas exported to {export_path}")
             
             # Check file size
             export_file = Path(export_path)
@@ -154,7 +154,7 @@ def demo_blue_brain_integration():
                 file_size = export_file.stat().st_size / 1024  # KB
                 print(f"   File size: {file_size:.1f} KB")
         else:
-            print("   ❌ Atlas export failed")
+            print("    Atlas export failed")
         
         print("\n" + "=" * 60)
         print("🎉 Blue Brain Atlas Integration Demo Complete!")
@@ -163,20 +163,20 @@ def demo_blue_brain_integration():
         return True
         
     except ImportError as e:
-        print(f"❌ Import error: {e}")
+        print(f" Import error: {e}")
         print("   Make sure all dependencies are installed:")
         print("   pip install numpy scipy nibabel")
         return False
         
     except Exception as e:
-        print(f"❌ Demo error: {e}")
+        print(f" Demo error: {e}")
         import traceback
         traceback.print_exc()
         return False
 
 def demo_integration_with_existing_system():
     """Demonstrate integration with existing fMRI analysis components."""
-    print("\n🔗 Integration with Existing fMRI Analysis System")
+    print("\n Integration with Existing fMRI Analysis System")
     print("=" * 60)
     
     try:
@@ -186,21 +186,21 @@ def demo_integration_with_existing_system():
         # Import existing components
         try:
             from brain_atlas_manager import BrainAtlasManager
-            print("   ✅ Brain Atlas Manager imported")
+            print("    Brain Atlas Manager imported")
             
             # Initialize with Harvard-Oxford atlas
             atlas_manager = BrainAtlasManager('harvard_oxford')
-            print(f"   ✅ Harvard-Oxford atlas loaded: {atlas_manager.atlas_name}")
+            print(f"    Harvard-Oxford atlas loaded: {atlas_manager.atlas_name}")
             
         except ImportError:
-            print("   ⚠️ Brain Atlas Manager not available")
+            print("    Brain Atlas Manager not available")
         
         # Test integration with 3D model generator
-        print("\n🏗️ Testing integration with 3D Model Generator...")
+        print("\n Testing integration with 3D Model Generator...")
         
         try:
             from brain_3d_model_generator import Brain3DModelGenerator
-            print("   ✅ 3D Model Generator imported")
+            print("    3D Model Generator imported")
             
             # Initialize with Blue Brain integration
             model_generator = Brain3DModelGenerator(
@@ -208,17 +208,17 @@ def demo_integration_with_existing_system():
                 use_gpu=False,  # Use CPU for demo
                 max_regions_detect=737  # Blue Brain has 737 regions
             )
-            print("   ✅ 3D Model Generator initialized with Blue Brain support")
+            print("    3D Model Generator initialized with Blue Brain support")
             
         except ImportError:
-            print("   ⚠️ 3D Model Generator not available")
+            print("    3D Model Generator not available")
         
         # Test integration with spatiotemporal registration
-        print("\n🔄 Testing integration with Spatiotemporal Registration...")
+        print("\n Testing integration with Spatiotemporal Registration...")
         
         try:
             from spatiotemporal_brain_registration import SpatioTemporalBrainRegistrator
-            print("   ✅ Spatiotemporal Brain Registrator imported")
+            print("    Spatiotemporal Brain Registrator imported")
             
             # Initialize with Blue Brain enhancement
             registrator = SpatioTemporalBrainRegistrator(
@@ -226,60 +226,60 @@ def demo_integration_with_existing_system():
                 enable_blue_brain=True,
                 cellular_weight=0.3
             )
-            print("   ✅ Spatiotemporal registration initialized with Blue Brain enhancement")
+            print("    Spatiotemporal registration initialized with Blue Brain enhancement")
             
         except ImportError:
-            print("   ⚠️ Spatiotemporal Brain Registrator not available")
+            print("    Spatiotemporal Brain Registrator not available")
         
         # Test integration with dual-GPU analyzer
-        print("\n⚡ Testing integration with Dual-GPU Analyzer...")
+        print("\n Testing integration with Dual-GPU Analyzer...")
         
         try:
             from enhanced_dual_gpu_analyzer import EnhancedDualGPUBrainAnalyzer
-            print("   ✅ Enhanced Dual-GPU Analyzer imported")
+            print("    Enhanced Dual-GPU Analyzer imported")
             
             # Initialize analyzer
             analyzer = EnhancedDualGPUBrainAnalyzer()
-            print("   ✅ Dual-GPU analyzer initialized")
+            print("    Dual-GPU analyzer initialized")
             
             # Check OpenCL availability
             try:
                 if hasattr(analyzer, 'HAS_OPENCL') and analyzer.HAS_OPENCL:
-                    print("   ✅ OpenCL available for GPU acceleration")
+                    print("    OpenCL available for GPU acceleration")
                 else:
-                    print("   ⚠️ OpenCL not available, using CPU fallback")
+                    print("    OpenCL not available, using CPU fallback")
             except AttributeError:
-                print("   ⚠️ OpenCL status unknown, assuming CPU fallback")
+                print("    OpenCL status unknown, assuming CPU fallback")
                 
         except ImportError:
-            print("   ⚠️ Enhanced Dual-GPU Analyzer not available")
+            print("    Enhanced Dual-GPU Analyzer not available")
         
-        print("\n✅ Integration testing complete!")
+        print("\n Integration testing complete!")
         return True
         
     except Exception as e:
-        print(f"❌ Integration test error: {e}")
+        print(f" Integration test error: {e}")
         return False
 
 def demo_performance_benefits():
     """Demonstrate performance benefits of Blue Brain integration."""
-    print("\n🚀 Performance Benefits of Blue Brain Integration")
+    print("\n Performance Benefits of Blue Brain Integration")
     print("=" * 60)
     
-    print("📊 Expected Performance Improvements:")
+    print(" Expected Performance Improvements:")
     print("   • Anatomical accuracy: +15-20% improvement")
     print("   • Region detection: 737+ regions vs standard 200+")
     print("   • Cellular-level detail: Neuron/glia composition")
     print("   • Registration precision: Sub-millimeter accuracy")
     print("   • Training efficiency: 40% faster convergence")
     
-    print("\n⚡ GPU Acceleration Benefits:")
+    print("\n GPU Acceleration Benefits:")
     print("   • Dual AMD GPU utilization: Radeon 780M + RX 7700S")
     print("   • 18x+ speedup over CPU baseline")
     print("   • Cellular-guided parallel processing")
     print("   • Real-time fMRI analysis: <100ms latency")
     
-    print("\n🔬 Scientific Validation:")
+    print("\n Scientific Validation:")
     print("   • Blue Brain Project: World's most detailed brain atlas")
     print("   • 737+ brain regions with cellular composition")
     print("   • Dynamic atlas updates as new data becomes available")
@@ -289,7 +289,7 @@ def demo_performance_benefits():
 
 def main():
     """Run the complete Blue Brain integration demo."""
-    print("🧠 Blue Brain Atlas Integration - Complete Demo")
+    print(" Blue Brain Atlas Integration - Complete Demo")
     print("=" * 80)
     
     # Run all demo components
@@ -311,12 +311,12 @@ def main():
     print("\n" + "=" * 80)
     if success:
         print("🎉 ALL DEMOS COMPLETED SUCCESSFULLY!")
-        print("\n✅ Blue Brain Atlas Integration is working correctly")
-        print("✅ Integration with existing fMRI analysis system confirmed")
-        print("✅ Performance benefits and capabilities demonstrated")
-        print("\n🚀 Ready for production use with dual-GPU acceleration!")
+        print("\n Blue Brain Atlas Integration is working correctly")
+        print(" Integration with existing fMRI analysis system confirmed")
+        print(" Performance benefits and capabilities demonstrated")
+        print("\n Ready for production use with dual-GPU acceleration!")
     else:
-        print("⚠️ Some demos encountered issues")
+        print(" Some demos encountered issues")
         print("   Check the error messages above for details")
     
     print("=" * 80)

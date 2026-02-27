@@ -104,7 +104,7 @@ class BlueBrainAtlasIntegrator:
         self.bb_api_base = "https://bbp.epfl.ch/ngv/atlas"
         self.bb_data_endpoint = f"{self.bb_api_base}/api/v1/regions"
         
-        print("🔬 Initializing Blue Brain Cell Atlas Integrator")
+        print(" Initializing Blue Brain Cell Atlas Integrator")
         print(f"   Data source: {data_source}")
         print(f"   Dynamic updates: {enable_dynamic_updates}")
         print(f"   Cellular weight: {cellular_weight:.2f}")
@@ -114,7 +114,7 @@ class BlueBrainAtlasIntegrator:
     
     def _load_atlas_data(self) -> bool:
         """Load Blue Brain Atlas data from the specified source."""
-        print("📥 Loading Blue Brain Cell Atlas data...")
+        print(" Loading Blue Brain Cell Atlas data...")
         
         if self.data_source == "local":
             return self._load_local_atlas()
@@ -130,7 +130,7 @@ class BlueBrainAtlasIntegrator:
         atlas_path = Path("data/blue_brain_atlas")
         
         if not atlas_path.exists():
-            print("⚠️ Local Blue Brain Atlas not found, creating mock data")
+            print(" Local Blue Brain Atlas not found, creating mock data")
             return self._load_mock_atlas()
         
         try:
@@ -165,32 +165,32 @@ class BlueBrainAtlasIntegrator:
                     )
                     self.atlas_data.regions[region.region_id] = region
                 
-                print(f"   ✅ Loaded {len(self.atlas_data.regions)} regions from local atlas")
+                print(f"    Loaded {len(self.atlas_data.regions)} regions from local atlas")
                 return True
                 
         except Exception as e:
-            print(f"   ❌ Error loading local atlas: {e}")
+            print(f"    Error loading local atlas: {e}")
             return self._load_mock_atlas()
     
     def _load_api_atlas(self) -> bool:
         """Load atlas data from Blue Brain API."""
         try:
-            print("   🌐 Fetching Blue Brain Atlas from API...")
+            print("    Fetching Blue Brain Atlas from API...")
             
             # Note: This would require actual API access
             # For now, we'll create mock data
-            print("   ⚠️ API access not configured, using mock data")
+            print("    API access not configured, using mock data")
             return self._load_mock_atlas()
             
         except Exception as e:
-            print(f"   ❌ Error loading from API: {e}")
+            print(f"    Error loading from API: {e}")
             return self._load_mock_atlas()
         
         return False
     
     def _load_mock_atlas(self) -> bool:
         """Create mock Blue Brain Atlas data for development/testing."""
-        print("   🧪 Creating mock Blue Brain Atlas data...")
+        print("    Creating mock Blue Brain Atlas data...")
         
         # Create realistic mock data based on known brain regions
         mock_regions = self._create_mock_regions()
@@ -204,7 +204,7 @@ class BlueBrainAtlasIntegrator:
             metadata={"source": "mock", "description": "Development/testing data"}
         )
         
-        print(f"   ✅ Created mock atlas with {len(mock_regions)} regions")
+        print(f"    Created mock atlas with {len(mock_regions)} regions")
         return True
     
     def _create_mock_regions(self) -> Dict[int, CellularRegion]:
@@ -363,7 +363,7 @@ class BlueBrainAtlasIntegrator:
         if not self.atlas_data:
             return {"enhanced": False, "reason": "No Blue Brain Atlas data"}
         
-        print(f"🔬 Enhancing registration with Blue Brain cellular data...")
+        print(f"Enhancing registration with Blue Brain cellular data...")
         
         enhanced_features = []
         cellular_metrics = {}
@@ -471,16 +471,16 @@ class BlueBrainAtlasIntegrator:
             with open(output_file, 'w') as f:
                 json.dump(export_data, f, indent=2)
             
-            print(f"   ✅ Exported Blue Brain Atlas to {output_file}")
+            print(f"    Exported Blue Brain Atlas to {output_file}")
             return True
             
         except Exception as e:
-            print(f"   ❌ Error exporting atlas: {e}")
+            print(f"    Error exporting atlas: {e}")
             return False
 
 # Example usage and testing
 if __name__ == "__main__":
-    print("🧠 Testing Blue Brain Atlas Integrator...")
+    print(" Testing Blue Brain Atlas Integrator...")
     
     # Initialize integrator
     integrator = BlueBrainAtlasIntegrator(data_source="mock")
@@ -500,4 +500,4 @@ if __name__ == "__main__":
         composition = integrator.get_cellular_composition(region.region_id)
         print(f"Cellular composition for {region.name}: {composition}")
     
-    print("✅ Blue Brain Atlas Integrator test complete!")
+    print(" Blue Brain Atlas Integrator test complete!")

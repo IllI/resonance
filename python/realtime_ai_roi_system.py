@@ -111,7 +111,7 @@ class RealTimeAIROISystem:
         - Specialized ROI detection network
         - Feature extraction models
         """
-        print("🧠 Loading AI Models for Real-Time Analysis...")
+        print(" Loading AI Models for Real-Time Analysis...")
         
         try:
             # These would be actual model loading operations
@@ -127,10 +127,10 @@ class RealTimeAIROISystem:
                 print(f"   Loading {model_name}...")
                 # self.models[model_name] = load_model(model_paths.get(model_name))
                 
-            print("✅ AI Models Loaded Successfully")
+            print(" AI Models Loaded Successfully")
             
         except Exception as e:
-            print(f"❌ Error loading AI models: {e}")
+            print(f" Error loading AI models: {e}")
             return False
         
         return True
@@ -146,10 +146,10 @@ class RealTimeAIROISystem:
         4. Network analysis and change detection
         5. Results streaming and visualization
         """
-        print("🚀 Starting Real-Time AI Processing Pipeline...")
+        print(" Starting Real-Time AI Processing Pipeline...")
         
         if self.is_running:
-            print("⚠️ System already running")
+            print(" System already running")
             return
         
         self.is_running = True
@@ -165,7 +165,7 @@ class RealTimeAIROISystem:
         # Start scanner data streaming
         # self._start_scanner_stream()
         
-        print("✅ Real-Time Processing Started")
+        print(" Real-Time Processing Started")
         print(f"   Max Latency Target: {self.max_latency_ms}ms")
         print("   Status: CONCEPTUAL IMPLEMENTATION")
     
@@ -179,7 +179,7 @@ class RealTimeAIROISystem:
         - Handle dropped frames gracefully
         - Provide immediate feedback for neurofeedback applications
         """
-        print("🔄 Real-Time Processing Loop Started")
+        print(" Real-Time Processing Loop Started")
         
         while self.is_running:
             try:
@@ -196,7 +196,7 @@ class RealTimeAIROISystem:
                 
                 # Check latency constraints
                 if processing_time > self.max_latency_ms:
-                    print(f"⚠️ High latency: {processing_time:.1f}ms (target: {self.max_latency_ms}ms)")
+                    print(f" High latency: {processing_time:.1f}ms (target: {self.max_latency_ms}ms)")
                 
                 # Send results to output queue
                 self.results_queue.put(results)
@@ -204,7 +204,7 @@ class RealTimeAIROISystem:
             except queue.Empty:
                 continue
             except Exception as e:
-                print(f"❌ Processing error: {e}")
+                print(f" Processing error: {e}")
                 continue
     
     def _process_volume_realtime(self, volume: RealTimeVolume) -> Dict:
@@ -259,7 +259,7 @@ class RealTimeAIROISystem:
                 results['neurofeedback'] = feedback_signal
             
         except Exception as e:
-            print(f"❌ Volume processing error: {e}")
+            print(f" Volume processing error: {e}")
             results['error'] = str(e)
         
         return results
@@ -393,7 +393,7 @@ class RealTimeAIROISystem:
         if self.processing_thread:
             self.processing_thread.join(timeout=2.0)
         
-        print("✅ Real-Time Processing Stopped")
+        print(" Real-Time Processing Stopped")
 
 def main():
     """
@@ -406,23 +406,23 @@ def main():
     print("=" * 70)
     print()
     print("📅 IMPLEMENTATION TIMELINE:")
-    print("   Phase 1: Setup & Data Acquisition ✅ COMPLETED")
-    print("   Phase 2: Core fMRI Analysis Pipeline ✅ COMPLETED")
-    print("   Phase 3: GPU Acceleration & 3D Visualization 🔄 CURRENT")
-    print("   Phase 3+ or 4: Real-Time AI ROI System 📋 PLANNED")
+    print("   Phase 1: Setup & Data Acquisition  COMPLETED")
+    print("   Phase 2: Core fMRI Analysis Pipeline  COMPLETED")
+    print("   Phase 3: GPU Acceleration & 3D Visualization  CURRENT")
+    print("   Phase 3+ or 4: Real-Time AI ROI System  PLANNED")
     print()
     
-    print("🧠 SYSTEM CAPABILITIES (When Implemented):")
-    print("   ✅ Real-time fMRI data streaming from scanner")
-    print("   ✅ AI-powered brain activation pattern recognition")
-    print("   ✅ Automatic ROI detection and classification")
-    print("   ✅ < 100ms processing latency for critical applications")
-    print("   ✅ GPU-accelerated preprocessing and AI inference")
-    print("   ✅ Real-time neurofeedback capabilities")
-    print("   ✅ Network change detection during live scanning")
+    print(" SYSTEM CAPABILITIES (When Implemented):")
+    print("    Real-time fMRI data streaming from scanner")
+    print("    AI-powered brain activation pattern recognition")
+    print("    Automatic ROI detection and classification")
+    print("    < 100ms processing latency for critical applications")
+    print("    GPU-accelerated preprocessing and AI inference")
+    print("    Real-time neurofeedback capabilities")
+    print("    Network change detection during live scanning")
     print()
     
-    print("🔧 TECHNICAL REQUIREMENTS:")
+    print(" TECHNICAL REQUIREMENTS:")
     print("   • Pre-trained AI models for brain feature recognition")
     print("   • Scanner integration APIs (DICOM, real-time streaming)")
     print("   • Ultra-low latency GPU processing pipeline")
@@ -435,7 +435,7 @@ def main():
         processing_mode=ProcessingMode.FEATURE_DETECTION
     )
     
-    print("🎯 WHEN TO IMPLEMENT:")
+    print(" WHEN TO IMPLEMENT:")
     print("   OPTIMAL TIMING: After Phase 3 GPU acceleration is complete")
     print("   RATIONALE: Requires foundation of:")
     print("     1. GPU-accelerated preprocessing (Phase 3)")
@@ -444,14 +444,14 @@ def main():
     print("     4. Scanner integration protocols")
     print()
     
-    print("📊 PERFORMANCE TARGETS:")
+    print(" PERFORMANCE TARGETS:")
     print("   • Processing latency: < 100ms per volume")
     print("   • ROI detection accuracy: > 90%")
     print("   • Real-time throughput: 2-3 volumes/second (typical TR)")
     print("   • System uptime: > 99.9% during scanning sessions")
     print()
     
-    print("🚀 IMPLEMENTATION PHASES:")
+    print(" IMPLEMENTATION PHASES:")
     print("   Phase 3B: GPU-accelerated real-time preprocessing")
     print("   Phase 4A: AI model training and integration")
     print("   Phase 4B: Scanner streaming protocols")

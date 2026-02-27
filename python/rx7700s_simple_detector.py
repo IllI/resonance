@@ -26,7 +26,7 @@ class RX7700SSimpleDetector:
     
     def __init__(self, auto_setup_environment=True):
         """Initialize RX 7700S detector."""
-        print("🎯 RX 7700S Simple Detector")
+        print(" RX 7700S Simple Detector")
         print("=" * 40)
         
         # Setup environment for RX 7700S if requested
@@ -47,7 +47,7 @@ class RX7700SSimpleDetector:
     def _detect_rx7700s(self):
         """Detect RX 7700S using simple memory-based heuristic."""
         try:
-            print("🔍 Detecting RX 7700S using memory heuristic...")
+            print(" Detecting RX 7700S using memory heuristic...")
             
             # Get AMD platform
             platforms = cl.get_platforms()
@@ -94,7 +94,7 @@ class RX7700SSimpleDetector:
                 rx7700s_info = max(discrete_gpus, key=lambda x: x['memory_gb'])
                 self.rx7700s_device = rx7700s_info['device']
                 
-                print(f"🎯 SELECTED RX 7700S:")
+                print(f" SELECTED RX 7700S:")
                 print(f"   GPU {rx7700s_info['index']}: {rx7700s_info['name']}")
                 print(f"   Memory: {rx7700s_info['memory_gb']} GB")
                 print(f"   Compute Units: {rx7700s_info['compute_units']}")
@@ -103,18 +103,18 @@ class RX7700SSimpleDetector:
                 self.rx7700s_context = cl.Context([self.rx7700s_device])
                 self.rx7700s_queue = cl.CommandQueue(self.rx7700s_context)
                 
-                print("✅ RX 7700S context created successfully")
+                print(" RX 7700S context created successfully")
                 return True
                 
             else:
-                print("❌ No discrete GPU found (all GPUs have ≤4GB memory)")
+                print(" No discrete GPU found (all GPUs have ≤4GB memory)")
                 print("Available GPUs:")
                 for info in device_info:
                     print(f"  - {info['name']}: {info['memory_gb']} GB")
                 return False
                 
         except Exception as e:
-            print(f"❌ RX 7700S detection failed: {e}")
+            print(f" RX 7700S detection failed: {e}")
             return False
     
     def get_device_info(self) -> Dict[str, Any]:
@@ -148,7 +148,7 @@ class RX7700SSimpleDetector:
             return {'error': 'RX 7700S not available'}
         
         try:
-            print(f"🧪 Testing RX 7700S compute performance...")
+            print(f" Testing RX 7700S compute performance...")
             print(f"   Test size: {test_size:,} elements")
             
             # Create test data
@@ -205,7 +205,7 @@ class RX7700SSimpleDetector:
                 'performance_rating': 'Excellent' if operations_per_second > 1e9 else 'Good' if operations_per_second > 1e8 else 'Fair'
             }
             
-            print(f"✅ RX 7700S compute test completed:")
+            print(f" RX 7700S compute test completed:")
             print(f"   Execution time: {execution_time*1000:.2f} ms")
             print(f"   Performance: {operations_per_second/1e6:.1f} M ops/sec")
             print(f"   Rating: {result['performance_rating']}")
@@ -213,7 +213,7 @@ class RX7700SSimpleDetector:
             return result
             
         except Exception as e:
-            print(f"❌ RX 7700S compute test failed: {e}")
+            print(f" RX 7700S compute test failed: {e}")
             return {'error': str(e), 'success': False}
     
     def process_brain_data_simple(self, brain_data: np.ndarray) -> Dict[str, Any]:
@@ -222,7 +222,7 @@ class RX7700SSimpleDetector:
             return {'error': 'RX 7700S not available'}
         
         try:
-            print(f"🧠 Processing brain data on RX 7700S...")
+            print(f" Processing brain data on RX 7700S...")
             print(f"   Data shape: {brain_data.shape}")
             print(f"   Data size: {brain_data.size:,} voxels")
             
@@ -283,7 +283,7 @@ class RX7700SSimpleDetector:
                 'device_used': self.rx7700s_device.name.strip()
             }
             
-            print(f"✅ Brain processing completed:")
+            print(f" Brain processing completed:")
             print(f"   Processing time: {processing_time:.3f} seconds")
             print(f"   Voxels/second: {result['voxels_per_second']:,.0f}")
             print(f"   Device: {result['device_used']}")
@@ -291,12 +291,12 @@ class RX7700SSimpleDetector:
             return result
             
         except Exception as e:
-            print(f"❌ Brain processing failed: {e}")
+            print(f" Brain processing failed: {e}")
             return {'error': str(e), 'success': False}
 
 def test_rx7700s_detection():
     """Test RX 7700S detection and basic functionality."""
-    print("🧪 RX 7700S Detection Test")
+    print(" RX 7700S Detection Test")
     print("=" * 50)
     
     try:
@@ -306,7 +306,7 @@ def test_rx7700s_detection():
         # Get device info
         device_info = detector.get_device_info()
         if 'error' not in device_info:
-            print("\n📊 RX 7700S Device Information:")
+            print("\n RX 7700S Device Information:")
             for key, value in device_info.items():
                 print(f"   {key}: {value}")
         
@@ -321,27 +321,27 @@ def test_rx7700s_detection():
         
         # Summary
         print("\n" + "="*50)
-        print("🎯 RX 7700S TEST SUMMARY")
+        print(" RX 7700S TEST SUMMARY")
         print("="*50)
         
         detection_ok = detector.rx7700s_device is not None
         compute_ok = compute_result.get('success', False)
         brain_ok = brain_result.get('success', False)
         
-        print(f"RX 7700S Detection: {'✅' if detection_ok else '❌'}")
-        print(f"Compute Test:       {'✅' if compute_ok else '❌'}")
-        print(f"Brain Processing:   {'✅' if brain_ok else '❌'}")
+        print(f"RX 7700S Detection: {'' if detection_ok else ''}")
+        print(f"Compute Test:       {'' if compute_ok else ''}")
+        print(f"Brain Processing:   {'' if brain_ok else ''}")
         
         if detection_ok and compute_ok and brain_ok:
             print("\n🎉 SUCCESS: RX 7700S is working correctly!")
             print("   Monitor Task Manager → Performance → GPU 1 during processing")
         else:
-            print("\n⚠️ Issues detected with RX 7700S setup")
+            print("\n Issues detected with RX 7700S setup")
         
         return detection_ok and compute_ok and brain_ok
         
     except Exception as e:
-        print(f"❌ Test failed: {e}")
+        print(f" Test failed: {e}")
         return False
 
 if __name__ == "__main__":

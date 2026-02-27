@@ -18,7 +18,7 @@ from typing import Dict, List, Optional
 
 def create_realistic_4d_fmri_with_motion():
     """Create realistic 4D fMRI data with temporal variations and motion artifacts."""
-    print("🧠 Creating realistic 4D fMRI data with motion and temporal dynamics...")
+    print(" Creating realistic 4D fMRI data with motion and temporal dynamics...")
     
     # Parameters for realistic fMRI
     n_timepoints = 100
@@ -63,7 +63,7 @@ def create_realistic_4d_fmri_with_motion():
             shifted_volume = np.roll(shifted_volume, int(motion_z), axis=2)
             fmri_4d[t_idx] = shifted_volume
     
-    print(f"✅ Created realistic 4D fMRI: {fmri_4d.shape}")
+    print(f" Created realistic 4D fMRI: {fmri_4d.shape}")
     print(f"   Signal range: [{np.min(fmri_4d):.3f}, {np.max(fmri_4d):.3f}]")
     print(f"   Temporal variation: {np.std(np.mean(fmri_4d, axis=(1,2,3))):.4f}")
     
@@ -80,7 +80,7 @@ def demonstrate_4d_registration():
         from spatiotemporal_brain_registration import SpatioTemporalBrainRegistrator
         
         # Step 1: Create and load 3D brain model
-        print("\n📋 Step 1: Creating 3D Anatomical Brain Model")
+        print("\n Step 1: Creating 3D Anatomical Brain Model")
         print("-" * 50)
         
         generator = Brain3DModelGenerator(
@@ -91,7 +91,7 @@ def demonstrate_4d_registration():
         )
         
         # Create mock 3D anatomical volume
-        print("🧠 Creating mock 3D anatomical brain volume...")
+        print(" Creating mock 3D anatomical brain volume...")
         volume_shape = (64, 64, 48)
         anatomical_volume = np.random.rand(*volume_shape) * 0.3 + 0.5
         
@@ -108,22 +108,22 @@ def demonstrate_4d_registration():
         generator._preprocess_volume()
         
         # Detect anatomical features
-        print("🔍 Detecting anatomical features...")
+        print(" Detecting anatomical features...")
         features = generator.detect_anatomical_features()
         
-        print(f"✅ Detected {len(features)} anatomical features")
+        print(f" Detected {len(features)} anatomical features")
         
         # Step 2: Create realistic 4D fMRI data
-        print("\n📋 Step 2: Creating 4D fMRI Time Series")
+        print("\n Step 2: Creating 4D fMRI Time Series")
         print("-" * 50)
         
         fmri_4d = create_realistic_4d_fmri_with_motion()
         
         # Step 3: Perform 4D registration
-        print("\n📋 Step 3: 4D Spatial-Temporal Registration")
+        print("\n Step 3: 4D Spatial-Temporal Registration")
         print("-" * 50)
         
-        print("🔄 Performing 4D registration to align anatomy with function...")
+        print(" Performing 4D registration to align anatomy with function...")
         start_time = time.time()
         
         registration_results = generator.register_to_fmri_timeseries(fmri_4d)
@@ -131,23 +131,23 @@ def demonstrate_4d_registration():
         registration_time = time.time() - start_time
         
         if registration_results:
-            print(f"✅ 4D Registration completed in {registration_time:.2f}s")
+            print(f" 4D Registration completed in {registration_time:.2f}s")
             print(f"   Timepoints processed: {registration_results['n_timepoints']}")
             print(f"   Anatomical regions tracked: {registration_results['n_regions']}")
             print(f"   Average alignment score: {registration_results['avg_alignment_score']:.3f}")
             print(f"   Average confidence: {registration_results['avg_confidence']:.3f}")
         else:
-            print("❌ 4D registration failed - using fallback analysis")
+            print(" 4D registration failed - using fallback analysis")
             return None
         
         # Step 4: Analyze anatomical dynamics
-        print("\n📋 Step 4: Anatomical-Functional Analysis")
+        print("\n Step 4: Anatomical-Functional Analysis")
         print("-" * 50)
         
-        print("🧬 Analyzing temporal dynamics of anatomical regions...")
+        print(" Analyzing temporal dynamics of anatomical regions...")
         dynamics = generator.analyze_anatomical_dynamics()
         
-        print(f"📊 Temporal Dynamics Analysis:")
+        print(f" Temporal Dynamics Analysis:")
         for region_name, stats in list(dynamics.items())[:5]:  # Show first 5 regions
             print(f"   {region_name}:")
             print(f"     Mean signal: {stats['mean_signal']:.4f}")
@@ -155,7 +155,7 @@ def demonstrate_4d_registration():
             print(f"     Peak at timepoint: {stats['peak_timepoint']}")
         
         # Step 5: Demonstrate temporal queries
-        print("\n📋 Step 5: Temporal Signal Queries")
+        print("\n Step 5: Temporal Signal Queries")
         print("-" * 50)
         
         # Get signal for specific region at specific timepoint
@@ -167,7 +167,7 @@ def demonstrate_4d_registration():
                 sample_region, sample_timepoint
             )
             
-            print(f"🎯 Signal query example:")
+            print(f" Signal query example:")
             print(f"   Region: {sample_region}")
             print(f"   Timepoint: {sample_timepoint}")
             print(f"   Signal value: {signal_value:.4f}")
@@ -179,7 +179,7 @@ def demonstrate_4d_registration():
                 print(f"   Profile range: [{np.min(temporal_profile):.4f}, {np.max(temporal_profile):.4f}]")
         
         # Step 6: Visualization (create simple plots)
-        print("\n📋 Step 6: Creating Temporal Visualizations")
+        print("\n Step 6: Creating Temporal Visualizations")
         print("-" * 50)
         
         if dynamics and len(dynamics) > 0:
@@ -188,19 +188,19 @@ def demonstrate_4d_registration():
         print("\n🎉 4D Registration Demonstration Completed!")
         print("=" * 70)
         print("Key Capabilities Demonstrated:")
-        print("✅ 3D anatomical model registration to 4D fMRI")
-        print("✅ Spatial-temporal alignment across timepoints")
-        print("✅ Anatomical attribution of functional signals")
-        print("✅ Temporal dynamics analysis")
-        print("✅ Real-time signal querying by region and time")
+        print(" 3D anatomical model registration to 4D fMRI")
+        print(" Spatial-temporal alignment across timepoints")
+        print(" Anatomical attribution of functional signals")
+        print(" Temporal dynamics analysis")
+        print(" Real-time signal querying by region and time")
         
         return registration_results, dynamics
         
     except ImportError as e:
-        print(f"❌ Required modules not available: {e}")
+        print(f" Required modules not available: {e}")
         return None, None
     except Exception as e:
-        print(f"❌ Demo failed: {e}")
+        print(f" Demo failed: {e}")
         import traceback
         traceback.print_exc()
         return None, None
@@ -271,14 +271,14 @@ def create_temporal_visualizations(generator, dynamics):
         # Save the plot
         output_path = "4d_registration_analysis.png"
         plt.savefig(output_path, dpi=150, bbox_inches='tight')
-        print(f"📊 Temporal visualizations saved to: {output_path}")
+        print(f" Temporal visualizations saved to: {output_path}")
         
         # Don't show plot in automated environment
         # plt.show()
         plt.close()
         
     except Exception as e:
-        print(f"⚠️ Visualization creation failed: {e}")
+        print(f" Visualization creation failed: {e}")
 
 def run_performance_benchmark():
     """Benchmark the 4D registration performance."""
@@ -306,12 +306,12 @@ def run_performance_benchmark():
         
         processing_time = time.time() - start_time
         
-        print(f"   ⏱️ Processing time: {processing_time:.3f}s")
-        print(f"   🔥 Throughput: {n_timepoints/processing_time:.1f} timepoints/sec")
+        print(f"    Processing time: {processing_time:.3f}s")
+        print(f"    Throughput: {n_timepoints/processing_time:.1f} timepoints/sec")
 
 def main():
     """Main demonstration function."""
-    print("🧠 Enhanced 4D Brain Analysis System")
+    print(" Enhanced 4D Brain Analysis System")
     print("=" * 60)
     print("Demonstrates advanced spatial-temporal registration")
     print("allowing 3D anatomical models to 'shift' through 4D space")
@@ -325,7 +325,7 @@ def main():
         # Run performance benchmark
         run_performance_benchmark()
         
-        print("\n🎯 Summary of 4D Registration Capabilities:")
+        print("\n Summary of 4D Registration Capabilities:")
         print("  • Spatial-temporal alignment of anatomy to function")
         print("  • Motion correction and registration across timepoints")
         print("  • Anatomical attribution of functional signals")
@@ -333,7 +333,7 @@ def main():
         print("  • Dynamic analysis of brain region activity")
         print("  • Comprehensive visualization and reporting")
         
-        print(f"\n💡 This system enables precise mapping of:")
+        print(f"\n This system enables precise mapping of:")
         print(f"  • Which anatomical regions are active at each timepoint")
         print(f"  • How brain network activity evolves over time")
         print(f"  • Temporal correlations between anatomical regions")
@@ -343,4 +343,4 @@ def main():
 
 if __name__ == "__main__":
     success = main()
-    print(f"\n{'✅ Demo completed successfully!' if success else '❌ Demo failed.'}")
+    print(f"\n{' Demo completed successfully!' if success else ' Demo failed.'}")

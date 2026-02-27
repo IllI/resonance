@@ -38,7 +38,7 @@ class RX7700SBrainAnalyzerFixed:
     
     def __init__(self):
         """Initialize fixed RX 7700S brain analyzer."""
-        print("🧠 RX 7700S Brain Analyzer - Fixed Version")
+        print(" RX 7700S Brain Analyzer - Fixed Version")
         print("=" * 60)
         print("Using successful GPU selection methods from guide")
         print()
@@ -52,7 +52,7 @@ class RX7700SBrainAnalyzerFixed:
         
         # Get device info
         self.device_info = self.gpu_detector.get_device_info()
-        print(f"✅ RX 7700S initialized: {self.device_info['name']}")
+        print(f" RX 7700S initialized: {self.device_info['name']}")
         print(f"   Memory: {self.device_info['memory_gb']} GB")
         print(f"   Compute Units: {self.device_info['compute_units']}")
         print()
@@ -71,7 +71,7 @@ class RX7700SBrainAnalyzerFixed:
         Returns:
             Dictionary with analysis results
         """
-        print("🧠 RX 7700S Brain Volume Analysis")
+        print(" RX 7700S Brain Volume Analysis")
         print("=" * 50)
         print(f"Volume shape: {volume_data.shape}")
         print(f"Volume size: {volume_data.size:,} voxels")
@@ -84,7 +84,7 @@ class RX7700SBrainAnalyzerFixed:
         
         try:
             # Step 1: GPU-accelerated brain segmentation
-            print("🔍 Step 1: GPU Brain Segmentation...")
+            print(" Step 1: GPU Brain Segmentation...")
             segmentation_result = self._gpu_brain_segmentation(volume_data)
             
             if not segmentation_result['success']:
@@ -94,18 +94,18 @@ class RX7700SBrainAnalyzerFixed:
             results['segmentation'] = segmentation_result
             
             # Step 2: Brain tissue classification
-            print("🧬 Step 2: GPU Tissue Classification...")
+            print(" Step 2: GPU Tissue Classification...")
             classification_result = self._gpu_tissue_classification(volume_data, brain_mask)
             results['classification'] = classification_result
             
             # Step 3: Surface generation (if requested)
             if generate_surface:
-                print("🎨 Step 3: Brain Surface Generation...")
+                print(" Step 3: Brain Surface Generation...")
                 surface_result = self._generate_brain_surface(volume_data, brain_mask, surface_quality)
                 results['surface'] = surface_result
             
             # Step 4: Analysis metrics
-            print("📊 Step 4: Computing Analysis Metrics...")
+            print(" Step 4: Computing Analysis Metrics...")
             metrics_result = self._compute_brain_metrics(volume_data, brain_mask)
             results['metrics'] = metrics_result
             
@@ -120,7 +120,7 @@ class RX7700SBrainAnalyzerFixed:
                 'gpu_memory_gb': self.device_info['memory_gb']
             })
             
-            print(f"\n✅ Brain analysis completed in {total_time:.2f} seconds")
+            print(f"\n Brain analysis completed in {total_time:.2f} seconds")
             print(f"   GPU: {self.device_info['name']}")
             print(f"   Brain voxels: {np.sum(brain_mask):,}")
             
@@ -134,7 +134,7 @@ class RX7700SBrainAnalyzerFixed:
             
         except Exception as e:
             error_time = time.time() - start_time
-            print(f"❌ Brain analysis failed after {error_time:.2f} seconds: {e}")
+            print(f" Brain analysis failed after {error_time:.2f} seconds: {e}")
             
             return {
                 'success': False,
@@ -311,7 +311,7 @@ class RX7700SBrainAnalyzerFixed:
 
 def test_rx7700s_brain_analyzer():
     """Test the fixed RX 7700S brain analyzer."""
-    print("🧪 RX 7700S Brain Analyzer Test")
+    print(" RX 7700S Brain Analyzer Test")
     print("=" * 60)
     
     try:
@@ -350,11 +350,11 @@ def test_rx7700s_brain_analyzer():
         
         # Display results
         print("\n" + "=" * 60)
-        print("🎯 ANALYSIS RESULTS")
+        print(" ANALYSIS RESULTS")
         print("=" * 60)
         
         if results['success']:
-            print("✅ Brain analysis completed successfully!")
+            print(" Brain analysis completed successfully!")
             print(f"   Total time: {results['total_processing_time']:.2f} seconds")
             print(f"   GPU used: {results['gpu_device']}")
             
@@ -389,12 +389,12 @@ def test_rx7700s_brain_analyzer():
             print("   Check Task Manager → Performance → GPU 1 for usage")
             
         else:
-            print(f"❌ Brain analysis failed: {results['error']}")
+            print(f" Brain analysis failed: {results['error']}")
         
         return results['success']
         
     except Exception as e:
-        print(f"❌ Test failed: {e}")
+        print(f" Test failed: {e}")
         return False
 
 if __name__ == "__main__":

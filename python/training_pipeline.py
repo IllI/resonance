@@ -36,10 +36,10 @@ from brain_atlas_manager import BrainAtlasManager
 try:
     from enhanced_dual_gpu_analyzer import EnhancedDualGPUBrainAnalyzer
     HAS_GPU_ACCELERATION = True
-    print("✅ Dual AMD GPU acceleration available (780M + RX 7700S)")
+    print(" Dual AMD GPU acceleration available (780M + RX 7700S)")
 except ImportError:
     HAS_GPU_ACCELERATION = False
-    print("⚠️ GPU acceleration not available - falling back to CPU")
+    print(" GPU acceleration not available - falling back to CPU")
 
 class TrainingPipeline:
     """
@@ -59,17 +59,17 @@ class TrainingPipeline:
         
         # Initialize with GPU acceleration if available and requested
         if use_gpu and HAS_GPU_ACCELERATION:
-            print("🚀 Initializing with Dual AMD GPU Acceleration...")
+            print(" Initializing with Dual AMD GPU Acceleration...")
             self.gpu_analyzer = EnhancedDualGPUBrainAnalyzer()
             self.detector = SignalProcessingROIDetector()
             self.use_gpu = True
         else:
-            print("💻 Initializing with CPU-only processing...")
+            print(" Initializing with CPU-only processing...")
             self.detector = SignalProcessingROIDetector()
             self.gpu_analyzer = None
             self.use_gpu = False
             
-        print(f"📁 Training data directory set to: {self.data_dir.absolute()}")
+        print(f" Training data directory set to: {self.data_dir.absolute()}")
 
     def download_openneuro_dataset(self, dataset_id: str, subject_id: str) -> Optional[Path]:
         """
@@ -84,10 +84,10 @@ class TrainingPipeline:
         """
         subject_dir = self.data_dir / dataset_id / subject_id
         if subject_dir.exists():
-            print(f"✅ Dataset '{dataset_id}/{subject_id}' already exists locally.")
+            print(f" Dataset '{dataset_id}/{subject_id}' already exists locally.")
             return subject_dir
 
-        print(f"📥 Downloading dataset '{dataset_id}' for subject '{subject_id}'...")
+        print(f" Downloading dataset '{dataset_id}' for subject '{subject_id}'...")
         # This is a simplified downloader; a real implementation would use the OpenNeuro API
         # For this project, we'll use a known dataset from nilearn's fetchers
         # which simplifies the download process significantly.
@@ -112,7 +112,7 @@ class TrainingPipeline:
         confounds_file = rest_dataset.confounds[0]
 
         # 2. Load and preprocess the data
-        print("🧠 Loading and preprocessing real fMRI data...")
+        print(" Loading and preprocessing real fMRI data...")
         fmri_img = image.load_img(fmri_file)
         
         # The Harvard-Oxford atlas provides the clear, integer-based labels we need.
@@ -163,10 +163,10 @@ class TrainingPipeline:
         self._train_on_anatomical_networks(fmri_data, anat_atlas_data, atlas_labels)
         
         # 4. Evaluate the model by trying to detect the trained networks
-        print("\n📈 Evaluating model by detecting trained ROIs...")
+        print("\n Evaluating model by detecting trained ROIs...")
         
         # CRITICAL: Disable noise reduction during evaluation to prevent GPU errors
-        print("🔧 Disabling noise reduction during evaluation to prevent padlen errors...")
+        print(" Disabling noise reduction during evaluation to prevent padlen errors...")
         original_noise_reduction = self.detector.noise_reduction
         self.detector.noise_reduction = False
         
@@ -177,7 +177,7 @@ class TrainingPipeline:
         finally:
             # Restore original noise reduction setting
             self.detector.noise_reduction = original_noise_reduction
-            print("🔧 Restored noise reduction setting")
+            print(" Restored noise reduction setting")
 
         print("\n--- Pipeline Finished ---")
 
@@ -205,7 +205,7 @@ class TrainingPipeline:
         """
         Trains the LAMSTAR coordinator using an anatomical atlas.
         """
-        print(f"\n💪 Training coordinator on real anatomical networks (fMRI shape: {fmri_data.shape}, Atlas shape: {atlas_data.shape})...")
+        print(f"\n Training coordinator on real anatomical networks (fMRI shape: {fmri_data.shape}, Atlas shape: {atlas_data.shape})...")
         
         # Map anatomical regions from Harvard-Oxford atlas to our NetworkState enum
         # This mapping is based on well-known neuroscience literature.
@@ -235,7 +235,7 @@ class TrainingPipeline:
                         else:
                             self.detector.train_on_roi(fmri_data, roi_mask, network_state)
                     else:
-                        print(f"      ⚠️ Warning: Region '{label_name}' not found in atlas data.")
+                        print(f"       Warning: Region '{label_name}' not found in atlas data.")
                     break # Move to the next label once a keyword is matched
 
     def _gpu_accelerated_training(self, fmri_data: np.ndarray, roi_mask: np.ndarray, 
@@ -248,22 +248,22 @@ class TrainingPipeline:
         - Spatial feature extraction (GPU convolutions)
         - Temporal pattern analysis
         """
-        print(f"      🚀 GPU-accelerating training for {region_name}...")
+        print(f"       GPU-accelerating training for {region_name}...")
         
         # Ensure dimensions are compatible to prevent vector bounds errors
-        print(f"         📊 Data shapes: fMRI={fmri_data.shape}, ROI mask={roi_mask.shape}")
+        print(f"          Data shapes: fMRI={fmri_data.shape}, ROI mask={roi_mask.shape}")
         
         # Validate dimensions match
         if fmri_data.shape[1:] != roi_mask.shape:
-            print(f"         ⚠️ Dimension mismatch: fMRI spatial {fmri_data.shape[1:]} != ROI mask {roi_mask.shape}")
-            print("         🔧 Attempting to fix dimension alignment...")
+            print(f"          Dimension mismatch: fMRI spatial {fmri_data.shape[1:]} != ROI mask {roi_mask.shape}")
+            print("          Attempting to fix dimension alignment...")
             
             # Try to align dimensions
             if len(fmri_data.shape) == 4 and len(roi_mask.shape) == 3:
                 # fMRI is (time, x, y, z), mask is (x, y, z) - this is correct
                 pass
             else:
-                print(f"         ❌ Cannot align dimensions, skipping GPU acceleration for {region_name}")
+                print(f"          Cannot align dimensions, skipping GPU acceleration for {region_name}")
                 self.detector.train_on_roi(fmri_data, roi_mask, network_state)
                 return
         
@@ -272,7 +272,7 @@ class TrainingPipeline:
             # Find voxels in the ROI
             roi_voxels = np.where(roi_mask > 0)
             if len(roi_voxels[0]) == 0:
-                print(f"         ⚠️ No voxels found in ROI mask for {region_name}")
+                print(f"          No voxels found in ROI mask for {region_name}")
                 return
             
             print(f"         📍 Found {len(roi_voxels[0])} voxels in ROI")
@@ -286,14 +286,14 @@ class TrainingPipeline:
                 if (x < fmri_data.shape[1] and y < fmri_data.shape[2] and z < fmri_data.shape[3]):
                     roi_timeseries_matrix[:, i] = fmri_data[:, x, y, z]
                 else:
-                    print(f"         ⚠️ Skipping out-of-bounds voxel ({x}, {y}, {z})")
+                    print(f"          Skipping out-of-bounds voxel ({x}, {y}, {z})")
             
             # Average across voxels for GPU processing
             roi_timeseries = np.mean(roi_timeseries_matrix, axis=1)
-            print(f"         ✅ Extracted ROI time series: {roi_timeseries.shape}")
+            print(f"          Extracted ROI time series: {roi_timeseries.shape}")
             
         except Exception as e:
-            print(f"         ❌ Error extracting ROI time series: {e}")
+            print(f"          Error extracting ROI time series: {e}")
             # Fallback to standard training
             self.detector.train_on_roi(fmri_data, roi_mask, network_state)
             return
@@ -310,7 +310,7 @@ class TrainingPipeline:
                 gpu_results = {'success': False}
             
             if gpu_results.get('success', False):
-                print(f"         ✅ Dual GPU analysis completed in {gpu_results.get('total_time', 0):.3f}s")
+                print(f"          Dual GPU analysis completed in {gpu_results.get('total_time', 0):.3f}s")
                 print(f"            - 780M GPU time: {gpu_results.get('gpu0_time', 0):.3f}s")
                 print(f"            - RX 7700S GPU time: {gpu_results.get('gpu1_time', 0):.3f}s")
                 
@@ -322,22 +322,22 @@ class TrainingPipeline:
                     'global_efficiency': 0.5
                 })
             else:
-                print("         ⚠️ GPU analysis failed, using CPU fallback")
+                print("          GPU analysis failed, using CPU fallback")
                 gpu_correlation_matrix = np.corrcoef(roi_timeseries.reshape(1, -1))
                 gpu_metrics = {'node_strength': np.array([1.0]), 'clustering_coefficient': np.array([0.5]), 'global_efficiency': 0.5}
                 
         except Exception as e:
-            print(f"         ⚠️ GPU error: {e}, using CPU fallback")
+            print(f"          GPU error: {e}, using CPU fallback")
             gpu_correlation_matrix = np.corrcoef(roi_timeseries.reshape(1, -1))
             gpu_metrics = {'node_strength': np.array([1.0]), 'clustering_coefficient': np.array([0.5]), 'global_efficiency': 0.5}
         
         # Now train the LAMSTAR coordinator with GPU-computed features
-        print("         🧠 Training LAMSTAR coordinator with GPU-accelerated features...")
+        print("          Training LAMSTAR coordinator with GPU-accelerated features...")
         
         # CRITICAL: Disable noise reduction during GPU training to avoid padlen errors
         original_noise_reduction = self.detector.noise_reduction
         self.detector.noise_reduction = False
-        print("         🔧 Temporarily disabled noise reduction to prevent GPU errors")
+        print("          Temporarily disabled noise reduction to prevent GPU errors")
         
         # We still need to call the standard training method, but now with GPU-computed data
         # The GPU acceleration mainly speeds up the correlation and metrics computation
@@ -346,13 +346,13 @@ class TrainingPipeline:
         finally:
             # Restore original noise reduction setting
             self.detector.noise_reduction = original_noise_reduction
-            print("         🔧 Restored noise reduction setting")
+            print("          Restored noise reduction setting")
         
-        print(f"      ✅ GPU-accelerated training completed for {region_name}")
+        print(f"       GPU-accelerated training completed for {region_name}")
 
     def _report_evaluation_results(self, report: Dict, atlas_data: np.ndarray, atlas_labels: List[str]):
         """Provides a simple report of evaluation results."""
-        print(f"\n📊 Detection Results:")
+        print(f"\n Detection Results:")
         print(f"   Total ROIs Detected: {report['total_rois_detected']}")
         if not report['detections']:
             print("   No ROIs detected above the confidence threshold.")

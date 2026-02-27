@@ -16,26 +16,26 @@ def check_dependency(module_name, package_name=None):
     
     spec = importlib.util.find_spec(module_name)
     if spec is None:
-        print(f"❌ {package_name} not found")
+        print(f" {package_name} not found")
         return False
     else:
-        print(f"✅ {package_name} available")
+        print(f" {package_name} available")
         return True
 
 def install_dependency(package_name):
     """Install a Python package."""
-    print(f"📦 Installing {package_name}...")
+    print(f" Installing {package_name}...")
     try:
         subprocess.check_call([sys.executable, "-m", "pip", "install", package_name])
-        print(f"✅ {package_name} installed successfully")
+        print(f" {package_name} installed successfully")
         return True
     except subprocess.CalledProcessError:
-        print(f"❌ Failed to install {package_name}")
+        print(f" Failed to install {package_name}")
         return False
 
 def main():
     """Main launcher function."""
-    print("🧠 Ultra-Realistic Brain GUI Launcher")
+    print(" Ultra-Realistic Brain GUI Launcher")
     print("=" * 50)
     
     # Check required dependencies
@@ -50,7 +50,7 @@ def main():
         ("warnings", "warnings (built-in)")
     ]
     
-    print("\n📋 Checking dependencies...")
+    print("\n Checking dependencies...")
     missing_deps = []
     
     for module, package in required_deps:
@@ -60,17 +60,17 @@ def main():
     
     # Install missing dependencies
     if missing_deps:
-        print(f"\n⚠️ Missing dependencies: {', '.join(missing_deps)}")
+        print(f"\n Missing dependencies: {', '.join(missing_deps)}")
         print("Attempting to install...")
         
         for dep in missing_deps:
             if not install_dependency(dep):
-                print(f"\n❌ Failed to install {dep}")
+                print(f"\n Failed to install {dep}")
                 print("Please install manually: pip install " + dep)
                 return False
     
     # Check optional dependencies
-    print("\n🔍 Checking optional dependencies...")
+    print("\n Checking optional dependencies...")
     optional_deps = [
         ("brain_3d_model_generator", "brain_3d_model_generator.py"),
         ("brain_3d_interface", "brain_3d_interface.py"),
@@ -83,16 +83,16 @@ def main():
         check_dependency(module, file_name)
     
     # Launch the GUI
-    print("\n🚀 Launching Ultra-Realistic Brain GUI...")
+    print("\n Launching Ultra-Realistic Brain GUI...")
     try:
         from ultra_realistic_brain_gui import main as launch_gui
         launch_gui()
     except ImportError as e:
-        print(f"❌ Failed to launch GUI: {e}")
+        print(f" Failed to launch GUI: {e}")
         print("Make sure ultra_realistic_brain_gui.py is in the same directory")
         return False
     except Exception as e:
-        print(f"❌ Error launching GUI: {e}")
+        print(f" Error launching GUI: {e}")
         return False
     
     return True
@@ -100,7 +100,7 @@ def main():
 if __name__ == "__main__":
     success = main()
     if not success:
-        print("\n❌ Launcher failed. Check the error messages above.")
+        print("\n Launcher failed. Check the error messages above.")
         input("Press Enter to exit...")
     else:
-        print("\n✅ GUI launched successfully!")
+        print("\n GUI launched successfully!")

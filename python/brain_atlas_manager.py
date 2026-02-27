@@ -20,7 +20,7 @@ try:
     HAS_NILEARN_PLOTTING = True
 except ImportError:
     HAS_NILEARN_PLOTTING = False
-    print("⚠️ Nilearn plotting not available - some visualization features limited")
+    print("WARNING: Nilearn plotting not available - some visualization features limited")
 
 class BrainAtlasManager:
     """
@@ -42,7 +42,7 @@ class BrainAtlasManager:
             'harvard_oxford', 'aal', 'craddock_2012', 'power_2011'
         ]
         
-        print(f"🧠 Initialized Brain Atlas Manager")
+        print(f"Initialized Brain Atlas Manager")
         print(f"   Atlas: {atlas_name}")
         
         # Load the specified atlas
@@ -55,10 +55,10 @@ class BrainAtlasManager:
         Returns:
             True if successful, False otherwise
         """
-        print(f"📥 Loading {self.atlas_name} atlas...")
+        print(f"Loading {self.atlas_name} atlas...")
         
         if not HAS_NILEARN_PLOTTING:
-            print("⚠️ Nilearn not available - creating mock atlas for testing")
+            print("WARNING: Nilearn not available - creating mock atlas for testing")
             self._create_mock_atlas()
             return True
         
@@ -98,7 +98,7 @@ class BrainAtlasManager:
                 unique_regions = np.unique(atlas_img.get_fdata())
                 unique_regions = unique_regions[unique_regions > 0]  # Remove background
                 
-                print(f"✅ Atlas loaded successfully:")
+                print(f"Atlas loaded successfully:")
                 print(f"   Regions: {len(self.atlas_labels)}")
                 print(f"   Unique values: {len(unique_regions)}")
                 print(f"   Shape: {atlas_img.shape}")
@@ -106,7 +106,7 @@ class BrainAtlasManager:
             return True
             
         except Exception as e:
-            print(f"❌ Failed to load atlas {self.atlas_name}: {e}")
+            print(f"Failed to load atlas {self.atlas_name}: {e}")
             print("   Creating mock atlas for testing...")
             self._create_mock_atlas()
             return False
@@ -121,7 +121,7 @@ class BrainAtlasManager:
         np.random.seed(42)
         self.region_coordinates = np.random.normal(0, 30, (n_regions, 3))
         
-        print(f"✅ Mock atlas created:")
+        print(f"Mock atlas created:")
         print(f"   Regions: {len(self.atlas_labels)}")
         print(f"   Coordinates: {self.region_coordinates.shape}")
     
@@ -138,10 +138,10 @@ class BrainAtlasManager:
         if self.region_coordinates is not None:
             return self.region_coordinates
         
-        print("📍 Extracting region coordinates...")
+        print("Extracting region coordinates...")
         
         if not HAS_NILEARN_PLOTTING or self.atlas_data is None:
-            print("⚠️ Using mock coordinates")
+            print("WARNING: Using mock coordinates")
             return self.region_coordinates if self.region_coordinates is not None else np.zeros((100, 3))
         
         try:
@@ -167,12 +167,12 @@ class BrainAtlasManager:
                     coordinates.append(world_coords)
             
             self.region_coordinates = np.array(coordinates)
-            print(f"✅ Extracted {len(coordinates)} region coordinates")
+            print(f"Extracted {len(coordinates)} region coordinates")
             
             return self.region_coordinates
             
         except Exception as e:
-            print(f"⚠️ Error extracting coordinates: {e}")
+            print(f"WARNING: Error extracting coordinates: {e}")
             print("   Using mock coordinates")
             if self.region_coordinates is None:
                 n_regions = len(self.atlas_labels)
@@ -193,7 +193,7 @@ class BrainAtlasManager:
         Returns:
             Dictionary with mapped connectivity information
         """
-        print("🗺️ Mapping connectivity to atlas regions...")
+        print("Mapping connectivity to atlas regions...")
         
         n_regions = connectivity_matrix.shape[0]
         
@@ -203,7 +203,7 @@ class BrainAtlasManager:
             if n_regions <= max_atlas_regions:
                 region_indices = list(range(n_regions))
             else:
-                print(f"⚠️ More regions ({n_regions}) than atlas labels ({max_atlas_regions})")
+                print(f"WARNING: More regions ({n_regions}) than atlas labels ({max_atlas_regions})")
                 region_indices = list(range(min(n_regions, max_atlas_regions)))
         
         # Create mapping
@@ -235,7 +235,7 @@ class BrainAtlasManager:
                     ]
                 }
         
-        print(f"✅ Mapped {len(mapped_connectivity)} regions to atlas")
+        print(f"Mapped {len(mapped_connectivity)} regions to atlas")
         return mapped_connectivity
     
     def identify_network_hubs(self, 
@@ -251,7 +251,7 @@ class BrainAtlasManager:
         Returns:
             List of hub regions with their properties
         """
-        print(f"🎯 Identifying network hubs (threshold={threshold})...")
+        print(f"Identifying network hubs (threshold={threshold})...")
         
         # Calculate node strength (sum of absolute connections)
         node_strength = np.sum(np.abs(connectivity_matrix), axis=1)
@@ -274,7 +274,7 @@ class BrainAtlasManager:
         # Sort by node strength
         hubs.sort(key=lambda x: x['node_strength'], reverse=True)
         
-        print(f"✅ Identified {len(hubs)} network hubs:")
+        print(f"Identified {len(hubs)} network hubs:")
         for i, hub in enumerate(hubs[:5]):  # Show top 5
             print(f"   {i+1}. {hub['region_name']}: {hub['node_strength']:.3f}")
         
@@ -293,7 +293,7 @@ class BrainAtlasManager:
         Returns:
             Dictionary with change analysis results
         """
-        print("📈 Analyzing connectivity changes across brain regions...")
+        print("Analyzing connectivity changes across brain regions...")
         
         if len(connectivity_matrices) < 2:
             return {'error': 'Need at least 2 connectivity matrices'}
@@ -357,7 +357,7 @@ class BrainAtlasManager:
             }
         }
         
-        print(f"✅ Change analysis completed:")
+        print(f"Change analysis completed:")
         print(f"   Most variable connections: {len(most_variable_connections)}")
         print(f"   Change points analyzed: {len(change_points)}")
         print(f"   Mean connectivity variance: {results['summary']['mean_variance']:.6f}")
@@ -375,13 +375,13 @@ class BrainAtlasManager:
         Returns:
             Formatted anatomical summary string
         """
-        print("📋 Creating anatomical summary...")
+        print("Creating anatomical summary...")
         
         summary_lines = [
-            f"🧠 Brain Network Analysis Summary - {self.atlas_name.upper()} Atlas",
+            f"Brain Network Analysis Summary - {self.atlas_name.upper()} Atlas",
             "=" * 60,
             "",
-            f"📊 Atlas Information:",
+            f"Atlas Information:",
             f"   Atlas: {self.atlas_name}",
             f"   Total regions: {len(self.atlas_labels)}",
             f"   Coordinate system: {'Available' if self.region_coordinates is not None else 'Not available'}",
@@ -391,13 +391,13 @@ class BrainAtlasManager:
         # Add connectivity information if available
         if 'most_variable_connections' in analysis_results:
             summary_lines.extend([
-                "🔗 Most Variable Connections:",
+                "Most Variable Connections:",
                 ""
             ])
             
             for i, conn in enumerate(analysis_results['most_variable_connections'][:5]):
                 summary_lines.append(
-                    f"   {i+1}. {conn['region_1']} ↔ {conn['region_2']}"
+                    f"   {i+1}. {conn['region_1']} <-> {conn['region_2']}"
                 )
                 summary_lines.append(
                     f"      Variance: {conn['variance']:.6f}, Mean: {conn['mean_connectivity']:.3f}"
@@ -407,24 +407,24 @@ class BrainAtlasManager:
         # Add change point information
         if 'change_point_analysis' in analysis_results:
             summary_lines.extend([
-                "📈 Temporal Changes:",
+                "Temporal Changes:",
                 ""
             ])
             
             for change_name, change_info in analysis_results['change_point_analysis'].items():
                 summary_lines.append(f"   {change_name}:")
-                summary_lines.append(f"      Regions: {change_info['max_change_regions'][0]} ↔ {change_info['max_change_regions'][1]}")
+                summary_lines.append(f"      Regions: {change_info['max_change_regions'][0]} <-> {change_info['max_change_regions'][1]}")
                 summary_lines.append(f"      Magnitude: {change_info['change_magnitude']:.6f}")
                 summary_lines.append("")
         
         summary_text = "\n".join(summary_lines)
-        print("✅ Anatomical summary created")
+        print("Anatomical summary created")
         
         return summary_text
 
 def main():
     """Test the Brain Atlas Manager."""
-    print("🧠 Testing Brain Atlas Manager")
+    print("Testing Brain Atlas Manager")
     print("=" * 60)
     
     try:
@@ -433,7 +433,7 @@ def main():
         
         # Get region coordinates
         coordinates = atlas_manager.get_region_coordinates()
-        print(f"\n📍 Region coordinates shape: {coordinates.shape}")
+        print(f"\nRegion coordinates shape: {coordinates.shape}")
         
         # Create a mock connectivity matrix for testing
         n_regions = min(50, len(atlas_manager.atlas_labels))
@@ -442,7 +442,7 @@ def main():
         connectivity_matrix = (connectivity_matrix + connectivity_matrix.T) / 2  # Make symmetric
         np.fill_diagonal(connectivity_matrix, 1.0)
         
-        print(f"\n🔗 Testing with {n_regions}x{n_regions} connectivity matrix")
+        print(f"\nTesting with {n_regions}x{n_regions} connectivity matrix")
         
         # Map connectivity to atlas
         mapped_connectivity = atlas_manager.map_connectivity_to_atlas(connectivity_matrix)
@@ -466,16 +466,16 @@ def main():
         summary = atlas_manager.create_anatomical_summary(change_results)
         
         print("\n" + "=" * 60)
-        print("🎉 BRAIN ATLAS INTEGRATION COMPLETED!")
+        print("BRAIN ATLAS INTEGRATION COMPLETED!")
         print("=" * 60)
         
-        print(f"\n📊 Results Summary:")
+        print(f"\nResults Summary:")
         print(f"   Atlas regions: {len(atlas_manager.atlas_labels)}")
         print(f"   Mapped connections: {len(mapped_connectivity)}")
         print(f"   Network hubs: {len(hubs)}")
         print(f"   Variable connections: {len(change_results['most_variable_connections'])}")
         
-        print(f"\n🧠 Top Network Hubs:")
+        print(f"\nTop Network Hubs:")
         for i, hub in enumerate(hubs[:3]):
             print(f"   {i+1}. {hub['region_name']}")
             print(f"      Strength: {hub['node_strength']:.3f}")
@@ -485,7 +485,7 @@ def main():
         return True
         
     except Exception as e:
-        print(f"❌ Test failed: {e}")
+        print(f"Test failed: {e}")
         import traceback
         traceback.print_exc()
         return False

@@ -19,7 +19,7 @@ from pathlib import Path
 
 def demonstrate_dataset_discovery():
     """Demonstrate discovering brain datasets."""
-    print("🔍 Dataset Discovery Demonstration")
+    print(" Dataset Discovery Demonstration")
     print("=" * 50)
     
     # Simulate real OpenNeuro dataset discovery
@@ -58,9 +58,9 @@ def demonstrate_dataset_discovery():
         }
     ]
     
-    print(f"✅ Discovered {len(discovered_datasets)} brain imaging datasets")
-    print(f"📊 Total subjects available: {sum(d['subjects'] for d in discovered_datasets):,}")
-    print(f"💾 Total data size: {sum(d['size_gb'] for d in discovered_datasets):.1f} GB")
+    print(f" Discovered {len(discovered_datasets)} brain imaging datasets")
+    print(f" Total subjects available: {sum(d['subjects'] for d in discovered_datasets):,}")
+    print(f" Total data size: {sum(d['size_gb'] for d in discovered_datasets):.1f} GB")
     
     for i, dataset in enumerate(discovered_datasets, 1):
         print(f"\n  {i}. {dataset['name']} ({dataset['id']})")
@@ -73,15 +73,15 @@ def demonstrate_dataset_discovery():
 
 def demonstrate_download_capabilities():
     """Demonstrate download capabilities."""
-    print("\n📥 Download Capabilities Demonstration")
+    print("\n Download Capabilities Demonstration")
     print("=" * 50)
     
-    print("🚀 Real Download Commands (production mode):")
+    print(" Real Download Commands (production mode):")
     print("   aws s3 sync s3://openneuro.org/ds000221/ ./data/ds000221/ --no-sign-request --include='*/anat/*T1w.nii.gz'")
     print("   aws s3 sync s3://openneuro.org/ds003097/ ./data/ds003097/ --no-sign-request --include='*/anat/*T1w.nii.gz'")
     print("   aws s3 sync s3://openneuro.org/ds005747/ ./data/ds005747/ --no-sign-request --include='*/anat/*T1w.nii.gz'")
     
-    print("\n✅ Download Features:")
+    print("\n Download Features:")
     print("   • Parallel multi-threaded downloads")
     print("   • Automatic file filtering (T1w anatomical only)")
     print("   • Resume interrupted downloads")
@@ -89,19 +89,19 @@ def demonstrate_download_capabilities():
     print("   • Subject count limiting for testing")
     
     # Simulate download progress
-    print("\n📊 Simulated Download Progress:")
+    print("\n Simulated Download Progress:")
     datasets = ['ds000221', 'ds003097', 'ds005747']
     for dataset in datasets:
-        print(f"   📂 {dataset}: Downloaded 50/50 subjects ✅")
+        print(f"    {dataset}: Downloaded 50/50 subjects ")
     
     print("\n💯 All datasets downloaded successfully!")
 
 def demonstrate_processing_pipeline():
     """Demonstrate the brain processing pipeline."""
-    print("\n🧠 Brain Processing Pipeline Demonstration") 
+    print("\n Brain Processing Pipeline Demonstration") 
     print("=" * 50)
     
-    print("🔄 Processing Steps for Each Brain:")
+    print(" Processing Steps for Each Brain:")
     print("   1. Load MRI volume (NIfTI format)")
     print("   2. Quality control validation")
     print("   3. Advanced preprocessing (noise reduction, normalization)")
@@ -115,7 +115,7 @@ def demonstrate_processing_pipeline():
     print("   7. 3D brain model generation")
     
     # Simulate processing results
-    print("\n📊 Simulated Processing Results:")
+    print("\n Simulated Processing Results:")
     
     processing_results = [
         {'dataset': 'ds000221', 'subjects': 50, 'features': 2450, 'success_rate': 0.96},
@@ -129,13 +129,13 @@ def demonstrate_processing_pipeline():
     avg_success_rate = sum(r['success_rate'] for r in processing_results) / len(processing_results)
     
     for result in processing_results:
-        print(f"   📊 {result['dataset']}: {result['subjects']} subjects → {result['features']} features ({result['success_rate']:.1%} success)")
+        print(f"    {result['dataset']}: {result['subjects']} subjects → {result['features']} features ({result['success_rate']:.1%} success)")
     
-    print(f"\n🎯 Overall Results:")
+    print(f"\n Overall Results:")
     print(f"   👥 Total subjects processed: {total_subjects:,}")
-    print(f"   🧠 Total features extracted: {total_features:,}")
-    print(f"   📈 Average success rate: {avg_success_rate:.1%}")
-    print(f"   ⚡ Average features per subject: {total_features/total_subjects:.1f}")
+    print(f"    Total features extracted: {total_features:,}")
+    print(f"    Average success rate: {avg_success_rate:.1%}")
+    print(f"    Average features per subject: {total_features/total_subjects:.1f}")
 
 def demonstrate_model_training():
     """Demonstrate model training capabilities."""
@@ -156,25 +156,25 @@ def demonstrate_model_training():
         {'atlas': 'craddock', 'accuracy': 0.89, 'features': 6800, 'regions': 200}
     ]
     
-    print("\n📊 Training Results by Atlas:")
+    print("\n Training Results by Atlas:")
     for result in atlas_results:
-        print(f"   🧠 {result['atlas']}: {result['accuracy']:.1%} accuracy, {result['features']} features, {result['regions']} regions")
+        print(f"    {result['atlas']}: {result['accuracy']:.1%} accuracy, {result['features']} features, {result['regions']} regions")
     
     overall_accuracy = sum(r['accuracy'] for r in atlas_results) / len(atlas_results)
     total_trained_features = sum(r['features'] for r in atlas_results)
     
-    print(f"\n🎯 Overall Training Performance:")
-    print(f"   🎯 Combined accuracy: {overall_accuracy:.1%}")
-    print(f"   🧠 Total features trained: {total_trained_features:,}")
-    print(f"   🔄 Cross-validation score: 0.92")
-    print(f"   🌐 Generalization score: 0.88")
+    print(f"\n Overall Training Performance:")
+    print(f"    Combined accuracy: {overall_accuracy:.1%}")
+    print(f"    Total features trained: {total_trained_features:,}")
+    print(f"    Cross-validation score: 0.92")
+    print(f"    Generalization score: 0.88")
 
 def demonstrate_real_world_deployment():
     """Demonstrate real-world deployment capabilities."""
-    print("\n🚀 Real-World Deployment Demonstration")
+    print("\n Real-World Deployment Demonstration")
     print("=" * 50)
     
-    print("🎯 Production Training Scale:")
+    print(" Production Training Scale:")
     print("   • 5,000+ subjects from multiple datasets")
     print("   • 1,000,000+ anatomical features extracted")
     print("   • 200+ brain regions detected per subject")
@@ -187,17 +187,17 @@ def demonstrate_real_world_deployment():
     print("      • Disease progression monitoring")
     print("      • Treatment response evaluation")
     
-    print("   🔬 Research Applications")
+    print("    Research Applications")
     print("      • Large-scale neuroimaging studies")
     print("      • Cross-population brain comparisons")
     print("      • Longitudinal brain development")
     
-    print("   🧠 Neurotechnology Integration")
+    print("    Neurotechnology Integration")
     print("      • Real-time brain-computer interfaces")
     print("      • Neurofeedback systems")
     print("      • Brain stimulation targeting")
     
-    print("\n⚡ Performance Specifications:")
+    print("\n Performance Specifications:")
     print("   • Processing speed: 1000+ brains/hour")
     print("   • Detection accuracy: 95%+ on anatomical features")
     print("   • Memory efficiency: <2GB per brain volume")
@@ -230,7 +230,7 @@ def save_demonstration_report():
     with open(report_file, 'w') as f:
         json.dump(report, f, indent=2)
     
-    print(f"\n💾 Demonstration report saved: {report_file}")
+    print(f"\n Demonstration report saved: {report_file}")
     
     # Create markdown summary
     md_file = output_dir / "BRAIN_TRAINING_CAPABILITIES.md"
@@ -256,7 +256,7 @@ def save_demonstration_report():
 
 def main():
     """Run the comprehensive demonstration."""
-    print("🧠 Brain Model Training System - Comprehensive Demonstration")
+    print(" Brain Model Training System - Comprehensive Demonstration")
     print("=" * 80)
     print("Advanced 3D brain modeling trained on real neuroimaging datasets")
     print("from OpenNeuro, Human Connectome Project, OASIS, and other sources")
@@ -271,13 +271,13 @@ def main():
     
     print("\n🎉 DEMONSTRATION COMPLETED")
     print("=" * 50)
-    print("✅ System Capabilities Verified:")
-    print("   📊 Dataset Discovery & Download")
-    print("   🧠 Large-Scale Brain Processing")
+    print(" System Capabilities Verified:")
+    print("    Dataset Discovery & Download")
+    print("    Large-Scale Brain Processing")
     print("   🎓 Model Training & Validation")
-    print("   🚀 Production Deployment Ready")
+    print("    Production Deployment Ready")
     
-    print("\n🚀 Ready for Production Training:")
+    print("\n Ready for Production Training:")
     print("   1. Install dependencies: pip install nibabel nilearn boto3 plotly")
     print("   2. Configure AWS CLI for OpenNeuro access")
     print("   3. Run: python comprehensive_brain_training_orchestrator.py --subjects 5000")
@@ -286,7 +286,7 @@ def main():
     
     save_demonstration_report()
     
-    print(f"\n📈 Expected Production Results:")
+    print(f"\n Expected Production Results:")
     print(f"   • {sum(d['subjects'] for d in datasets):,} subjects processed")
     print(f"   • 1,000,000+ anatomical features extracted") 
     print(f"   • 95%+ accuracy on anatomical detection")

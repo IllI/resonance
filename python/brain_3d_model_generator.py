@@ -56,6 +56,18 @@ try:
 except ImportError:
     HAS_LOCAL_MODULES = False
     warnings.warn("Local modules not available - limited functionality")
+    
+    # Fallback ROIDetection dataclass when ai_roi_detector is not available
+    @dataclass
+    class ROIDetection:
+        """Fallback ROIDetection when ai_roi_detector is not available."""
+        region_id: int = 0
+        region_name: str = ""
+        confidence: float = 0.0
+        coordinates: Tuple[int, int, int] = (0, 0, 0)
+        network_state: str = "unknown"
+        activation_strength: float = 0.0
+        temporal_pattern: np.ndarray = None
 
 @dataclass
 class AnatomicalFeature:
@@ -150,7 +162,7 @@ class Brain3DModelGenerator:
         self.frequency_processor = FrequencyBrainProcessor() if HAS_LOCAL_MODULES else None
         self._initialize_components()
         
-        print(f"🧠 Advanced Brain 3D Model Generator initialized")
+        print(f" Advanced Brain 3D Model Generator initialized")
         print(f"   Atlas: {atlas_name}")
         print(f"   Detection threshold: {detection_confidence_threshold}")
         print(f"   Max regions to detect: {max_regions_detect}")
@@ -172,16 +184,16 @@ class Brain3DModelGenerator:
                         self.blue_brain_integrator = BlueBrainAtlasIntegrator(
                             data_source="mock"
                         )
-                        print("✅ Blue Brain Cell Atlas integrator initialized")
+                        print(" Blue Brain Cell Atlas integrator initialized")
                     except ImportError:
-                        print("⚠️ Blue Brain integrator not available")
+                        print(" Blue Brain integrator not available")
                         self.blue_brain_integrator = None
                 
-                print("✅ Components initialized successfully")
+                print(" Components initialized successfully")
             except Exception as e:
-                print(f"⚠️ Error initializing components: {e}")
+                print(f" Error initializing components: {e}")
         else:
-            print("⚠️ Local modules not available - limited functionality")
+            print(" Local modules not available - limited functionality")
     
     def _initialize_4d_registration_system(self):
         """Initialize the 4D spatial-temporal registration system."""
@@ -189,11 +201,11 @@ class Brain3DModelGenerator:
             from spatiotemporal_brain_registration import SpatiotemporalBrainRegistrator
             self.registrator_4d = SpatiotemporalBrainRegistrator()
             self.has_4d_registration = True
-            print("   🔄 4D spatial-temporal registration system initialized")
+            print("    4D spatial-temporal registration system initialized")
         except ImportError:
             self.registrator_4d = None
             self.has_4d_registration = False
-            print("   ⚠️ 4D registration system not available")
+            print("    4D registration system not available")
     
     def load_mri_volume(self, 
                        mri_path: Union[str, Path],
@@ -208,10 +220,10 @@ class Brain3DModelGenerator:
         Returns:
             Success status
         """
-        print(f"📂 Loading MRI volume from {mri_path}")
+        print(f" Loading MRI volume from {mri_path}")
         
         if not HAS_NIBABEL:
-            print("❌ nibabel not available - cannot load NIfTI files")
+            print(" nibabel not available - cannot load NIfTI files")
             return False
         
         try:
@@ -221,10 +233,10 @@ class Brain3DModelGenerator:
             
             # Handle different volume dimensions
             if len(volume_data.shape) == 4:
-                print(f"   📈 Detected 4D time series data: {volume_data.shape}")
+                print(f"    Detected 4D time series data: {volume_data.shape}")
                 # For 4D fMRI data, average across time to get 3D anatomical volume
                 self.brain_volume = np.mean(volume_data, axis=-1)
-                print(f"   📉 Averaged to 3D volume: {self.brain_volume.shape}")
+                print(f"    Averaged to 3D volume: {self.brain_volume.shape}")
                 
                 # Store the original 4D data for potential time series analysis
                 self.brain_volume_4d = volume_data
@@ -233,12 +245,12 @@ class Brain3DModelGenerator:
                 self._initialize_4d_registration_system()
                 
             elif len(volume_data.shape) == 3:
-                print(f"   📊 Detected 3D anatomical data: {volume_data.shape}")
+                print(f"    Detected 3D anatomical data: {volume_data.shape}")
                 self.brain_volume = volume_data
                 self.brain_volume_4d = None
                 
             else:
-                print(f"   ⚠️ Unsupported volume dimensions: {volume_data.shape}")
+                print(f"    Unsupported volume dimensions: {volume_data.shape}")
                 return False
             
             # Store metadata
@@ -246,7 +258,7 @@ class Brain3DModelGenerator:
             self.volume_affine = nifti_img.affine
             self.volume_header = nifti_img.header
             
-            print(f"✅ Loaded MRI volume: {self.volume_shape}")
+            print(f" Loaded MRI volume: {self.volume_shape}")
             
             # Preprocess if requested
             if preprocess:
@@ -255,16 +267,16 @@ class Brain3DModelGenerator:
             return True
             
         except Exception as e:
-            print(f"❌ Error loading MRI volume: {e}")
+            print(f" Error loading MRI volume: {e}")
             return False
     
     def _preprocess_volume(self):
         """Advanced preprocessing of MRI volume with frequency-based analysis."""
         if self.brain_volume is None:
-            print("⚠️ No brain volume loaded for preprocessing")
+            print(" No brain volume loaded for preprocessing")
             return
         
-        print("🔄 Advanced preprocessing of MRI volume...")
+        print(" Advanced preprocessing of MRI volume...")
         
         if self.frequency_processor:
             # Apply sophisticated noise reduction preserving signal characteristics
@@ -285,7 +297,7 @@ class Brain3DModelGenerator:
             min_val, max_val = np.min(self.brain_volume), np.max(self.brain_volume)
             self.brain_volume = (self.brain_volume - min_val) / (max_val - min_val)
         
-        print("✅ Advanced preprocessing complete")
+        print(" Advanced preprocessing complete")
         print(f"   Generated {'frequency volume and ' if self.frequency_analysis else ''}tissue probability maps")
     
     def detect_anatomical_features(self) -> List[AnatomicalFeature]:
@@ -296,20 +308,20 @@ class Brain3DModelGenerator:
             List of detected anatomical features
         """
         if self.brain_volume is None:
-            print("❌ No brain volume loaded for feature detection")
+            print(" No brain volume loaded for feature detection")
             return []
         
-        print("🔍 Detecting anatomical features with advanced multi-modal analysis...")
+        print(" Detecting anatomical features with advanced multi-modal analysis...")
         start_time = time.time()
         
         all_features = []
         
         # 1. PRIMARY: Blue Brain Cell Atlas enhanced detection (highest priority)
         if self.enable_blue_brain and self.blue_brain_integrator is not None:
-            print("   🧠 Using Blue Brain Cell Atlas as primary anatomical reference...")
+            print("    Using Blue Brain Cell Atlas as primary anatomical reference...")
             bb_features = self._detect_blue_brain_enhanced_features()
             all_features.extend(bb_features)
-            print(f"   ✅ Blue Brain detected {len(bb_features)} cellular-level features")
+            print(f"    Blue Brain detected {len(bb_features)} cellular-level features")
         
         # 2. Atlas-guided feature detection (enhanced with Blue Brain integration)
         if self.atlas_manager is not None:
@@ -340,7 +352,7 @@ class Brain3DModelGenerator:
             self.detected_features = self.detected_features[:self.max_regions_detect]
         
         duration = time.time() - start_time
-        print(f"✅ Detected {len(self.detected_features)} anatomical features in {duration:.2f}s")
+        print(f" Detected {len(self.detected_features)} anatomical features in {duration:.2f}s")
         
         # Print top features by confidence
         for i, feature in enumerate(sorted(self.detected_features, 
@@ -397,14 +409,14 @@ class Brain3DModelGenerator:
     
     def _detect_signal_based_rois(self) -> List[AnatomicalFeature]:
         """Detect ROIs using the original signal processing approach (preserving existing functionality)."""
-        print("   🎯 Signal-based ROI detection (original method)...")
+        print("    Signal-based ROI detection (original method)...")
         
         features = []
         
         try:
             # Use 4D volume if available, otherwise create single-timepoint 4D
             if hasattr(self, 'brain_volume_4d') and self.brain_volume_4d is not None:
-                print(f"     📈 Using 4D time series data: {self.brain_volume_4d.shape}")
+                print(f"      Using 4D time series data: {self.brain_volume_4d.shape}")
                 # Transpose to (time, x, y, z) format expected by ROI detector
                 if self.brain_volume_4d.shape[-1] > 10:  # Last dimension likely time
                     volume_4d = np.transpose(self.brain_volume_4d, (3, 0, 1, 2))
@@ -412,10 +424,10 @@ class Brain3DModelGenerator:
                     volume_4d = self.brain_volume_4d
             else:
                 # Create single-timepoint 4D volume for 3D data
-                print(f"     📊 Creating single-timepoint 4D from 3D: {self.brain_volume.shape}")
+                print(f"      Creating single-timepoint 4D from 3D: {self.brain_volume.shape}")
                 volume_4d = np.expand_dims(self.brain_volume, axis=0)
             
-            print(f"     🔄 Processing volume shape: {volume_4d.shape}")
+            print(f"      Processing volume shape: {volume_4d.shape}")
             
             # Detect ROIs using AI detector
             detected_rois = self.roi_detector.detect_rois(volume_4d, 
@@ -424,10 +436,10 @@ class Brain3DModelGenerator:
             # Convert ROIs to anatomical features using existing method
             features = self._convert_rois_to_features(detected_rois)
             
-            print(f"     📊 Found {len(features)} signal-based ROIs")
+            print(f"      Found {len(features)} signal-based ROIs")
             
         except Exception as e:
-            print(f"     ⚠️ Signal-based detection failed: {e}")
+            print(f"      Signal-based detection failed: {e}")
         
         return features
     
@@ -438,7 +450,7 @@ class Brain3DModelGenerator:
         features = []
         
         if not self.frequency_volume:
-            print("     ⚠️ No frequency volume available")
+            print("      No frequency volume available")
             return features
         
         for band_name, band_volume in self.frequency_volume.items():
@@ -472,12 +484,12 @@ class Brain3DModelGenerator:
                 )
                 features.append(feature)
         
-        print(f"     📊 Found {len(features)} frequency-based features")
+        print(f"      Found {len(features)} frequency-based features")
         return features
     
     def _detect_tissue_based_features(self) -> List[AnatomicalFeature]:
         """Detect anatomical features based on tissue probability maps."""
-        print("   🧠 Tissue-based feature detection...")
+        print("    Tissue-based feature detection...")
         
         features = []
         
@@ -519,7 +531,7 @@ class Brain3DModelGenerator:
                 )
                 features.append(feature)
         
-        print(f"     📊 Found {len(features)} tissue-based features")
+        print(f"      Found {len(features)} tissue-based features")
         return features
     
     def _detect_atlas_guided_features(self) -> List[AnatomicalFeature]:
@@ -596,12 +608,12 @@ class Brain3DModelGenerator:
                         features.append(feature)
                         
                         if i % 20 == 0:  # Progress update
-                            print(f"       ✅ {label}: {confidence:.3f} confidence")
+                            print(f"        {label}: {confidence:.3f} confidence")
             
-            print(f"     📊 Found {len(features)} high-precision atlas-guided features")
+            print(f"      Found {len(features)} high-precision atlas-guided features")
             
         except Exception as e:
-            print(f"     ⚠️ Atlas-guided detection failed: {e}")
+            print(f"      Atlas-guided detection failed: {e}")
         
         return features
     
@@ -788,7 +800,7 @@ class Brain3DModelGenerator:
     
     def _merge_and_deduplicate_features(self, features: List[AnatomicalFeature]) -> List[AnatomicalFeature]:
         """Merge similar features and remove duplicates."""
-        print("   🔄 Merging and deduplicating features...")
+        print("    Merging and deduplicating features...")
         
         if not features:
             return features
@@ -815,7 +827,7 @@ class Brain3DModelGenerator:
             if not merged:
                 merged_features.append(feature)
         
-        print(f"     📊 Merged {len(features)} → {len(merged_features)} features")
+        print(f"      Merged {len(features)} → {len(merged_features)} features")
         return merged_features
     
     def _create_sphere_mask(self, center: Tuple[int, int, int], radius: int) -> np.ndarray:
@@ -843,7 +855,7 @@ class Brain3DModelGenerator:
     
     def _detect_spatial_features_fallback(self) -> List[AnatomicalFeature]:
         """Fallback spatial feature detection when temporal analysis fails."""
-        print("🔄 Using spatial analysis fallback for feature detection...")
+        print(" Using spatial analysis fallback for feature detection...")
         
         features = []
         
@@ -937,7 +949,7 @@ class Brain3DModelGenerator:
         features.sort(key=lambda f: f.confidence, reverse=True)
         features = features[:min(len(features), 50)]  # Limit to top 50
         
-        print(f"   ✅ Generated {len(features)} features using spatial analysis fallback")
+        print(f"    Generated {len(features)} features using spatial analysis fallback")
         
         return features
     
@@ -950,14 +962,14 @@ class Brain3DModelGenerator:
             Dictionary containing the 3D model data with cellular information
         """
         if self.brain_volume is None:
-            print("❌ No brain volume loaded for model generation")
+            print(" No brain volume loaded for model generation")
             return {}
         
         if not self.detected_features:
-            print("⚠️ No features detected, running detection first")
+            print(" No features detected, running detection first")
             self.detect_anatomical_features()
         
-        print("🧠 Generating 3D brain model with Blue Brain Atlas enhancement...")
+        print(" Generating 3D brain model with Blue Brain Atlas enhancement...")
         start_time = time.time()
         
         # Create base model from brain volume
@@ -999,7 +1011,7 @@ class Brain3DModelGenerator:
                             'region_volume_mm3': cellular_data.get('region_volume_mm3', 0.0)
                         }
                 except Exception as e:
-                    print(f"⚠️ Could not extract cellular data for {feature.name}: {e}")
+                    print(f" Could not extract cellular data for {feature.name}: {e}")
         
         model['labeled_volume'] = labeled_volume
         model['cellular_composition'] = cellular_composition
@@ -1018,7 +1030,7 @@ class Brain3DModelGenerator:
                 'regions_with_cellular_data': len(cellular_composition)
             }
             
-            print(f"🔬 Blue Brain cellular enhancement:")
+            print(f" Blue Brain cellular enhancement:")
             print(f"   Total estimated cells: {total_cells:,}")
             print(f"   Neurons: {total_neurons:,}, Glia: {total_glia:,}")
             print(f"   Regions with cellular data: {len(cellular_composition)}")
@@ -1027,7 +1039,7 @@ class Brain3DModelGenerator:
         self.brain_model = model
         
         duration = time.time() - start_time
-        print(f"✅ 3D brain model generated in {duration:.2f}s")
+        print(f" 3D brain model generated in {duration:.2f}s")
         print(f"   Features: {len(self.detected_features)}")
         print(f"   Volume dimensions: {self.brain_volume.shape}")
         if self.enable_blue_brain:
@@ -1046,7 +1058,7 @@ class Brain3DModelGenerator:
             Success status
         """
         if self.brain_model is None:
-            print("❌ No brain model generated to save")
+            print(" No brain model generated to save")
             return False
         
         try:
@@ -1070,11 +1082,11 @@ class Brain3DModelGenerator:
                 metadata=self.brain_model['metadata']
             )
             
-            print(f"✅ 3D brain model saved to {output_path}")
+            print(f" 3D brain model saved to {output_path}")
             return True
             
         except Exception as e:
-            print(f"❌ Error saving brain model: {e}")
+            print(f" Error saving brain model: {e}")
             return False
     
     def load_model(self, model_path: Union[str, Path]) -> bool:
@@ -1117,14 +1129,14 @@ class Brain3DModelGenerator:
                 'metadata': data['metadata'].item()
             }
             
-            print(f"✅ 3D brain model loaded from {model_path}")
+            print(f" 3D brain model loaded from {model_path}")
             print(f"   Features: {len(self.detected_features)}")
             print(f"   Volume dimensions: {self.brain_volume.shape}")
             
             return True
             
         except Exception as e:
-            print(f"❌ Error loading brain model: {e}")
+            print(f" Error loading brain model: {e}")
             return False
     
     def register_to_fmri_timeseries(self, fmri_4d: np.ndarray) -> Dict:
@@ -1139,14 +1151,14 @@ class Brain3DModelGenerator:
             Dictionary containing registration results and anatomical attribution
         """
         if not hasattr(self, 'has_4d_registration') or not self.has_4d_registration:
-            print("❌ 4D registration system not available")
+            print(" 4D registration system not available")
             return {}
         
         if self.brain_volume is None or not self.detected_features:
-            print("❌ Brain model must be loaded and features detected first")
+            print(" Brain model must be loaded and features detected first")
             return {}
         
-        print(f"🔄 Registering 3D model to 4D fMRI sequence: {fmri_4d.shape}")
+        print(f" Registering 3D model to 4D fMRI sequence: {fmri_4d.shape}")
         
         # Prepare brain model for registration
         brain_model = {
@@ -1257,12 +1269,12 @@ class Brain3DModelGenerator:
         This method leverages cellular composition data from the Blue Brain Project
         to achieve even higher anatomical accuracy by using cellular-level ground truth.
         """
-        print("   🧠 Blue Brain Cell Atlas enhanced detection...")
+        print("    Blue Brain Cell Atlas enhanced detection...")
         
         features = []
         
         if not self.blue_brain_integrator:
-            print("     ⚠️ Blue Brain integrator not available")
+            print("      Blue Brain integrator not available")
             return features
         
         try:
@@ -1312,10 +1324,10 @@ class Brain3DModelGenerator:
                     )
                     features.append(feature)
             
-            print(f"     🔬 Found {len(features)} Blue Brain enhanced features")
+            print(f"      Found {len(features)} Blue Brain enhanced features")
             
         except Exception as e:
-            print(f"     ⚠️ Blue Brain detection failed: {e}")
+            print(f"      Blue Brain detection failed: {e}")
         
         return features
     
@@ -1400,7 +1412,7 @@ class Brain3DModelGenerator:
 
 def main():
     """Test the Advanced Brain 3D Model Generator."""
-    print("🧠 Testing Advanced Brain 3D Model Generator")
+    print(" Testing Advanced Brain 3D Model Generator")
     print("=" * 60)
     
     # Create model generator
@@ -1414,7 +1426,7 @@ def main():
     # Check if test data is available
     test_data_path = Path("data/test_mri_volume.nii.gz")
     if not test_data_path.exists():
-        print(f"⚠️ Test data not found at {test_data_path}")
+        print(f" Test data not found at {test_data_path}")
         print("   Creating realistic mock 4D fMRI volume for testing...")
         
         # Create realistic 4D fMRI volume (time series data)
@@ -1449,7 +1461,7 @@ def main():
         # Convert to 3D by averaging across time (for volume-based analysis)
         mock_volume_3d = np.mean(mock_volume_4d, axis=0)
         
-        print(f"✅ Created realistic mock volume: {mock_volume_3d.shape}")
+        print(f" Created realistic mock volume: {mock_volume_3d.shape}")
         print(f"   Signal range: [{np.min(mock_volume_3d):.3f}, {np.max(mock_volume_3d):.3f}]")
         
         # Set the brain volume
@@ -1463,16 +1475,16 @@ def main():
         model_generator.load_mri_volume(test_data_path)
     
     # Detect features with enhanced multi-modal approach
-    print("\n🔍 Running enhanced anatomical feature detection...")
+    print("\n Running enhanced anatomical feature detection...")
     features = model_generator.detect_anatomical_features()
     
     # If no features detected with signal-based method, use fallback detection
     if len(features) == 0:
-        print("\n⚠️ No features detected with temporal analysis, using spatial analysis...")
+        print("\n No features detected with temporal analysis, using spatial analysis...")
         features = model_generator._detect_spatial_features_fallback()
     
     # Generate 3D model
-    print("\n🧠 Generating 3D brain model...")
+    print("\n Generating 3D brain model...")
     model = model_generator.generate_3d_model()
     
     # Save model
@@ -1484,14 +1496,14 @@ def main():
     print("🎉 ADVANCED BRAIN 3D MODEL GENERATION COMPLETED!")
     print("=" * 60)
     
-    print(f"\n📊 Generation Results:")
+    print(f"\n Generation Results:")
     print(f"   Total features detected: {len(features)}")
     print(f"   Volume dimensions: {model_generator.brain_volume.shape}")
     print(f"   Atlas used: {model_generator.atlas_name}")
-    print(f"   Frequency analysis: {'✅' if model_generator.frequency_analysis else '❌'}")
+    print(f"   Frequency analysis: {'' if model_generator.frequency_analysis else ''}")
     
     if features:
-        print(f"\n🏆 Top 5 Detected Features:")
+        print(f"\n Top 5 Detected Features:")
         top_features = sorted(features, key=lambda f: f.confidence, reverse=True)[:5]
         for i, feature in enumerate(top_features, 1):
             tissue_type = feature.properties.get('tissue_type', 'Unknown')
@@ -1518,11 +1530,11 @@ def main():
             methods[method] = methods.get(method, 0) + 1
             tissues[tissue] = tissues.get(tissue, 0) + 1
         
-        print(f"📈 Detection Method Distribution:")
+        print(f" Detection Method Distribution:")
         for method, count in methods.items():
             print(f"   {method}: {count} features")
         
-        print(f"\n🧠 Tissue Type Distribution:")
+        print(f"\n Tissue Type Distribution:")
         for tissue, count in tissues.items():
             print(f"   {tissue}: {count} features")
     

@@ -48,7 +48,7 @@ try:
     HAS_DEPENDENCIES = True
 except ImportError as e:
     HAS_DEPENDENCIES = False
-    print(f"⚠️ Warning: Some dependencies not available - {e}")
+    print(f" Warning: Some dependencies not available - {e}")
 
 class UltraRealisticBrainGUI:
     """
@@ -58,7 +58,7 @@ class UltraRealisticBrainGUI:
     def __init__(self, root):
         """Initialize the main GUI application."""
         self.root = root
-        self.root.title("🧠 Ultra-Realistic Brain 3D Visualization")
+        self.root.title(" Ultra-Realistic Brain 3D Visualization")
         self.root.geometry("1400x900")
         self.root.configure(bg='#2b2b2b')
         
@@ -79,7 +79,7 @@ class UltraRealisticBrainGUI:
         self.processing_thread = None
         self.is_processing = False
         
-        print("🎮 Ultra-Realistic Brain GUI initialized")
+        print(" Ultra-Realistic Brain GUI initialized")
         print("   Ready for high-definition 3D brain visualization")
     
     def _initialize_components(self):
@@ -88,11 +88,11 @@ class UltraRealisticBrainGUI:
             if HAS_DEPENDENCIES:
                 # Initialize Blue Brain integrator
                 self.blue_brain_integrator = BlueBrainAtlasIntegrator(data_source="mock")
-                print("✅ Blue Brain Atlas integrator initialized")
+                print(" Blue Brain Atlas integrator initialized")
                 
                 # Initialize GPU analyzer
                 self.gpu_analyzer = EnhancedDualGPUBrainAnalyzer()
-                print("✅ Dual-GPU analyzer initialized")
+                print(" Dual-GPU analyzer initialized")
                 
                 # Initialize 3D model generator
                 self.model_generator = Brain3DModelGenerator(
@@ -100,17 +100,17 @@ class UltraRealisticBrainGUI:
                     use_gpu=True,
                     max_regions_detect=737  # Blue Brain atlas size
                 )
-                print("✅ 3D model generator initialized with Blue Brain support")
+                print(" 3D model generator initialized with Blue Brain support")
                 
                 # Initialize brain interface
                 self.brain_interface = Brain3DInterface()
-                print("✅ 3D brain interface initialized")
+                print(" 3D brain interface initialized")
                 
             else:
-                print("⚠️ Running in limited mode - some features unavailable")
+                print(" Running in limited mode - some features unavailable")
                 
         except Exception as e:
-            print(f"⚠️ Error initializing components: {e}")
+            print(f" Error initializing components: {e}")
     
     def _create_gui_layout(self):
         """Create the main GUI layout."""
@@ -180,7 +180,7 @@ class UltraRealisticBrainGUI:
     def _create_control_panel(self):
         """Create the control panel with all controls."""
         # Title
-        title_label = ttk.Label(self.control_frame, text="🧠 Brain Model Controls", 
+        title_label = ttk.Label(self.control_frame, text=" Brain Model Controls", 
                                font=("Arial", 14, "bold"))
         title_label.pack(pady=(0, 20))
         
@@ -202,7 +202,7 @@ class UltraRealisticBrainGUI:
     def _create_mri_loading_section(self):
         """Create the MRI loading section."""
         # MRI Loading Frame
-        mri_frame = ttk.LabelFrame(self.control_frame, text="📁 MRI Volume Loading", padding="10")
+        mri_frame = ttk.LabelFrame(self.control_frame, text=" MRI Volume Loading", padding="10")
         mri_frame.pack(fill="x", pady=(0, 15))
         
         # Load button
@@ -222,7 +222,7 @@ class UltraRealisticBrainGUI:
     def _create_model_generation_section(self):
         """Create the model generation section."""
         # Model Generation Frame
-        model_frame = ttk.LabelFrame(self.control_frame, text="🏗️ 3D Model Generation", padding="10")
+        model_frame = ttk.LabelFrame(self.control_frame, text=" 3D Model Generation", padding="10")
         model_frame.pack(fill="x", pady=(0, 15))
         
         # Atlas selection
@@ -253,7 +253,7 @@ class UltraRealisticBrainGUI:
     def _create_visualization_controls(self):
         """Create the visualization controls."""
         # Visualization Frame
-        viz_frame = ttk.LabelFrame(self.control_frame, text="🎨 Visualization Controls", padding="10")
+        viz_frame = ttk.LabelFrame(self.control_frame, text=" Visualization Controls", padding="10")
         viz_frame.pack(fill="x", pady=(0, 15))
         
         # Tissue type visibility
@@ -286,7 +286,7 @@ class UltraRealisticBrainGUI:
     def _create_blue_brain_section(self):
         """Create the Blue Brain integration section."""
         # Blue Brain Frame
-        bb_frame = ttk.LabelFrame(self.control_frame, text="🧬 Blue Brain Atlas", padding="10")
+        bb_frame = ttk.LabelFrame(self.control_frame, text=" Blue Brain Atlas", padding="10")
         bb_frame.pack(fill="x", pady=(0, 15))
         
         # Atlas info
@@ -307,17 +307,17 @@ class UltraRealisticBrainGUI:
     def _create_gpu_controls(self):
         """Create the GPU control section."""
         # GPU Frame
-        gpu_frame = ttk.LabelFrame(self.control_frame, text="⚡ GPU Acceleration", padding="10")
+        gpu_frame = ttk.LabelFrame(self.control_frame, text=" GPU Acceleration", padding="10")
         gpu_frame.pack(fill="x", pady=(0, 15))
         
         # GPU status
         if self.gpu_analyzer:
             try:
-                gpu_status = "✅ Available" if getattr(self.gpu_analyzer, 'HAS_OPENCL', False) else "❌ Not Available"
+                gpu_status = " Available" if getattr(self.gpu_analyzer, 'HAS_OPENCL', False) else " Not Available"
             except:
-                gpu_status = "⚠️ Unknown"
+                gpu_status = " Unknown"
         else:
-            gpu_status = "⚠️ Unknown"
+            gpu_status = " Unknown"
         
         ttk.Label(gpu_frame, text=f"OpenCL Status: {gpu_status}").pack(anchor="w")
         
@@ -337,7 +337,7 @@ class UltraRealisticBrainGUI:
     def _create_visualization_area(self):
         """Create the main visualization area with real-time 3D rendering."""
         # Title
-        title_label = ttk.Label(self.viz_frame, text="🎨 Real-Time 3D Brain Visualization", 
+        title_label = ttk.Label(self.viz_frame, text=" Real-Time 3D Brain Visualization", 
                                font=("Arial", 14, "bold"))
         title_label.pack(pady=(0, 20))
         
@@ -424,21 +424,21 @@ class UltraRealisticBrainGUI:
                     if file_ext in ['.dcm', '.dicom'] and HAS_PYDICOM:
                         # Load DICOM file
                         self.fmri_data = self._load_dicom_file(file_path)
-                        print(f"✅ Loaded DICOM data: {self.fmri_data.shape}")
+                        print(f" Loaded DICOM data: {self.fmri_data.shape}")
                     else:
                         # Try to load NIfTI file
                         import nibabel
                         nii_img = nibabel.load(file_path)
                         self.fmri_data = nii_img.get_fdata()
-                        print(f"✅ Loaded NIfTI data: {self.fmri_data.shape}")
+                        print(f" Loaded NIfTI data: {self.fmri_data.shape}")
                         
                 except ImportError:
                     # Fallback to mock data if libraries not available
-                    print("⚠️ Required libraries not available, using mock data")
+                    print(" Required libraries not available, using mock data")
                     self.fmri_data = np.random.randn(128, 128, 128)  # Mock 3D volume
                 except Exception as e:
                     # Fallback to mock data on error
-                    print(f"⚠️ Error loading file: {e}, using mock data")
+                    print(f" Error loading file: {e}, using mock data")
                     self.fmri_data = np.random.randn(128, 128, 128)  # Mock 3D volume
                 
                 # Update file info
@@ -650,9 +650,9 @@ class UltraRealisticBrainGUI:
                 # Success message
                 messagebox.showinfo("Real-Time 3D Visualization Success", 
                                   f"Ultra-realistic 3D brain model created!\n\n"
-                                  f"🎮 Real-time GPU-accelerated rendering\n"
-                                  f"🔄 Interactive 3D exploration\n"
-                                  f"⚡ Hardware acceleration enabled\n\n"
+                                  f" Real-time GPU-accelerated rendering\n"
+                                  f" Interactive 3D exploration\n"
+                                  f" Hardware acceleration enabled\n\n"
                                   f"Features: {self.brain_model.get('features', 'Unknown')}\n"
                                   f"Regions: {self.brain_model.get('regions', 'Unknown')}\n"
                                   f"GPU Accelerated: {self.brain_model.get('gpu_accelerated', 'Unknown')}")
@@ -803,7 +803,7 @@ class UltraRealisticBrainGUI:
         self.viz_canvas = tk.Canvas(fallback_frame, bg="white", height=400)
         self.viz_canvas.pack(fill="both", expand=True)
         
-        self.viz_canvas.create_text(400, 100, text="🎨 3D Brain Visualization", 
+        self.viz_canvas.create_text(400, 100, text=" 3D Brain Visualization", 
                                    font=("Arial", 18, "bold"), fill="darkblue")
         
         # Model info
@@ -820,7 +820,7 @@ class UltraRealisticBrainGUI:
         if self.blue_brain_integrator:
             summary = self.blue_brain_integrator.get_atlas_summary()
             y_pos += 20
-            self.viz_canvas.create_text(400, y_pos, text="🧬 Blue Brain Integration", 
+            self.viz_canvas.create_text(400, y_pos, text=" Blue Brain Integration", 
                                        font=("Arial", 14, "bold"), fill="darkgreen")
             y_pos += 25
             self.viz_canvas.create_text(400, y_pos, 
@@ -833,7 +833,7 @@ class UltraRealisticBrainGUI:
         
         # GPU acceleration info
         y_pos += 20
-        self.viz_canvas.create_text(400, y_pos, text="⚡ GPU Acceleration", 
+        self.viz_canvas.create_text(400, y_pos, text=" GPU Acceleration", 
                                    font=("Arial", 14, "bold"), fill="purple")
         y_pos += 25
         if self.gpu_analyzer:
@@ -914,7 +914,7 @@ class UltraRealisticBrainGUI:
             elif len(pixel_array.shape) == 3:
                 print("   📚 Multi-slice DICOM volume detected")
             else:
-                print(f"   ⚠️ Unexpected DICOM dimensions: {pixel_array.shape}")
+                print(f"    Unexpected DICOM dimensions: {pixel_array.shape}")
             
             # Normalize pixel values
             if pixel_array.dtype != np.float64:
@@ -926,7 +926,7 @@ class UltraRealisticBrainGUI:
                 pixel_array = (pixel_array - min_val) / (max_val - min_val)
             
             # Print DICOM metadata
-            print(f"   📋 DICOM Metadata:")
+            print(f"    DICOM Metadata:")
             print(f"      Patient ID: {getattr(dicom_data, 'PatientID', 'Unknown')}")
             print(f"      Study Date: {getattr(dicom_data, 'StudyDate', 'Unknown')}")
             print(f"      Modality: {getattr(dicom_data, 'Modality', 'Unknown')}")
@@ -935,7 +935,7 @@ class UltraRealisticBrainGUI:
             return pixel_array
             
         except Exception as e:
-            print(f"   ❌ Error loading DICOM: {e}")
+            print(f"    Error loading DICOM: {e}")
             raise
     
     def blue_brain_analysis(self):
@@ -947,22 +947,22 @@ class UltraRealisticBrainGUI:
         try:
             summary = self.blue_brain_integrator.get_atlas_summary()
             
-            analysis_text = f"""🧬 Blue Brain Atlas Analysis
+            analysis_text = f""" Blue Brain Atlas Analysis
 
-📊 Atlas Information:
+ Atlas Information:
 • Version: {summary['version']}
 • Last Updated: {summary['last_updated']}
 • Total Regions: {summary['total_regions']}
 • Total Cells: {summary['total_cells']:,}
 • Coordinate System: {summary['coordinate_system']}
 
-🔬 Cell Types Available:
+ Cell Types Available:
 • {', '.join(summary['cell_types'])}
 
-🏗️ Anatomical Levels:
+ Anatomical Levels:
 • {', '.join(summary['anatomical_levels'])}
 
-✅ Ready for ultra-realistic brain modeling with cellular-level detail!"""
+ Ready for ultra-realistic brain modeling with cellular-level detail!"""
             
             messagebox.showinfo("Blue Brain Atlas Analysis", analysis_text)
             
@@ -977,26 +977,26 @@ class UltraRealisticBrainGUI:
         
         try:
             # Mock performance data (in real implementation, get actual metrics)
-            performance_text = f"""⚡ GPU Performance Information
+            performance_text = f""" GPU Performance Information
 
-🎯 Hardware Configuration:
+ Hardware Configuration:
 • Primary GPU: AMD Radeon 780M (Integrated)
 • Secondary GPU: AMD Radeon RX 7700S (Discrete)
 • OpenCL Support: {'Available' if self.gpu_analyzer and getattr(self.gpu_analyzer, 'HAS_OPENCL', False) else 'Not Available'}
 
-🚀 Performance Metrics:
+ Performance Metrics:
 • 3D Model Generation: 18x speedup over CPU
 • Rendering Performance: 30x improvement
 • Memory Bandwidth: 85% utilization
 • Parallel Efficiency: 92%
 
-🔧 Optimization Features:
+ Optimization Features:
 • Dual-GPU load balancing
 • Cellular-guided processing
 • Real-time rendering pipeline
 • Hardware-accelerated visualization
 
-✅ Ready for ultra-realistic 3D brain visualization!"""
+ Ready for ultra-realistic 3D brain visualization!"""
             
             messagebox.showinfo("GPU Performance", performance_text)
             
@@ -1061,7 +1061,7 @@ class UltraRealisticBrainGUI:
     
     def show_about(self):
         """Show about information."""
-        about_text = """🧠 Ultra-Realistic Brain 3D Visualization GUI
+        about_text = """ Ultra-Realistic Brain 3D Visualization GUI
 
 Version: 1.0.0
 Built with: Python, Tkinter, Plotly
@@ -1128,7 +1128,7 @@ The system integrates Blue Brain Atlas with dual-GPU acceleration for ultra-real
         title_label.pack(pady=(0, 20))
         
         # File selection frame
-        file_frame = ttk.LabelFrame(main_frame, text="📁 DICOM File Selection", padding="10")
+        file_frame = ttk.LabelFrame(main_frame, text=" DICOM File Selection", padding="10")
         file_frame.pack(fill="x", pady=(0, 15))
         
         # Load DICOM button
@@ -1141,7 +1141,7 @@ The system integrates Blue Brain Atlas with dual-GPU acceleration for ultra-real
         self.dicom_info_text.pack(fill="both", expand=True)
         
         # Viewer frame
-        viewer_frame = ttk.LabelFrame(main_frame, text="🖼️ DICOM Image Display", padding="10")
+        viewer_frame = ttk.LabelFrame(main_frame, text=" DICOM Image Display", padding="10")
         viewer_frame.pack(fill="both", expand=True, pady=(15, 0))
         
         # Canvas for DICOM display
@@ -1186,26 +1186,26 @@ The system integrates Blue Brain Atlas with dual-GPU acceleration for ultra-real
         metadata_info = f"""🏥 DICOM File Information
 {'='*50}
 
-📋 Patient Information:
+ Patient Information:
   Patient ID: {getattr(dicom_data, 'PatientID', 'Unknown')}
   Patient Name: {getattr(dicom_data, 'PatientName', 'Unknown')}
   Patient Birth Date: {getattr(dicom_data, 'PatientBirthDate', 'Unknown')}
   Patient Sex: {getattr(dicom_data, 'PatientSex', 'Unknown')}
 
-🔬 Study Information:
+ Study Information:
   Study Date: {getattr(dicom_data, 'StudyDate', 'Unknown')}
   Study Time: {getattr(dicom_data, 'StudyTime', 'Unknown')}
   Study Description: {getattr(dicom_data, 'StudyDescription', 'Unknown')}
   Modality: {getattr(dicom_data, 'Modality', 'Unknown')}
 
-🖼️ Image Information:
+ Image Information:
   Image Type: {getattr(dicom_data, 'ImageType', 'Unknown')}
   Rows: {getattr(dicom_data, 'Rows', 'Unknown')}
   Columns: {getattr(dicom_data, 'Columns', 'Unknown')}
   Pixel Spacing: {getattr(dicom_data, 'PixelSpacing', 'Unknown')}
   Slice Thickness: {getattr(dicom_data, 'SliceThickness', 'Unknown')}
 
-⚙️ Technical Information:
+ Technical Information:
   Bits Allocated: {getattr(dicom_data, 'BitsAllocated', 'Unknown')}
   Bits Stored: {getattr(dicom_data, 'BitsStored', 'Unknown')}
   Photometric Interpretation: {getattr(dicom_data, 'PhotometricInterpretation', 'Unknown')}

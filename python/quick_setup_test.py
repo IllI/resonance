@@ -13,7 +13,7 @@ from pathlib import Path
 
 def setup_rx7700s_environment():
     """Setup RX 7700S environment using successful methods."""
-    print("🔧 Setting up RX 7700S environment...")
+    print(" Setting up RX 7700S environment...")
     
     # Apply the successful environment variables from our working implementation
     rx7700s_env_vars = {
@@ -50,14 +50,14 @@ def setup_rx7700s_environment():
             os.environ[var_name] = var_value
             applied_count += 1
         except Exception as e:
-            print(f"⚠️ Failed to set {var_name}: {e}")
+            print(f" Failed to set {var_name}: {e}")
     
-    print(f"✅ Applied {applied_count}/{len(rx7700s_env_vars)} RX 7700S environment variables")
+    print(f" Applied {applied_count}/{len(rx7700s_env_vars)} RX 7700S environment variables")
     return applied_count > 0
 
 def verify_rx7700s_detection():
     """Verify RX 7700S is detected and available."""
-    print("\n🔍 Verifying RX 7700S detection...")
+    print("\n Verifying RX 7700S detection...")
     
     try:
         import pyopencl as cl
@@ -72,7 +72,7 @@ def verify_rx7700s_detection():
                 break
         
         if not amd_platform:
-            print("❌ AMD platform not found")
+            print(" AMD platform not found")
             return False
         
         # Get GPU devices
@@ -87,29 +87,29 @@ def verify_rx7700s_detection():
             # Check if this is RX 7700S (gfx1103 or >10GB memory)
             is_rx7700s = 'gfx1103' in name or memory_gb >= 10
             
-            status = "🎯 RX 7700S" if is_rx7700s else "   780M"
+            status = " RX 7700S" if is_rx7700s else "   780M"
             print(f"  GPU {i}: {name} ({memory_gb} GB) {status}")
             
             if is_rx7700s:
                 rx7700s_found = True
         
         if rx7700s_found:
-            print("✅ RX 7700S detected and available")
+            print(" RX 7700S detected and available")
             return True
         else:
-            print("❌ RX 7700S not found")
+            print(" RX 7700S not found")
             return False
             
     except ImportError:
-        print("❌ OpenCL not available (pyopencl not installed)")
+        print(" OpenCL not available (pyopencl not installed)")
         return False
     except Exception as e:
-        print(f"❌ GPU detection failed: {e}")
+        print(f" GPU detection failed: {e}")
         return False
 
 def patch_brain_analyzer():
     """Patch the existing brain analyzer to use RX 7700S."""
-    print("\n🔧 Patching brain analyzer for RX 7700S...")
+    print("\n Patching brain analyzer for RX 7700S...")
     
     try:
         # Import our successful RX 7700S detector
@@ -122,19 +122,19 @@ def patch_brain_analyzer():
         if rx7700s_detector.rx7700s_device:
             device_name = rx7700s_detector.rx7700s_device.name.strip()
             memory_gb = rx7700s_detector.rx7700s_device.global_mem_size // (1024**3)
-            print(f"✅ RX 7700S detector initialized: {device_name} ({memory_gb} GB)")
+            print(f" RX 7700S detector initialized: {device_name} ({memory_gb} GB)")
             return True
         else:
-            print("❌ RX 7700S detector failed to initialize")
+            print(" RX 7700S detector failed to initialize")
             return False
             
     except Exception as e:
-        print(f"❌ Failed to patch brain analyzer: {e}")
+        print(f" Failed to patch brain analyzer: {e}")
         return False
 
 def launch_3d_analyzer():
     """Launch the 3D brain analyzer with RX 7700S integration."""
-    print("\n🚀 Launching 3D Brain Analyzer with RX 7700S...")
+    print("\n Launching 3D Brain Analyzer with RX 7700S...")
     print("=" * 60)
     
     try:
@@ -146,12 +146,12 @@ def launch_3d_analyzer():
             # Try current directory
             gui_file = current_dir / "ultra_realistic_brain_gui.py"
             if not gui_file.exists():
-                print("❌ ultra_realistic_brain_gui.py not found")
+                print(" ultra_realistic_brain_gui.py not found")
                 print(f"   Searched in: {current_dir}")
                 print(f"   And: {current_dir / 'python'}")
                 return False
         
-        print("✅ Found GUI file")
+        print(" Found GUI file")
         
         # Import and launch the GUI
         print("Starting Ultra-Realistic Brain 3D Visualization...")
@@ -171,14 +171,14 @@ def launch_3d_analyzer():
         root = tk.Tk()
         app = UltraRealisticBrainGUI(root)
         
-        print("🎮 GUI launched successfully!")
+        print(" GUI launched successfully!")
         print("   Use the GUI to generate brain models and verify RX 7700S usage")
         
         root.mainloop()
         return True
         
     except ImportError as e:
-        print(f"❌ Import error: {e}")
+        print(f" Import error: {e}")
         print("\nTrying alternative launch method...")
         
         # Try launching via the quick start GUI
@@ -187,16 +187,16 @@ def launch_3d_analyzer():
             launch_quick_start()
             return True
         except Exception as e2:
-            print(f"❌ Alternative launch failed: {e2}")
+            print(f" Alternative launch failed: {e2}")
             return False
             
     except Exception as e:
-        print(f"❌ Failed to launch 3D analyzer: {e}")
+        print(f" Failed to launch 3D analyzer: {e}")
         return False
 
 def run_quick_test():
     """Run a quick test to verify RX 7700S is working."""
-    print("\n🧪 Running quick RX 7700S test...")
+    print("\n Running quick RX 7700S test...")
     
     try:
         # Import our brain analyzer
@@ -217,22 +217,22 @@ def run_quick_test():
         end_time = time.time()
         
         if results['success']:
-            print(f"✅ Quick test successful!")
+            print(f" Quick test successful!")
             print(f"   Processing time: {end_time - start_time:.3f} seconds")
             print(f"   GPU used: {results['gpu_device']}")
             print(f"   Brain voxels: {results['segmentation']['brain_voxels']:,}")
             return True
         else:
-            print(f"❌ Quick test failed: {results['error']}")
+            print(f" Quick test failed: {results['error']}")
             return False
             
     except Exception as e:
-        print(f"❌ Quick test error: {e}")
+        print(f" Quick test error: {e}")
         return False
 
 def main():
     """Main function for quick setup test."""
-    print("🧠 Quick Setup Test - RX 7700S Integrated 3D Brain Analyzer")
+    print(" Quick Setup Test - RX 7700S Integrated 3D Brain Analyzer")
     print("=" * 70)
     print("This will integrate RX 7700S GPU selection into your 3D analyzer")
     print()
@@ -250,25 +250,25 @@ def main():
     test_success = True
     if detection_success and patch_success:
         print("\n" + "=" * 70)
-        print("🧪 Running quick RX 7700S test...")
+        print(" Running quick RX 7700S test...")
         
         # Import numpy for test
         try:
             import numpy as np
             test_success = run_quick_test()
         except ImportError:
-            print("⚠️ NumPy not available for quick test, skipping...")
+            print(" NumPy not available for quick test, skipping...")
             test_success = True
     
     # Summary
     print("\n" + "=" * 70)
-    print("🎯 SETUP SUMMARY")
+    print(" SETUP SUMMARY")
     print("=" * 70)
     
-    print(f"Environment Setup: {'✅ SUCCESS' if env_success else '❌ FAILED'}")
-    print(f"RX 7700S Detection: {'✅ SUCCESS' if detection_success else '❌ FAILED'}")
-    print(f"Analyzer Patching: {'✅ SUCCESS' if patch_success else '❌ FAILED'}")
-    print(f"Quick Test: {'✅ SUCCESS' if test_success else '❌ FAILED'}")
+    print(f"Environment Setup: {' SUCCESS' if env_success else ' FAILED'}")
+    print(f"RX 7700S Detection: {' SUCCESS' if detection_success else ' FAILED'}")
+    print(f"Analyzer Patching: {' SUCCESS' if patch_success else ' FAILED'}")
+    print(f"Quick Test: {' SUCCESS' if test_success else ' FAILED'}")
     
     overall_success = env_success and detection_success
     
@@ -281,16 +281,16 @@ def main():
         
         # Launch the 3D analyzer automatically
         print("\n" + "=" * 70)
-        print("🚀 Launching 3D Brain Analyzer with RX 7700S...")
+        print(" Launching 3D Brain Analyzer with RX 7700S...")
         
         launch_success = launch_3d_analyzer()
         if not launch_success:
-            print("\n⚠️ GUI launch failed, but RX 7700S is configured")
+            print("\n GUI launch failed, but RX 7700S is configured")
             print("Try running manually:")
             print("   python ultra_realistic_brain_gui.py")
             
     else:
-        print("\n⚠️ Some setup steps failed")
+        print("\n Some setup steps failed")
         print("\nTroubleshooting:")
         print("1. Update AMD drivers to latest version")
         print("2. Restart your computer")
