@@ -124,7 +124,12 @@ def run_simulation():
     # FORCE the Bi-Twistor collapse (simulating hitting the E_G threshold for Badoon)
     # Target state is the pure frequency map of the Platonic Badoon.
     print("\n[!] Subject visualizes Badoon concept phase-lock.")
-    is_grokked = layer.objective_reduction_check(target_qpc_state=x_badoon, threshold=-1.0) # Force true
+    
+    # Force phase alignment override to demonstrate pruning
+    perfect_amplitude = x_badoon.unsqueeze(1).expand(-1, layer.output_dim, -1).unsqueeze(-1).expand(-1, -1, -1, layer.lattice_size)
+    layer.active_superposition = torch.complex(perfect_amplitude, torch.zeros_like(perfect_amplitude))
+    
+    is_grokked = layer.objective_reduction_check(target_qpc_state=x_badoon, t_active_sec=0.5, wattage=1e12) 
     
     if is_grokked:
         print("-> Bi-Twistor Retrocausal Alignment Triggered!")

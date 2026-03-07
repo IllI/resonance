@@ -5,6 +5,7 @@ import numpy as np
 import random
 
 from run_visual_dlinoss import load_haxby_subject, build_block_labels, extract_brain_voxels
+from dlinoss_thermodynamic_pruner import ThermodynamicPruner
 
 def process_subject(subject_dir, max_runs=12):
     bold_runs, events_runs, TR = load_haxby_subject(subject_dir, max_runs=max_runs)
@@ -143,14 +144,24 @@ def train_global_superpositions():
     model = UnifiedSuperpositionModel(in_dim=1000, n_classes=len(categories), latent_dim=128)
     opt = torch.optim.AdamW(model.parameters(), lr=1e-3, weight_decay=1e-4)
     
+    # Initialize the thermodynamic pruner. 
+    # Generalization threshold set to 55% Memorization of the Superposition (due to chaotic LSTM baseline)
+    pruner = ThermodynamicPruner(model, grok_acc_threshold=0.55, var_window=5, prune_magnitude=0.015)
+    
     epochs = 60
     print("\n--- Training Model to map any Subject/Phase to a Unitary Category Superposition ---")
     
     model.train()
     for ep in range(epochs):
         loss_sum = 0
+        correct_train = 0
         random.shuffle(train_events)
         
+        # We need a trailing train accuracy to feed the biological regularizer
+        trailing_acc = 0.0
+        if ep > 0:
+            trailing_acc = prev_ep_acc
+            
         for subj, phase, cat, x_ev in train_events:
             opt.zero_grad()
             
@@ -164,9 +175,34 @@ def train_global_superpositions():
             cos_sim = F.cosine_similarity(brain_vector.unsqueeze(0), target_superposition.unsqueeze(0))
             loss = 1.0 - cos_sim.mean()
             
-            loss.backward()
+            # Simulated classification check for training
+            best_train_sim = -1.0
+            best_train_c = None
+            for probe_cat in categories:
+                s_s = F.cosine_similarity(brain_vector.unsqueeze(0), model.get_superposition(cat_to_idx[probe_cat]).unsqueeze(0)).item()
+                if s_s > best_train_sim:
+                    best_train_sim = s_s
+                    best_train_c = probe_cat
+            if best_train_c == cat:
+                correct_train += 1
+                
+            # Add dynamic Thermodynamic ATP Penalty
+            atp_penalty = pruner.compute_atp_penalty(trailing_acc, ep)
+            total_loss = loss + atp_penalty
+            
+            total_loss.backward()
+            
+            # Hook the pruner into the gradient flow
+            pruner.log_gradients()
+            pruner.enforce_masks()
+            
             opt.step()
-            loss_sum += loss.item()
+            loss_sum += total_loss.item()
+            
+        prev_ep_acc = correct_train / len(train_events) if len(train_events) > 0 else 0
+        
+        # Check and sever topology after every full training pass over the data
+        total_params, total_disconnected = pruner.check_and_prune(prev_ep_acc)
             
         if (ep + 1) % 10 == 0:
             # We track the emergence of the Ghost Basin over the Memorization Basin here!
@@ -185,7 +221,7 @@ def train_global_superpositions():
                     if best_c == t_cat:
                         correct += 1
             test_acc = correct / len(test_events) if len(test_events) > 0 else 0
-            print(f"Epoch {ep+1:2d} | Train Loss (Memorization): {loss_sum/len(train_events):.4f} | Zero-Shot Unseen Subj Acc (Generalization): {test_acc*100:.1f}%")
+            print(f"Epoch {ep+1:2d} | Train Loss: {loss_sum/len(train_events):.4f} | Train Acc: {prev_ep_acc*100:.1f}% | Zero-Shot Generalization: {test_acc*100:.1f}%")
             model.train()
             
     print("\n--- Training Complete ---")
@@ -196,7 +232,7 @@ def train_global_superpositions():
     
     correct = 0
     phase_metrics = {"Early": [], "Mid": [], "Late": []}
-    subj_metrics = {"sub-4": [], "sub-6": []}
+    subj_metrics = {s: [] for s in ['sub-4', 'sub-5', 'sub-6']}
     
     with torch.no_grad():
         for subj, phase, true_cat, x_ev in test_events:

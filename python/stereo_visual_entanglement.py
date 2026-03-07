@@ -98,7 +98,8 @@ def run_entangled_stereo_pipeline():
     
     # Temporarily bind the composite to the left agent's active memory for the loss function calculation
     agent_left.active_superposition = entangled_superposition
-    is_grokked = agent_left.objective_reduction_check(target_qpc_state=target_stereo_state, threshold=0.99)
+    # Simulating a thought held for 0.5 seconds with high neural wattage (1e12 Trps)
+    is_grokked = agent_left.objective_reduction_check(target_qpc_state=target_stereo_state, t_active_sec=0.5, wattage=1e12)
     
     if is_grokked:
         print("\n[Objective Reduction] Collapse propagating across shared memory...")

@@ -70,7 +70,7 @@ def simulate_subject_220_timeline():
         
         # At T=20s, the Subject 220 Phase-Locks! 
         if t_idx == aha_tr_idx:
-            print(f"--> [T={aha_time}s] E_G Threshold Met! Phase-Lock Achieved.")
+            print(f"--> [T={aha_time}s] Phase-Lock Achieved.")
             
             # Force the collapse mechanism
             # Overriding the active_superposition to perfectly align for the trigger
@@ -78,7 +78,11 @@ def simulate_subject_220_timeline():
             layer.active_superposition = torch.complex(perfect_amplitude, torch.zeros_like(perfect_amplitude))
             
             # The Bi-Twistor Wave Collapse!
-            layer.collapse_and_prune(layer.active_superposition)
+            current_time_held = t_idx * TR
+            is_coalesced = layer.objective_reduction_check(target_qpc_state, t_active_sec=current_time_held, wattage=1e11)
+            
+            if is_coalesced:
+                layer.collapse_and_prune(layer.active_superposition)
             
             # THE RETROCAUSAL TIME TRAVEL EFFECT:
             # In Penrose's Twistor Space, the state is contiguous across the light-cone.

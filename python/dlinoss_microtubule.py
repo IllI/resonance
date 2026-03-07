@@ -78,23 +78,50 @@ class MicrotubuleLayer(nn.Module):
         # superradiant state itself, propagating forward to be compared against the QPC.
         return self.active_superposition
 
-    def objective_reduction_check(self, target_qpc_state, threshold=0.99):
+    def objective_reduction_check(self, target_qpc_state, t_active_sec, wattage=1e11):
         """
-        Continuously checks if the active superradiant search state has achieved
-        Harmonic Resonance (phase-lock) with the target QPC concept.
+        Calculates Penrose's Objective Reduction (Orch-OR) criteria.
+        Instead of an arbitrary probability threshold, this computes if the 
+        Gravitational Self-Energy (E_G) of the specific wave-shape (Fidelity)
+        has exceeded the fundamental decoherence limit for the time it has
+        been in superposition (t_active_sec).
         
-        Returns True if the Penrose E_G threshold is met, triggering the Bi-Twistor retro-jump.
+        wattage: The number of active Tryptophan resonance molecules (N_trp).
+                 The brain modulates this to adjust the superposition mass.
         """
         if not self.is_superradiant or self.active_superposition is None:
             return False
             
-        # Calculate phase alignment between the Ghost Basin (active state) and the QPC
-        # In a full model, this compares the global network phase, but locally:
-        phase_alignment = self._calculate_phase_coherence(self.active_superposition, target_qpc_state)
+        # Physics Constants for Microtubule Lattice
+        G = 6.67430e-11 # Gravitational constant
+        hbar = 1.054571817e-34 # Reduced Planck constant
+        m_trp = 3.39e-25 # Mass of Tryptophan (kg)
+        delta_x = 2.5e-15 # Nuclear Fermi separation distance (m)
         
-        if phase_alignment >= threshold:
-            # E_G Threshold Met! 
-            print(f"[Aha! Moment] Phase alignment ({phase_alignment:.4f}) exceeded threshold. Triggering Bi-Twistor Collapse.")
+        # 1. Measure the exact shape of the active wave against the QPC concept
+        # Fidelity F perfectly isolating the resonant geometric silhouette.
+        F = self._calculate_phase_coherence(self.active_superposition, target_qpc_state)
+        
+        # 2. Calculate the actual Gravitational Self-Energy of the Phase-Locked shape
+        # The higher the fidelity (resonance), the more dense the coherent mass overlay.
+        M_superposed = wattage * m_trp
+        E_G_max = G * (M_superposed ** 2) / delta_x
+        
+        # The true E_G of the current thought is scaled by its geometric fidelity
+        E_G_actual = E_G_max * F
+        
+        # 3. Penrose Wave Collapse Threshold (tau = hbar / E_G)
+        # If E_G is essentially 0 (noise), tau is infinite.
+        if E_G_actual > 0:
+            tau_decoherence = hbar / E_G_actual
+        else:
+            tau_decoherence = float('inf')
+            
+        # The quantum wave physically collapses if it has been held in the QED cavity
+        # longer than its gravitational decoherence limit.
+        if t_active_sec >= tau_decoherence:
+            print(f"\n[Aha! Moment] Quantum Flash! Wave shape fidelity ({F:.4f}) drew enough mass-energy.")
+            print(f"E_G limit ({E_G_actual:.2e} J) breached tau ({tau_decoherence:.2e} s). Triggering Objective Reduction!")
             return True
             
         return False

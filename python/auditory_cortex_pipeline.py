@@ -99,12 +99,12 @@ def run_auditory_cortex_pipeline():
     
     print("\n[Grokking Trigger] Presenting perfectly resonant Low Tone concept...")
     
-    # Overriding active superposition to hit the 0.99 threshold 
-    # to demonstrate the Retrocausal Pruning on the target.
+    # Overriding active superposition to perfectly phase lock to trigger the collapse logic
     perfect_amplitude = tone_A_state.unsqueeze(1).expand(-1, mt_layer.output_dim, -1).unsqueeze(-1).expand(-1, -1, -1, mt_layer.lattice_size)
     mt_layer.active_superposition = torch.complex(perfect_amplitude, torch.zeros_like(perfect_amplitude))
     
-    is_grokked = mt_layer.objective_reduction_check(target_qpc_state=tone_A_state, threshold=0.99)
+    # We hold the thought for 2.0 seconds with a standard tryptophan cortical cascade wattage.
+    is_grokked = mt_layer.objective_reduction_check(target_qpc_state=tone_A_state, t_active_sec=2.0, wattage=1e12)
     
     if is_grokked:
         mt_layer.collapse_and_prune(mt_layer.active_superposition)

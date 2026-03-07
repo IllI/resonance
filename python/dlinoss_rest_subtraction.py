@@ -53,11 +53,23 @@ def extract_dataset_events_with_rest(ts_2d, labels, categories, subject_id, coor
     manifold_ts = np.clip((cleaned - mu) / sigma, -5.0, 5.0).T 
     
     events = []
-    current_cat = None
-    curr_start = 0
     t = 0
     while t < len(labels):
         lbl = labels[t]
+        if lbl == 'rest':
+            start_idx = t
+            while t < len(labels) and labels[t] == 'rest':
+                t += 1
+            end_idx = t
+
+            if 'rest' in categories:
+                max_rest_event_trs = 12
+                if end_idx - start_idx > 0:
+                    take_end = min(end_idx, start_idx + max_rest_event_trs)
+                    block_ts = manifold_ts[start_idx:take_end].copy()
+                    events.append((subject_id, 'rest', block_ts, active_coords))
+            continue
+
         if lbl != 'rest':
             start_idx = t
             cat = lbl
@@ -70,15 +82,19 @@ def extract_dataset_events_with_rest(ts_2d, labels, categories, subject_id, coor
                 # Find the preceding 'rest' block to measure local fatigue/anxiety
                 rest_end = start_idx
                 rest_start = rest_end - 1
-                while rest_start >= 0 and labels[rest_start] == 'rest' and (rest_end - rest_start) < 4:
+                max_rest_trs = 12
+                while rest_start >= 0 and labels[rest_start] == 'rest' and (rest_end - rest_start) < max_rest_trs:
                     rest_start -= 1
                 rest_start += 1
-                
-                block_ts = manifold_ts[start_idx:end_idx].copy()
+
                 if rest_end > rest_start:
                     local_fatigue = manifold_ts[rest_start:rest_end].mean(axis=0, keepdims=True)
-                    block_ts -= local_fatigue # Strip the local noise!
-                    
+                else:
+                    local_fatigue = manifold_ts[max(0, start_idx - 1):start_idx].mean(axis=0, keepdims=True)
+
+                block_ts = manifold_ts[start_idx:end_idx].copy()
+                block_ts -= local_fatigue
+
                 events.append((subject_id, cat, block_ts, active_coords))
         else:
             t += 1
@@ -165,7 +181,7 @@ def run_distilled_baseline_anchoring():
     
     data_dir = r"C:\Users\cityz\IllI\newer_all\data\openneuro\ds000105"
     target_categories = ['bottle', 'cat', 'chair', 'face', 'house', 'scissors', 'shoe']
-    all_categories = target_categories + ['scrambledpix']
+    all_categories = target_categories + ['scrambledpix', 'rest']
     
     clip_anchors = extract_clip_anchors(target_categories)
     anchor_matrix = torch.stack([clip_anchors[cat].cpu() for cat in target_categories]).numpy()
@@ -199,9 +215,9 @@ def run_distilled_baseline_anchoring():
         subject_baselines = {}
         with torch.no_grad():
             for subj in set(ev[0] for ev in train_events):
-                subj_scrambled = [ev for ev in train_events if ev[0] == subj and ev[1] == 'scrambledpix']
+                subj_rest = [ev for ev in train_events if ev[0] == subj and ev[1] == 'rest']
                 vecs = []
-                for _, _, x_ev, _ in subj_scrambled:
+                for _, _, x_ev, _ in subj_rest:
                     if x_ev.shape[0] < 2: continue
                     x_ev_tensor = torch.tensor(x_ev, dtype=torch.float32).unsqueeze(0).to(device)
                     pred_vec, _, _, _, _ = model(x_ev_tensor)
@@ -213,6 +229,8 @@ def run_distilled_baseline_anchoring():
         loss_anchor_sum = 0
         loss_outlier_sum = 0
         correct_outliers = 0
+        outlier_eval_count = 0
+        scrambled_count = 0
         
         random.shuffle(train_events)
         
@@ -229,17 +247,20 @@ def run_distilled_baseline_anchoring():
             
             # Train the 100% Outlier Detector
             is_scrambled = 1.0 if cat == 'scrambledpix' else 0.0
+            if is_scrambled == 1.0:
+                scrambled_count += 1
             target_outlier = torch.tensor([is_scrambled], dtype=torch.float32).to(device)
             outlier_loss = bce_loss(outlier_logit, target_outlier)
             
             pred_prob = torch.sigmoid(outlier_logit).item()
+            outlier_eval_count += 1
             if (pred_prob >= 0.5 and is_scrambled == 1.0) or (pred_prob < 0.5 and is_scrambled == 0.0):
                 correct_outliers += 1
                 
             total_loss = outlier_loss * 2.0 # Heavily weight the detector
             
             # Only train orientation if it's a true category
-            if cat != 'scrambledpix':
+            if cat in target_categories:
                 oriented_vec = pred_vec - subject_baselines[subj]
                 oriented_vec = F.normalize(oriented_vec, p=2, dim=0) 
                 
@@ -257,16 +278,27 @@ def run_distilled_baseline_anchoring():
             loss_outlier_sum += outlier_loss.item()
         
         if (ep+1) % 5 == 0:
-            acc = correct_outliers / len(train_events) * 100
-            print(f"Epoch {ep+1:2d} | Outlier Suppress Detector Acc: {acc:.1f}% | Anchor Loss: {loss_anchor_sum/len(train_events):.4f}")
+            acc = (correct_outliers / max(1, outlier_eval_count)) * 100
+            anchor_denom = max(1, outlier_eval_count)
+            print(
+                f"Epoch {ep+1:2d} | Outlier Suppress Detector Acc: {acc:.1f}% "
+                f"(n={outlier_eval_count}, scrambled={scrambled_count}) | "
+                f"Anchor Loss: {loss_anchor_sum/anchor_denom:.4f}"
+            )
             
-    print("\n--- Zero-Shot Setup: Anchoring Unanalyzed Subject to the Static Baseline ---")
+    print("\n--- Zero-Shot Setup: Anchoring Unanalyzed Subject to Rest Baseline ---")
     model.eval()
     
+    test_rest = [ev for ev in test_events if ev[1] == 'rest']
     test_scrambled = [ev for ev in test_events if ev[1] == 'scrambledpix']
+    test_targets_count = sum(1 for ev in test_events if ev[1] in target_categories)
+    print(
+        f"Test subject events: rest={len(test_rest)}, scrambledpix={len(test_scrambled)}, "
+        f"targets={test_targets_count}"
+    )
     test_baseline_vecs = []
     with torch.no_grad():
-        for _, _, x_ev, _ in test_scrambled:
+        for _, _, x_ev, _ in test_rest:
             if x_ev.shape[0] < 2: continue
             x_ev_tensor = torch.tensor(x_ev, dtype=torch.float32).unsqueeze(0).to(device)
             pred_vec, _, _, attn_weights, outlier_logit = model(x_ev_tensor)
@@ -278,7 +310,28 @@ def run_distilled_baseline_anchoring():
                 print_once = True
                 
             test_baseline_vecs.append(pred_vec)
-                
+
+    if not test_baseline_vecs:
+        print("Rest baseline empty; falling back to scrambledpix baseline.")
+        with torch.no_grad():
+            for _, _, x_ev, _ in test_scrambled:
+                if x_ev.shape[0] < 2: continue
+                x_ev_tensor = torch.tensor(x_ev, dtype=torch.float32).unsqueeze(0).to(device)
+                pred_vec, _, _, _, _ = model(x_ev_tensor)
+                test_baseline_vecs.append(pred_vec)
+
+    if not test_baseline_vecs:
+        print("Scrambledpix baseline empty; falling back to global mean prediction baseline.")
+        with torch.no_grad():
+            for _, _, x_ev, _ in test_events:
+                if x_ev.shape[0] < 2: continue
+                x_ev_tensor = torch.tensor(x_ev, dtype=torch.float32).unsqueeze(0).to(device)
+                pred_vec, _, _, _, _ = model(x_ev_tensor)
+                test_baseline_vecs.append(pred_vec)
+
+    if not test_baseline_vecs:
+        raise RuntimeError("Unable to compute any baseline vectors (rest/scrambled/global all empty)")
+
     test_baseline = torch.stack(test_baseline_vecs).mean(dim=0)
     
     test_oriented_vecs = []
@@ -302,6 +355,7 @@ def run_distilled_baseline_anchoring():
     print("\nClustering Rest-Subtracted Base-Anchored Orientations into 7 Unknown Geometric Camps...")
     kmeans = KMeans(n_clusters=7, random_state=42, n_init=15)
     kmeans.fit(test_oriented_vecs)
+    test_cluster_ids = kmeans.labels_.astype(int)
     sub5_centroids = kmeans.cluster_centers_
     sub5_centroids = sub5_centroids / np.linalg.norm(sub5_centroids, axis=1, keepdims=True)
     
@@ -319,6 +373,13 @@ def run_distilled_baseline_anchoring():
     rotated_test_vecs = np.dot(test_oriented_vecs, R)
     rotated_test_vecs = torch.tensor(rotated_test_vecs, dtype=torch.float32)
     rotated_test_vecs = F.normalize(rotated_test_vecs, p=2, dim=1)
+
+    rotated_centroids = np.dot(sub5_centroids, R)
+    rotated_centroids = torch.tensor(rotated_centroids, dtype=torch.float32)
+    rotated_centroids = F.normalize(rotated_centroids, p=2, dim=1)
+
+    anchor_stack = torch.stack([clip_anchors[c].detach().cpu() for c in target_categories], dim=0)
+    anchor_stack = F.normalize(anchor_stack, p=2, dim=1)
     
     mountain_camps = {cat: [] for cat in target_categories}
     for label, vec in zip(test_labels, rotated_test_vecs):
@@ -355,6 +416,78 @@ def run_distilled_baseline_anchoring():
             print(f"  [x] Resonance Convergence: Misaligned to '{best_centroid_cat}'")
 
     print(f"\nOverall Final Zero-Shot Categorical Accuracy: {(correct_mountains/len(target_categories))*100:.1f}%")
+
+    print(f"\n--- Camp-Level Zero-Shot Decoding ({test_subject}) ---")
+    cluster_sizes = np.bincount(test_cluster_ids, minlength=7)
+    for cid in range(7):
+        print(f"Camp {cid}: n_events={int(cluster_sizes[cid])}")
+
+    camp_pred = {}
+    camp_top_true = {}
+    camp_purity = {}
+    camp_face_house_counts = {}
+
+    for cid in range(7):
+        idx = np.where(test_cluster_ids == cid)[0]
+        if idx.size == 0:
+            camp_pred[cid] = None
+            camp_top_true[cid] = None
+            camp_purity[cid] = 0.0
+            camp_face_house_counts[cid] = (0, 0)
+            continue
+
+        centroid = rotated_centroids[cid]
+        sims = F.cosine_similarity(centroid.unsqueeze(0), anchor_stack, dim=1)
+        pred_i = int(torch.argmax(sims).item())
+        pred_cat = target_categories[pred_i]
+        camp_pred[cid] = pred_cat
+
+        true_subset = [test_labels[i] for i in idx.tolist()]
+        unique, counts = np.unique(np.array(true_subset, dtype=object), return_counts=True)
+        top_i = int(np.argmax(counts))
+        top_true = str(unique[top_i])
+        top_count = int(counts[top_i])
+        camp_top_true[cid] = top_true
+        camp_purity[cid] = top_count / float(idx.size)
+
+        face_n = int(np.sum(np.array(true_subset) == 'face'))
+        house_n = int(np.sum(np.array(true_subset) == 'house'))
+        camp_face_house_counts[cid] = (face_n, house_n)
+
+        topk = sorted(zip(unique.tolist(), counts.tolist()), key=lambda x: -x[1])[:3]
+        topk_str = ", ".join([f"{c}:{int(n)}" for c, n in topk])
+        print(
+            f"Camp {cid} -> pred='{pred_cat}' | top_true='{top_true}' | purity={camp_purity[cid]*100:.1f}% | "
+            f"top3=[{topk_str}] | face={face_n}, house={house_n}"
+        )
+
+    valid_camps = [cid for cid in range(7) if cluster_sizes[cid] > 0 and camp_pred[cid] is not None]
+    camp_correct = 0
+    for cid in valid_camps:
+        if camp_pred[cid] == camp_top_true[cid]:
+            camp_correct += 1
+    camp_acc = (camp_correct / max(1, len(valid_camps))) * 100
+    print(f"Camp-level accuracy (predicted label vs majority true label): {camp_acc:.1f}% ({camp_correct}/{len(valid_camps)})")
+
+    event_pred = []
+    for i in range(len(test_labels)):
+        cid = int(test_cluster_ids[i])
+        pred_cat = camp_pred.get(cid)
+        event_pred.append(pred_cat)
+    event_correct = sum((p == t) for p, t in zip(event_pred, test_labels) if p is not None)
+    event_acc = (event_correct / max(1, len(test_labels))) * 100
+    print(f"Event accuracy via camp labels: {event_acc:.1f}% ({event_correct}/{len(test_labels)})")
+
+    face_camps = [cid for cid in valid_camps if camp_pred[cid] == 'face' or camp_top_true[cid] == 'face']
+    house_camps = [cid for cid in valid_camps if camp_pred[cid] == 'house' or camp_top_true[cid] == 'house']
+    if face_camps or house_camps:
+        print("\nFace/House camp focus:")
+        for cid in sorted(set(face_camps + house_camps)):
+            fh = camp_face_house_counts[cid]
+            print(
+                f"Camp {cid}: pred='{camp_pred[cid]}', top_true='{camp_top_true[cid]}', "
+                f"purity={camp_purity[cid]*100:.1f}%, face={fh[0]}, house={fh[1]}"
+            )
 
 if __name__ == "__main__":
     run_distilled_baseline_anchoring()
