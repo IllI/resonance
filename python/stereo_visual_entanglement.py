@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import os
 from universal_spike_encoder import PoissonSpikeEncoder
 from dlinoss_microtubule import MicrotubuleLayer
+from entangled_camkii_lattice import EntangledCaMKIILattice
 
 OUT_DIR = r"C:\Users\cityz\.gemini\antigravity\brain\b55228ba-8aeb-40a4-bd50-374d9a287041"
 
@@ -66,14 +67,13 @@ def run_entangled_stereo_pipeline():
     lattice_size = 9
     
     print("\n[Architecture] Establishing 2 Agents with Entangled CaMKII Memory Pointers...")
-    agent_left = MicrotubuleLayer(input_dim=input_size, output_dim=output_size, lattice_size=lattice_size)
-    agent_right = MicrotubuleLayer(input_dim=input_size, output_dim=output_size, lattice_size=lattice_size)
+    shared_cauldron = EntangledCaMKIILattice(input_dim=input_size, output_dim=output_size, lattice_size=lattice_size)
     
-    # THE ENTANGLEMENT BINDING: Overwriting Right agent's memory to point natively to Left's
-    agent_right.camkii_matrix = agent_left.camkii_matrix
+    agent_left = MicrotubuleLayer(input_dim=input_size, output_dim=output_size, lattice_size=lattice_size, shared_lattice=shared_cauldron)
+    agent_right = MicrotubuleLayer(input_dim=input_size, output_dim=output_size, lattice_size=lattice_size, shared_lattice=shared_cauldron)
     
     # Verification of pointer sharing
-    print(f"Memory Pointers Shared: {agent_left.camkii_matrix is agent_right.camkii_matrix}")
+    print(f"Memory Pointers Shared: {agent_left.lattice is agent_right.lattice}")
     
     # 4. Independent Ghost Basin Superpositions
     print("\n[Search Phase] Both agents actively constructing separate Ghost Basins...")
@@ -108,8 +108,8 @@ def run_entangled_stereo_pipeline():
         
         # Verify cross-agent entanglement update without backprop!
         print("\n[Result Verification]")
-        print(f"--> Left Agent Memory Weighted natively? {torch.any(agent_left.camkii_matrix > 0).item()}")
-        print(f"--> Right Agent Memory Updated simultaneously? {torch.any(agent_right.camkii_matrix > 0).item()}")
+        print(f"--> Left Agent Memory Weighted natively? {torch.any(agent_left.lattice.get_lattice() != 0).item()}")
+        print(f"--> Right Agent Memory Updated simultaneously? {torch.any(agent_right.lattice.get_lattice() != 0).item()}")
         
         # We also need to manually prune the right agent's ghost basin since it was functionally 
         # deleted by the left agent's observation.

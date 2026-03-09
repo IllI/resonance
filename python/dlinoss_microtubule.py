@@ -3,6 +3,8 @@ import torch.nn as nn
 import numpy as np
 import math
 
+from entangled_camkii_lattice import EntangledCaMKIILattice
+
 class MicrotubuleLayer(nn.Module):
     """
     A D-LinOSS network layer modeling a Microtubule Hexagonal Lattice.
@@ -14,7 +16,7 @@ class MicrotubuleLayer(nn.Module):
     2. Bi-Twistor Collapse & Prune: Upon phase-lock, retrocausally aligns the lattice
        weights (phosphorylation states) and prunes all non-resonant quantum pathways.
     """
-    def __init__(self, input_dim, output_dim, lattice_size=9, qed_cavity_q=1e4):
+    def __init__(self, input_dim, output_dim, lattice_size=9, qed_cavity_q=1e4, shared_lattice=None):
         super(MicrotubuleLayer, self).__init__()
         
         self.input_dim = input_dim
@@ -27,14 +29,14 @@ class MicrotubuleLayer(nn.Module):
         # ordered-water QED cavity quality factor (secures coherence time)
         self.qed_cavity_q = qed_cavity_q 
         
-        # CaMKII Phosphorylation Matrix (The Classical Memory "Weights")
-        # Represents the stable, physical Boolean logic gates on the protofilaments.
-        # Initialized to a baseline (unphosphorylated) state.
-        self.camkii_matrix = nn.Parameter(
-            torch.zeros(output_dim, input_dim, lattice_size), 
-            requires_grad=False # We DO NOT use standard gradient descent backprop!
-        )
-        
+        # The CaMKII memory structure
+        # If part of a multimodal agent array, the lattice is passed by reference.
+        # Otherwise, the agent generates an independent classical memory structure.
+        if shared_lattice is not None:
+            self.lattice = shared_lattice
+        else:
+            self.lattice = EntangledCaMKIILattice(input_dim, output_dim, lattice_size)
+            
         # The Ghost Basin Superposition (The Active Quantum Search State)
         # Complex-valued tensor representing the UV Superradiant Tryptophan exciton.
         # Shape: (batch_size, output_dim, input_dim, lattice_size)
@@ -65,7 +67,8 @@ class MicrotubuleLayer(nn.Module):
             
             # 3. Create the complex-valued superposition (amplitude * e^(i * phase))
             # The baseline amplitude is modulated by the existing classical CaMKII memory.
-            amplitude = x_expanded + self.camkii_matrix.unsqueeze(0)
+            current_memory = self.lattice.get_lattice()
+            amplitude = x_expanded + current_memory.unsqueeze(0)
             
             # Storing the active superposition (The expanded Ghost Basin)
             self.active_superposition = torch.complex(
@@ -134,13 +137,10 @@ class MicrotubuleLayer(nn.Module):
         """
         # 1. RETROCAUSAL ALIGNMENT:
         # Extract the specific lattice configuration from the phase_locked_state that solved the problem.
-        # Instantly physically rewrite the CaMKII phosphorylation matrix (the weights).
+        # Instantly physically rewrite the CaMKII phosphorylation matrix (the weights) physically or via global reference.
         # We take the real component of the aligned amplitude as the new classical memory structure.
-        aligned_memory = torch.real(phase_locked_state).mean(dim=0) # Average over batch for global update
-        
         # The layer time-travels to alignment: No epochs, no gradients.
-        with torch.no_grad():
-            self.camkii_matrix.copy_(aligned_memory)
+        self.lattice.write_silhouette(phase_locked_state)
             
         # 2. WAVE COLLAPSE PRUNING:
         # Instantly destroy the massive, high-entropy superradiant search matrix.

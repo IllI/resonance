@@ -1,0 +1,113 @@
+================================================================================
+ PHASE TRANSITION ENERGY QUANTUM TEST
+ Is the grokking energy a constant quantum across all subjects?
+================================================================================
+
+  Processing sub-201...
+
+  Processing sub-206...
+
+  Processing sub-212...
+
+  Processing sub-216...
+
+  Processing sub-217...
+
+  Processing sub-220...
+
+  Processing sub-226...
+
+  Processing sub-229...
+
+  Processing sub-237...
+
+  Processing sub-240...
+
+================================================================================
+ [1] IS THE GROKKING ENERGY A CONSTANT QUANTUM?
+================================================================================
+
+  Per-Subject Grokking Phase Transition Energy:
+  Subject     HF Excess (z)  HF Excess (raw)  E_Metabolic    E_Total
+  -----------------------------------------------------------------
+  sub-201             0.998         0.155359       0.7765     1.1221
+  sub-206            -0.217        -0.043027       0.6311     0.7888
+  sub-212             0.432         0.069021       0.7228     1.0459
+  sub-216            -0.231        -0.036012       0.7909     0.9318
+  sub-217             0.043         0.006734       0.7675     0.9393
+  sub-220             0.304         0.062694       0.9537     1.4066
+  sub-226             0.743         0.134959       0.8220     1.1654
+  sub-229             0.084         0.016389       0.8426     1.1527
+  sub-237            -0.331        -0.045551       0.7431     0.8458
+  sub-240            -0.855        -0.116905       0.7227     0.7735
+
+  HF Excess (z-scored) across grokkers:
+    Mean:   0.0970
+    Std:    0.5178
+    CV:     5.3367
+
+  HF Excess (raw) across grokkers:
+    Mean:   0.020366
+    Std:    0.081302
+    CV:     3.9921
+
+  E_Total at grokking:
+    Mean:   1.0172
+    Std:    0.1893
+    CV:     0.1861
+
+  E_Metabolic at grokking:
+    Mean:   0.7773
+    Std:    0.0813
+    CV:     0.1047
+
+    E_total is NOT more constant than E_metabolic alone.
+
+================================================================================
+ [2] SPECTRAL BETA SHIFT AT GROKKING: Which ROI hits 1/f criticality?
+================================================================================
+
+  ROI                   Mean Shift      Std  Pink Count  Brown Count
+  -----------------------------------------------------------------
+  PFC                       -0.130    0.608           3            2
+  Parahippocampus            0.143    0.965           3            3
+  Thalamus                   0.195    0.959           2            5
+
+  Thalamus beta shift: t=0.611, p=0.5561
+    Direction: TOWARD BROWN (1/f^2 metabolic)
+
+================================================================================
+ [3] GROKKING SPIKES vs NON-GROKKING SPIKES: Same population?
+     If grokking is a specific phase transition, its HF spike should be
+     distinguishable from random exploration-phase HF fluctuations.
+================================================================================
+
+  Grokking HF spikes (n=10) vs Exploration HF (n=1316):
+    Mann-Whitney U = 8190.0, p = 0.091071
+    Grokking spikes are NOT significantly different from exploration noise.
+
+  Exploration HF distribution:
+    Mean:     0.218371
+    Std:      0.181506
+    95th pct: 0.576681
+    99th pct: 0.785497
+
+  Grokking HF values and their percentile in exploration distribution:
+    sub-201: 0.373729 (percentile: 81.5%)
+    sub-206: 0.175343 (percentile: 53.1%)
+    sub-212: 0.287392 (percentile: 71.4%)
+    sub-216: 0.182359 (percentile: 54.6%)
+    sub-217: 0.225105 (percentile: 62.2%)
+    sub-220: 0.281064 (percentile: 70.7%)
+    sub-226: 0.353330 (percentile: 79.6%)
+    sub-229: 0.234759 (percentile: 64.0%)
+    sub-237: 0.172820 (percentile: 52.4%)
+    sub-240: 0.101466 (percentile: 32.8%)
+
+  Anomalous non-grokking spikes that match grokking energy range:
+    Grokking HF range: [0.101466, 0.373729]
+    Non-grokking trials in that range: 641 / 1316
+    Percentage: 48.7%
+    Many exploration trials have similar energy.
+    Could be: failed alignment attempts, or HF alone isn't distinctive.
+

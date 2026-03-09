@@ -66,7 +66,7 @@ def simulate_subject_220_timeline():
         fidelity_log[t_idx] = f
         
         # Record current memory weight matrix magnitude (unphosphorylated baseline)
-        camkii_phosphorylation_log[t_idx] = torch.norm(layer.camkii_matrix).item()
+        camkii_phosphorylation_log[t_idx] = torch.norm(layer.lattice.get_lattice()).item()
         
         # At T=20s, the Subject 220 Phase-Locks! 
         if t_idx == aha_tr_idx:
@@ -90,7 +90,7 @@ def simulate_subject_220_timeline():
             # We model this by retroactively updating the log.
             
             print(f"--> [Retrocausality] Propagating CaMKII crystalline state backward down the Bi-Twistor lightcone...")
-            new_phosphorylation_norm = torch.norm(layer.camkii_matrix).item()
+            new_phosphorylation_norm = torch.norm(layer.lattice.get_lattice()).item()
             
             # Update the past states starting from T=4s (16 seconds ago) up to T=20
             # This is the physical "Time Travel" prediction spike from Subject 220
@@ -103,7 +103,7 @@ def simulate_subject_220_timeline():
             
     # Post-Grokking (T > 20s)
     for t_idx in range(aha_tr_idx + 1, num_steps):
-        camkii_phosphorylation_log[t_idx] = torch.norm(layer.camkii_matrix).item()
+        camkii_phosphorylation_log[t_idx] = torch.norm(layer.lattice.get_lattice()).item()
         fidelity_log[t_idx] = 1.0 # Locked
         superradiant_energy_log[t_idx] = 0.0 # Pruned
 

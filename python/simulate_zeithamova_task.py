@@ -138,7 +138,7 @@ def run_simulation():
         
     print(f"\nPost-Collapse Validation:")
     print(f"Ghost Basin Collapsed (Pruned): {layer.active_superposition is None}")
-    print(f"CaMKII Logic Matrix updated natively? {torch.any(layer.camkii_matrix != 0).item()}")
+    print(f"CaMKII Logic Matrix updated natively? {torch.any(layer.lattice.get_lattice() != 0).item()}")
     print("Classical Working Memory solidified without standard backpropagation!")
 
 if __name__ == "__main__":

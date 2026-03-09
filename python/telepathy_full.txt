@@ -1,0 +1,76 @@
+--- Aim: ---
+Telepathy is defined as the communication of impressions of any kind from one mind to another, independently of the recognized channels of sense. Meta-analyses of ganzfield studies as well as card-guessing task studies provide compelling evidence for the existence of telepathic phenomena. The aim of this study was to elucidate the neural basis of telepathy by examining an individual with this special ability.
+
+
+--- Materials and Methods: ---
+Using functional MRI, we examined a famous mentalist while he was performing a telepathic task in a 1.5 T scanner. A matched control subject without this special ability was also examined under similar conditions.
+
+
+--- Results: ---
+The mentalist demonstrated significant activation of the right parahippocampal gyrus after successful performance of a telepathic task. The comparison subject, who did not show any telepathic ability, demonstrated significant activation of the left inferior frontal gyrus.
+
+
+--- Conclusions: ---
+The findings of this study are suggestive of a limbic basis for telepathy and warrant further systematic research.
+
+
+--- INTRODUCTION ---
+Telepathy is defined as the communication of impressions of any kind from one mind to another, independently of the recognized channels of sense.[
+Examining people with extraordinary capabilities involving paranormal phenomena might help in a better understanding of these puzzling entities.[
+
+
+--- MATERIALS AND METHODS ---
+Mr. Gerard Senehi [Mr. GS] (aged 46 years) is well known for his abilities to perform various paranormal tasks such as telekinesis, mind reading, and telepathy (
+One of the investigators (PNJ) drew an image in the presence of other investigators [HRN, BNG, and GVS]. Figures
+Image drawn by the investigator (PNJ) for the mentalist [Mr. GS]
+Image reproduced by the mentalist [Mr. GS] after the telepathic task
+Image drawn by the investigator (PNJ) for the control subject [Mr. JS]
+Image reproduced by the control subject [Mr. JS] after the telepathic task
+MRI was done with 1.5 Tesla Magnetom vision scanner. First, a T
+The fMRI analysis was performed using Statistical Parametric Mapping-2 (SPM2)(
+SPM2 combines the General Linear Model and Gaussian field theory to draw statistical inferences from BOLD response data regarding deviations from the null hypothesis in three-dimensional brain space.[
+
+
+--- Subjects ---
+Mr. Gerard Senehi [Mr. GS] (aged 46 years) is well known for his abilities to perform various paranormal tasks such as telekinesis, mind reading, and telepathy (
+
+
+--- Telepathy task ---
+One of the investigators (PNJ) drew an image in the presence of other investigators [HRN, BNG, and GVS]. Figures
+Image drawn by the investigator (PNJ) for the mentalist [Mr. GS]
+Image reproduced by the mentalist [Mr. GS] after the telepathic task
+Image drawn by the investigator (PNJ) for the control subject [Mr. JS]
+Image reproduced by the control subject [Mr. JS] after the telepathic task
+
+
+--- Imaging procedures ---
+MRI was done with 1.5 Tesla Magnetom vision scanner. First, a T
+
+
+--- Image analysis ---
+The fMRI analysis was performed using Statistical Parametric Mapping-2 (SPM2)(
+SPM2 combines the General Linear Model and Gaussian field theory to draw statistical inferences from BOLD response data regarding deviations from the null hypothesis in three-dimensional brain space.[
+
+
+--- RESULTS ---
+The image [
+Right Parahippocampal Gyrus Activation in the subject with telepathic ability [Mr. GS], while performing a successful telepathic task. On the left hand side, the activation is superimposed on a glass brain and on the right hand side, the activation [yellow] is superimposed on a structural MR image
+Left Inferior Frontal Gyrus Activation in the control subject without any telepathic ability [Mr. JS], while performing an unsuccessful telepathic task. On the left hand side, the activation is superimposed on a glass brain and on the right hand side, the activation [yellow] is superimposed on a structural MR image
+
+
+--- DISCUSSION ---
+To our knowledge, this is the first fMRI study to examine the brain correlates of telepathy. Previous studies have employed other functional brain mapping techniques such as Single Photon Emission Computed Tomography (SPECT)[
+A previous study[
+Another SPECT study[
+Together, these two studies suggest that paranormal phenomena might have a relationship with the right cerebral hemisphere, especially the right posterior cortical and hippocampal regions. The parahippocampal region is very closely linked to the hippocampus, both structurally and functionally.[
+In our study, the control subject activated his left inferior frontal gyrus during his unsuccessful telepathic task performance; this brain area is implicated in the Theory of Mind [ToM].[
+Superior empathizing abilities have been hypothesized to be important for both telepathy[
+On the contrary, empathy deficits[
+Ours is probably the first fMRI study to examine the neuroanatomical correlates of telepathy. fMRI offers methodological advantages of nonradioactive and noninvasive real-time imaging of the brain. We have employed a well-researched and validated image analysis paradigm with optimal correction for false positive results. Our study methodology strictly adhered to the guidelines for research on paranormal phenomena proposed by Hyman and Honorton.[
+Nonetheless, one has to be cautious while interpreting the study findings due to the following limitations: i) ideally, it would have been methodologically more rigorous if Mr. Gerard had replicated the successful telepathic task with similar brain activation during another session of fMRI on a different occasion. As Mr. Gerard had reported some inexplicable discomfort in the few days following the fMRI, this could not be done; Ii) examination of just one control subject is another limiting factor.
+
+
+--- CONCLUSIONS ---
+In summary, this study's findings are suggestive of an association between telepathy and the right parahippocampal gyrus. The methodological rigor, isolated and robust brain activation with telepathy, and established theoretical relevance of this brain region with reference to paranormal phenomena highlight the need for further studies using advanced fusion imaging techniques (simultaneous fMRI, EEG, and magnetoencephalography) to examine telepathy.
+
+
