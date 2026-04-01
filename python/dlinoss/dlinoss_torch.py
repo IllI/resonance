@@ -370,49 +370,49 @@ class DLinOSSLayer(nn.Module):
         L, H = input_sequence.shape
         P = self.state_dim
 
-        # 1. Materialize complex parameters
-        B_complex = torch.view_as_complex(self.B.contiguous())  # (P, H)
-        C_complex = torch.view_as_complex(self.C.contiguous())  # (H, P)
+        # 1. Extract real and imaginary parts of B and C
+        # self.B: (P, H, 2), self.C: (H, P, 2)
+        B_re = self.B[..., 0]
+        B_im = self.B[..., 1]
+        C_re = self.C[..., 0]
+        C_im = self.C[..., 1]
 
         # 2. Soft projection for stability
         A, G, dt = self._soft_project(self.A_diag, self.G_diag, self.dt_raw)
 
-        # 3. Input projection: Bu_k = B @ u_k for each k
-        # input_sequence: (L, H), B_complex: (P, H)
-        # Bu: (L, P) complex
-        Bu = input_sequence.to(B_complex.dtype) @ B_complex.T  # (L, P)
+        # 3. Input projection: Bu_k = B @ u_k
+        # Since input is real: Bu_re = B_re @ u, Bu_im = B_im @ u
+        Bu_re = input_sequence @ B_re.T
+        Bu_im = input_sequence @ B_im.T
 
         # 4. Construct recurrence elements
-        # Schur complement S = 1 + Δt·G
-        S = 1.0 + dt * G  # (P,)
-
+        S = 1.0 + dt * G
         M11 = 1.0 / S
         M12 = -dt * A / S
         M21 = dt / S
         M22 = 1.0 - dt.pow(2) * A / S
 
-        # Flatten to [M11, M12, M21, M22] per oscillator
-        M = torch.cat([M11, M12, M21, M22])  # (4P,)
-        M_elements = M.unsqueeze(0).repeat(L, 1)  # (L, 4P)
+        M = torch.cat([M11, M12, M21, M22])
+        M_elements = M.unsqueeze(0).repeat(L, 1)
 
-        # Forcing: F1 = dt/S · Bu, F2 = dt²/S · Bu
-        F1 = (dt / S).unsqueeze(0) * Bu  # (L, P) complex
-        F2 = (dt.pow(2) / S).unsqueeze(0) * Bu  # (L, P) complex
-        F_cat = torch.cat([F1, F2], dim=-1)  # (L, 2P) complex
+        # Forcing terms (Real and Imaginary treated separately)
+        dt_S = dt / S
+        dt2_S = dt.pow(2) / S
+        
+        F_re = torch.cat([dt_S.unsqueeze(0) * Bu_re, dt2_S.unsqueeze(0) * Bu_re], dim=-1)
+        F_im = torch.cat([dt_S.unsqueeze(0) * Bu_im, dt2_S.unsqueeze(0) * Bu_im], dim=-1)
 
-        # Process real and imaginary parts through the SAME real M
-        # separately (since M is real, R[M·z] = M·R[z] and I[M·z] = M·I[z])
-        _, xs_re = parallel_scan(M_elements, F_cat.real)
-        _, xs_im = parallel_scan(M_elements, F_cat.imag)
+        # 5. Parallel scan (all real arithmetic)
+        _, xs_re = parallel_scan(M_elements, F_re)
+        _, xs_im = parallel_scan(M_elements, F_im)
 
-        # Extract position component (x, not z): indices P:2P
-        ys_re = xs_re[:, P:]   # real part of position
-        ys_im = xs_im[:, P:]   # imag part of position
-        ys = torch.complex(ys_re, ys_im)  # (L, P) complex
+        # Extract position component (x): indices P:2P
+        ys_re = xs_re[:, P:]
+        ys_im = xs_im[:, P:]
 
-        # 6. Output projection: y_k = Re(C @ x_k) + D · u_k
-        # C_complex: (H, P), ys: (L, P) → (L, H)
-        output = (ys @ C_complex.T).real + self.D.unsqueeze(0) * input_sequence
+        # 6. Output projection: y = Re(C @ (ys_re + i*ys_im)) + D*u
+        # Re((C_re + i*C_im) @ (ys_re + i*ys_im)) = C_re @ ys_re - C_im @ ys_im
+        output = (ys_re @ C_re.T - ys_im @ C_im.T) + self.D.unsqueeze(0) * input_sequence
 
         return output
 
@@ -435,13 +435,17 @@ class DLinOSSLayer(nn.Module):
             det = 1.0 / S
 
             disc = tr.pow(2) - 4 * det
+            
+            # Complex64 operations deadlock the DirectML backend graph.
+            # We explicitly bypass this by computing the roots natively on CPU.
+            disc = disc.cpu()
+            tr_c = tr.cpu().to(torch.complex64)
             sqrt_disc = torch.sqrt(disc.to(torch.complex64))
-            tr_c = tr.to(torch.complex64)
 
             lam_plus = (tr_c + sqrt_disc) / 2
             lam_minus = (tr_c - sqrt_disc) / 2
 
-            return torch.stack([lam_plus, lam_minus], dim=-1)
+            return torch.stack([lam_plus, lam_minus], dim=-1).to(tr.device)
 
     def get_spectral_radius(self) -> float:
         """Maximum |λ| across all oscillators. Should be < 1 for stability."""

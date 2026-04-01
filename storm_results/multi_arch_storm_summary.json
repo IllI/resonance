@@ -1,0 +1,43 @@
+[
+  {
+    "coherence": 0.374968,
+    "velocity": 688.914,
+    "peak_event_count": 0,
+    "peaks": [],
+    "label": "T4_storm_peak",
+    "hw": "Tesla T4",
+    "utc": "2026-03-22 00:08:56"
+  },
+  {
+    "coherence": 0.376308,
+    "velocity": 56.8736,
+    "peak_event_count": 1,
+    "peaks": [
+      {
+        "bin": 1,
+        "z": 6.24498
+      }
+    ],
+    "label": "T4_solar_flare",
+    "hw": "Tesla T4",
+    "utc": "2026-03-21 05:09:06"
+  },
+  {
+    "coherence": 0.374971,
+    "velocity": 23.387,
+    "peak_event_count": 0,
+    "peaks": [],
+    "label": "T4_solar_flare_1am",
+    "hw": "Tesla T4",
+    "utc": "2026-03-21 06:12:36"
+  },
+  {
+    "coherence": 0.837955,
+    "velocity": 0.266361,
+    "peak_event_count": 0,
+    "peaks": [],
+    "label": "TPU_storm",
+    "hw": "TPU v5e",
+    "utc": "2026-03-21 06:38:55"
+  }
+]

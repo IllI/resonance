@@ -1,0 +1,84 @@
+{
+  "bou_global": {
+    "baseline_H_nT": 20693.8,
+    "min_Dst_proxy_nT": -200.9,
+    "min_Dst_time": "2026-03-21T01:52:00+00:00",
+    "ssc_dH_nT_per_min": 29.19,
+    "ssc_time": "2026-03-20T22:08:00+00:00"
+  },
+  "T4_solar_flare": {
+    "xcorr": {
+      "H": {
+        "best_r": -0.223,
+        "best_lag_sec": 0.0,
+        "n_overlap": 40
+      },
+      "dH": {
+        "best_r": -0.223,
+        "best_lag_sec": 0.0,
+        "n_overlap": 40
+      }
+    },
+    "peak_count": 3
+  },
+  "T4_solar_flare_1am": {
+    "xcorr": {
+      "H": {
+        "best_r": -0.1618,
+        "best_lag_sec": 0.0,
+        "n_overlap": 40
+      },
+      "dH": {
+        "best_r": 0.1618,
+        "best_lag_sec": 0.0,
+        "n_overlap": 40
+      }
+    },
+    "peak_count": 3
+  },
+  "T4_storm_peak": {
+    "xcorr": {
+      "H": {
+        "best_r": -0.2532,
+        "best_lag_sec": 0.0,
+        "n_overlap": 41
+      },
+      "dH": {
+        "best_r": 0.2614,
+        "best_lag_sec": 0.0,
+        "n_overlap": 41
+      }
+    },
+    "peak_count": 0
+  },
+  "T4_equinox": {
+    "xcorr": {
+      "H": {
+        "best_r": -0.2031,
+        "best_lag_sec": 0.0,
+        "n_overlap": 40
+      },
+      "dH": {
+        "best_r": 0.2031,
+        "best_lag_sec": 0.0,
+        "n_overlap": 40
+      }
+    },
+    "peak_count": 3
+  },
+  "local_780m": {
+    "xcorr": {
+      "H": {
+        "best_r": -0.5603,
+        "best_lag_sec": -18.0,
+        "n_overlap": 1201
+      },
+      "dH": {
+        "best_r": -0.535,
+        "best_lag_sec": -6.0,
+        "n_overlap": 1201
+      }
+    },
+    "peak_count": 0
+  }
+}
