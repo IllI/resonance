@@ -20,10 +20,10 @@ D3D11CreateDeviceAndSwapChain(pAdapter, ...);                                   
 
 | Dataset | Hardware | Window (UTC) | Coherence | Velocity | Peaks |
 |---|---|---|---|---|---|
-| T4_storm_peak | Tesla T4 | 2026-03-22 00:08:56 | **0.3750** | 688.91 | 0 |
-| T4_solar_flare | Tesla T4 | 2026-03-21 05:09:06 | **0.3763** | 56.87 | 1 |
-| T4_solar_flare_1am | Tesla T4 | 2026-03-21 06:12:36 | **0.3750** | 23.39 | 0 |
-| TPU_storm | TPU v5e | 2026-03-21 06:38:55 | **0.8380** | 0.27 | 0 |
+| T4_storm_peak | Tesla T4 | 2026-03-22 00:08:56 | 0.3750 | 688.91 | 0 |
+| T4_solar_flare | Tesla T4 | 2026-03-21 05:09:06 | 0.3763 | 56.87 | 1 |
+| T4_solar_flare_1am | Tesla T4 | 2026-03-21 06:12:36 | 0.3750 | 23.39 | 0 |
+| TPU_storm | TPU v5e | 2026-03-21 06:38:55 | **0.3761** | 0.68 | **53** |
 
 ## Key Findings
 - **TPU coherence is 2.2x higher** (0.838 vs ~0.375) than T4 at similar storm times — consistent with TPU's tighter clock tree reducing jitter
