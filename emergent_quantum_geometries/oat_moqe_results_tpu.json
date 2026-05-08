@@ -1,0 +1,209 @@
+﻿python.exe : Using ssh batch size of 1. Attempting to SSH into 1 nodes with a total of 1 workers.
+At C:\Users\cityz\AppData\Local\Google\Cloud SDK\google-cloud-sdk\bin\gcloud.ps1:114 char:3
++   & "$cloudsdk_python" $run_args_array
++   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Using ssh batch...l of 1 workers.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+SSH: Attempting to connect to worker 0...
+{
+  "experiment": "OAT-MoQE Quantum Framework Discriminator v2",
+  "method": "D-LiNOSS SSM + signal statistics physics scoring",
+  "frameworks": [
+    "heisenberg",
+    "syk",
+    "mbl",
+    "lindblad",
+    "oat",
+    "penrose_or"
+  ],
+  "accuracy": "4/6",
+  "results": {
+    "oat": {
+      "source": "oat",
+      "winner": "mbl",
+      "correct": false,
+      "probabilities": {
+        "heisenberg": 0.2427985131785095,
+        "syk": 0.0303836153786126,
+        "mbl": 0.33294995002486205,
+        "lindblad": 0.15541765050418946,
+        "oat": 0.2362485898152321,
+        "penrose_or": 0.0022016810985941424
+      },
+      "scores": {
+        "heisenberg": 0.4638182044029236,
+        "syk": 2.5421466446145,
+        "mbl": 0.14805796146392824,
+        "lindblad": 0.9099341273307799,
+        "oat": 0.491165542602539,
+        "penrose_or": 5.166828935636702
+      },
+      "signal_stats": {
+        "decay_ratio": 0.9980579614639282,
+        "raw_mean": 0.6813784837722778,
+        "variance_ratio": 1.0134442483698831,
+        "freq_disorder": 5.265581049674395,
+        "osc_sustain": 0.9644304450853147
+      },
+      "gamma_mean": 0.5118761658668518,
+      "omega_std": 0.03137151524424553,
+      "epochs": 500
+    },
+    "heisenberg": {
+      "source": "heisenberg",
+      "winner": "heisenberg",
+      "correct": true,
+      "probabilities": {
+        "heisenberg": 0.3527722831404886,
+        "syk": 0.0394628372704517,
+        "mbl": 0.25611585404287324,
+        "lindblad": 0.2249375388422626,
+        "oat": 0.1254759921210403,
+        "penrose_or": 0.0012354945828834307
+      },
+      "scores": {
+        "heisenberg": 0.7877759456634521,
+        "syk": 2.9782393037290285,
+        "mbl": 1.107968807220459,
+        "lindblad": 1.237775945663452,
+        "oat": 1.8214842617511748,
+        "penrose_or": 6.442127342300099
+      },
+      "signal_stats": {
+        "decay_ratio": 1.357968807220459,
+        "raw_mean": 0.4872969090938568,
+        "variance_ratio": 0.1311885296870929,
+        "freq_disorder": 0.0,
+        "osc_sustain": 1.0306941295334653
+      },
+      "gamma_mean": 0.47980713844299316,
+      "omega_std": 0.01250326819717884,
+      "epochs": 500
+    },
+    "syk": {
+      "source": "syk",
+      "winner": "syk",
+      "correct": true,
+      "probabilities": {
+        "heisenberg": 0.10429281749873555,
+        "syk": 0.44249230157755626,
+        "mbl": 0.30530170646325966,
+        "lindblad": 0.1323339172750566,
+        "oat": 0.015442966466924748,
+        "penrose_or": 0.00013629071846709827
+      },
+      "scores": {
+        "heisenberg": 1.7509288161993026,
+        "syk": 0.30570824523661455,
+        "mbl": 0.6768308227795297,
+        "lindblad": 1.5128029073012113,
+        "oat": 3.660977657139301,
+        "penrose_or": 8.391096350919637
+      },
+      "signal_stats": {
+        "decay_ratio": 0.22118450701236725,
+        "raw_mean": 0.08356756716966629,
+        "variance_ratio": 204.3982368781454,
+        "freq_disorder": 0.551984670208103,
+        "osc_sustain": 0.08812590889809149
+      },
+      "gamma_mean": 1.02211332321167,
+      "omega_std": 0.1342393159866333,
+      "epochs": 500
+    },
+    "mbl": {
+      "source": "mbl",
+      "winner": "mbl",
+      "correct": true,
+      "probabilities": {
+        "heisenberg": 0.23236316059321696,
+        "syk": 0.053102340597982536,
+        "mbl": 0.45615634534411736,
+        "lindblad": 0.23576370555878703,
+        "oat": 0.017788603492037914,
+        "penrose_or": 0.004825844413858325
+      },
+      "scores": {
+        "heisenberg": 0.7567983984947204,
+        "syk": 2.2328788873319083,
+        "mbl": 0.08226428031921384,
+        "lindblad": 0.7422698378562927,
+        "oat": 3.3265418946743006,
+        "penrose_or": 4.631114166134035
+      },
+      "signal_stats": {
+        "decay_ratio": 0.7677357196807861,
+        "raw_mean": 0.068238765001297,
+        "variance_ratio": 1.3391955121857737,
+        "freq_disorder": 0.80389068558791,
+        "osc_sustain": 1.005147917278045
+      },
+      "gamma_mean": 0.5745341181755066,
+      "omega_std": 0.21447904407978058,
+      "epochs": 500
+    },
+    "lindblad": {
+      "source": "lindblad",
+      "winner": "penrose_or",
+      "correct": false,
+      "probabilities": {
+        "heisenberg": 0.10191794818372787,
+        "syk": 0.12548768130973148,
+        "mbl": 0.23968362737203636,
+        "lindblad": 0.2588263928442535,
+        "oat": 0.013245448444025745,
+        "penrose_or": 0.26083890184622494
+      },
+      "scores": {
+        "heisenberg": 1.503139865398407,
+        "syk": 1.2951003285247276,
+        "mbl": 0.647988090940836,
+        "lindblad": 0.5711503863334655,
+        "oat": 3.543653945624828,
+        "penrose_or": 0.5634049429347658
+      },
+      "signal_stats": {
+        "decay_ratio": 0.3090052604675293,
+        "raw_mean": 0.08946815878152847,
+        "variance_ratio": 5.167937350255652,
+        "freq_disorder": 0.4930066485916347,
+        "osc_sustain": 1.1087993649344732
+      },
+      "gamma_mean": 0.8621451258659363,
+      "omega_std": 0.17617455124855042,
+      "epochs": 500
+    },
+    "penrose_or": {
+      "source": "penrose_or",
+      "winner": "penrose_or",
+      "correct": true,
+      "probabilities": {
+        "heisenberg": 0.07960326981612136,
+        "syk": 0.1919644374368211,
+        "mbl": 0.20422702597776146,
+        "lindblad": 0.1276446225193959,
+        "oat": 0.010884176032046953,
+        "penrose_or": 0.3856764682178534
+      },
+      "scores": {
+        "heisenberg": 1.6769725203514099,
+        "syk": 0.7967175572611387,
+        "mbl": 0.7347954429493104,
+        "lindblad": 1.2047776744074787,
+        "oat": 3.66671769618988,
+        "penrose_or": 0.09902883768081665
+      },
+      "signal_stats": {
+        "decay_ratio": 0.14902883768081665,
+        "raw_mean": 0.0968506932258606,
+        "variance_ratio": 11.697786169234709,
+        "freq_disorder": 0.5661757193698729,
+        "osc_sustain": 0.3221948459439311
+      },
+      "gamma_mean": 0.8760013580322266,
+      "omega_std": 0.10712181031703949,
+      "epochs": 500
+    }
+  }
+}

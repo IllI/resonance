@@ -1,0 +1,201 @@
+{
+  "experiment": "OAT-MoQE Quantum Framework Discriminator v2",
+  "method": "D-LiNOSS SSM + signal statistics physics scoring",
+  "frameworks": [
+    "heisenberg",
+    "syk",
+    "mbl",
+    "lindblad",
+    "oat",
+    "penrose_or"
+  ],
+  "accuracy": "5/6",
+  "results": {
+    "oat": {
+      "source": "oat",
+      "winner": "mbl",
+      "correct": false,
+      "probabilities": {
+        "heisenberg": 0.22339171186773912,
+        "syk": 0.03466931205166476,
+        "mbl": 0.34179954913056376,
+        "lindblad": 0.14244084432585027,
+        "oat": 0.2558280770460683,
+        "penrose_or": 0.001870505578113778
+      },
+      "scores": {
+        "heisenberg": 0.5804806470870971,
+        "syk": 2.4435525163241167,
+        "mbl": 0.1551829814910889,
+        "lindblad": 1.030480647087097,
+        "oat": 0.4449017882347106,
+        "penrose_or": 5.363198676115824
+      },
+      "signal_stats": {
+        "decay_ratio": 1.0051829814910889,
+        "raw_mean": 0.6920562386512756,
+        "variance_ratio": 0.8593972201376274,
+        "freq_disorder": 3.016663789133066,
+        "osc_sustain": 1.0348258295247255
+      },
+      "gamma_mean": 0.6252976655960083,
+      "omega_std": 0.0034524942748248577,
+      "epochs": 200
+    },
+    "heisenberg": {
+      "source": "heisenberg",
+      "winner": "heisenberg",
+      "correct": true,
+      "probabilities": {
+        "heisenberg": 0.3327001036125364,
+        "syk": 0.0489743982683864,
+        "mbl": 0.27703945672316027,
+        "lindblad": 0.21213895211083406,
+        "oat": 0.1279045037218012,
+        "penrose_or": 0.0012425855632818862
+      },
+      "scores": {
+        "heisenberg": 0.8939195394515991,
+        "syk": 2.8098633566558195,
+        "mbl": 1.0770010948181152,
+        "lindblad": 1.343919539451599,
+        "oat": 1.8498771131038665,
+        "penrose_or": 6.483966693479304
+      },
+      "signal_stats": {
+        "decay_ratio": 1.3270010948181152,
+        "raw_mean": 0.47542479634284973,
+        "variance_ratio": 0.13712709929458164,
+        "freq_disorder": 0.0,
+        "osc_sustain": 1.1881853959115414
+      },
+      "gamma_mean": 0.6169184446334839,
+      "omega_std": 0.011096363887190819,
+      "epochs": 200
+    },
+    "syk": {
+      "source": "syk",
+      "winner": "syk",
+      "correct": true,
+      "probabilities": {
+        "heisenberg": 0.12835486087349857,
+        "syk": 0.3940387352666524,
+        "mbl": 0.30455092631982034,
+        "lindblad": 0.15653562539754182,
+        "oat": 0.01649211158507983,
+        "penrose_or": 2.774055740713672e-05
+      },
+      "scores": {
+        "heisenberg": 1.5891437500715255,
+        "syk": 0.46749331136439165,
+        "mbl": 0.7251042098098146,
+        "lindblad": 1.3906589062919696,
+        "oat": 3.641060347855091,
+        "penrose_or": 10.028802299002049
+      },
+      "signal_stats": {
+        "decay_ratio": 0.22513999044895172,
+        "raw_mean": 0.08675993233919144,
+        "variance_ratio": 237.07324617106192,
+        "freq_disorder": 0.49975579974123363,
+        "osc_sustain": 0.04848484377955602
+      },
+      "gamma_mean": 0.8642837405204773,
+      "omega_std": 0.09566798061132431,
+      "epochs": 200
+    },
+    "mbl": {
+      "source": "mbl",
+      "winner": "mbl",
+      "correct": true,
+      "probabilities": {
+        "heisenberg": 0.22089674787247793,
+        "syk": 0.06002167408352215,
+        "mbl": 0.46703272067941026,
+        "lindblad": 0.2293920268930531,
+        "oat": 0.01754008118229997,
+        "penrose_or": 0.005116749289236466
+      },
+      "scores": {
+        "heisenberg": 0.8425724625587463,
+        "syk": 2.1455621189877654,
+        "mbl": 0.09386852979660032,
+        "lindblad": 0.8048354029655457,
+        "oat": 3.375779235363006,
+        "penrose_or": 4.607748517737446
+      },
+      "signal_stats": {
+        "decay_ratio": 0.7561314702033997,
+        "raw_mean": 0.05607044696807861,
+        "variance_ratio": 1.370049597788109,
+        "freq_disorder": 0.7860098058743005,
+        "osc_sustain": 1.0433332906443102
+      },
+      "gamma_mean": 0.648703932762146,
+      "omega_std": 0.057512588798999786,
+      "epochs": 200
+    },
+    "lindblad": {
+      "source": "lindblad",
+      "winner": "lindblad",
+      "correct": true,
+      "probabilities": {
+        "heisenberg": 0.1026710317193393,
+        "syk": 0.12484693065985544,
+        "mbl": 0.23682405589806427,
+        "lindblad": 0.2619053923543195,
+        "oat": 0.012450905800912513,
+        "penrose_or": 0.2613016835675087
+      },
+      "scores": {
+        "heisenberg": 1.479014140367508,
+        "syk": 1.2834557183146107,
+        "mbl": 0.6432266652584075,
+        "lindblad": 0.5425608098506927,
+        "oat": 3.588750775158405,
+        "penrose_or": 0.5448685349657356
+      },
+      "signal_stats": {
+        "decay_ratio": 0.3067733347415924,
+        "raw_mean": 0.08089517802000046,
+        "variance_ratio": 5.883344055075972,
+        "freq_disorder": 0.5,
+        "osc_sustain": 1.0761904004482863
+      },
+      "gamma_mean": 0.8357874751091003,
+      "omega_std": 0.08328720927238464,
+      "epochs": 200
+    },
+    "penrose_or": {
+      "source": "penrose_or",
+      "winner": "penrose_or",
+      "correct": true,
+      "probabilities": {
+        "heisenberg": 0.08606951851381749,
+        "syk": 0.16866593827842472,
+        "mbl": 0.2016412003709797,
+        "lindblad": 0.1467574218040451,
+        "oat": 0.010612361092120541,
+        "penrose_or": 0.3862535599406124
+      },
+      "scores": {
+        "heisenberg": 1.598043930530548,
+        "syk": 0.9252791929504316,
+        "mbl": 0.7467093728164177,
+        "lindblad": 1.0644182231498371,
+        "oat": 3.6911797925829886,
+        "penrose_or": 0.09670521020889282
+      },
+      "signal_stats": {
+        "decay_ratio": 0.14670521020889282,
+        "raw_mean": 0.09242299944162369,
+        "variance_ratio": 10.79807035074304,
+        "freq_disorder": 0.5565854169746894,
+        "osc_sustain": 0.383625707380711
+      },
+      "gamma_mean": 0.7947491407394409,
+      "omega_std": 0.1172943264245987,
+      "epochs": 200
+    }
+  }
+}
