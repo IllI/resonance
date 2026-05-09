@@ -1,0 +1,273 @@
+{
+  "experiment": "OAT-MoQE v4 \u2014 Real Data Hypothesis Test",
+  "hypothesis": {
+    "H1": "OAT probe > 0.80 on real OAT sim, < 0.30 on separable",
+    "H0": "Learner cannot distinguish entangled from separable"
+  },
+  "config": {
+    "N": [
+      2,
+      4,
+      6,
+      8,
+      10,
+      12
+    ],
+    "epochs": 600,
+    "T": 64,
+    "B": 64,
+    "seed": 0
+  },
+  "datasets": {
+    "oat": {
+      "label": "OAT (real sim)",
+      "probe_scores": {
+        "oat": 1.0,
+        "separable": 0.39472851395566244,
+        "hamiltonian": 0.3077997675955339,
+        "lindblad": 0.5225438752921322,
+        "penrose_or": 0.3333333333333333,
+        "novel": 0.27678709139557134
+      },
+      "oat_analysis": {
+        "fit": 1.0,
+        "raw_mean": 0.7165732383728027,
+        "raw_min": 0.6545971632003784,
+        "margin_above_2_3": 0.049906571706136105,
+        "raw_osc": 0.0346648208796978,
+        "quantum_advantage": true
+      },
+      "penrose_null_residual": 5.41333515652895e-34,
+      "spinor_winding": 13.446373740669587,
+      "ssm_omega_mean": 0.668577253818512,
+      "ssm_gamma_mean": 0.4750043749809265,
+      "probe_details": {
+        "oat": {
+          "fit": 1.0,
+          "raw_mean": 0.7165732383728027,
+          "raw_min": 0.6545971632003784,
+          "margin_above_2_3": 0.049906571706136105,
+          "raw_osc": 0.0346648208796978,
+          "quantum_advantage": true
+        },
+        "separable": {
+          "fit": 0.39472851395566244,
+          "raw_mean": 0.7165732383728027,
+          "raw_std": 0.08653848618268967
+        },
+        "hamiltonian": {
+          "fit": 0.3077997675955339,
+          "eom_ratio": 1.2159567915555791,
+          "eom_fit": 0.6492654817638657,
+          "norm_variance": 0.5695292949676514,
+          "gamma_mean": 0.4750043749809265
+        },
+        "lindblad": {
+          "fit": 0.5225438752921322,
+          "N_BLP": 0.0,
+          "markov_fit": 1.0,
+          "gamma_mean": 0.4750043749809265,
+          "decay": 0.469350129365921
+        },
+        "penrose_or": {
+          "fit": 0.3333333333333333,
+          "null_surface_residual": 5.41333515652895e-34,
+          "spinor_winding": 13.446373740669587,
+          "or_threshold_crossings": 0,
+          "E_G_phenom": 0.01,
+          "collapse_spike": 2.2695349659581886e-25,
+          "bi_twistor_norm_mean": 5.41333515652895e-34,
+          "note": "E_G is phenomenological. Null surface = topological probe, not gravitational."
+        },
+        "novel": {
+          "fit": 0.27678709139557134,
+          "effective_dim": 1.3827186822891235,
+          "level_spacing_r": 0.383635938167572,
+          "lyapunov_proxy": -0.011227632234821401,
+          "time_reversal_symmetry": 0.6216627359390259,
+          "topological_winding": 0.0
+        }
+      }
+    },
+    "separable": {
+      "label": "Separable (C=0)",
+      "probe_scores": {
+        "oat": 0.033219658020675544,
+        "separable": 0.9753499619482104,
+        "hamiltonian": 0.5714607310831189,
+        "lindblad": 0.5286288830253041,
+        "penrose_or": 0.3333333333333333,
+        "novel": 0.17675783272181844
+      },
+      "oat_analysis": {
+        "fit": 0.033219658020675544,
+        "raw_mean": 0.6666204333305359,
+        "raw_min": 0.647477388381958,
+        "margin_above_2_3": 0.0,
+        "raw_osc": 0.004898581188172102,
+        "quantum_advantage": false
+      },
+      "penrose_null_residual": 8.358451834685091e-38,
+      "spinor_winding": 13.294834239060947,
+      "ssm_omega_mean": 0.6944891214370728,
+      "ssm_gamma_mean": 0.530860424041748,
+      "probe_details": {
+        "oat": {
+          "fit": 0.033219658020675544,
+          "raw_mean": 0.6666204333305359,
+          "raw_min": 0.647477388381958,
+          "margin_above_2_3": 0.0,
+          "raw_osc": 0.004898581188172102,
+          "quantum_advantage": false
+        },
+        "separable": {
+          "fit": 0.9753499619482104,
+          "raw_mean": 0.6666204333305359,
+          "raw_std": 0.004958510864526033
+        },
+        "hamiltonian": {
+          "fit": 0.5714607310831189,
+          "eom_ratio": 1.1116399013918308,
+          "eom_fit": 0.7998910062498865,
+          "norm_variance": 0.056477680802345276,
+          "gamma_mean": 0.530860424041748
+        },
+        "lindblad": {
+          "fit": 0.5286288830253041,
+          "N_BLP": 0.0,
+          "markov_fit": 1.0,
+          "gamma_mean": 0.530860424041748,
+          "decay": 0.4562418460845947
+        },
+        "penrose_or": {
+          "fit": 0.3333333333333333,
+          "null_surface_residual": 8.358451834685091e-38,
+          "spinor_winding": 13.294834239060947,
+          "or_threshold_crossings": 0,
+          "E_G_phenom": 0.01,
+          "collapse_spike": 1.1408178829099068e-28,
+          "bi_twistor_norm_mean": 8.358451834685091e-38,
+          "note": "E_G is phenomenological. Null surface = topological probe, not gravitational."
+        },
+        "novel": {
+          "fit": 0.17675783272181844,
+          "effective_dim": 1.2147094011306763,
+          "level_spacing_r": 0.32989808917045593,
+          "lyapunov_proxy": -0.012349248063433309,
+          "time_reversal_symmetry": 0.636859118938446,
+          "topological_winding": 0.0
+        }
+      }
+    },
+    "thermal": {
+      "label": "Thermal (classical)",
+      "probe_scores": {
+        "oat": 0.05868490704010633,
+        "separable": 0.2568581951698702,
+        "hamiltonian": 0.609318442931452,
+        "lindblad": 0.5530613817086535,
+        "penrose_or": 0.3333333333333333,
+        "novel": 0.12209021156531963
+      },
+      "oat_analysis": {
+        "fit": 0.05868490704010633,
+        "raw_mean": 0.5499881505966187,
+        "raw_min": 0.37264344096183777,
+        "margin_above_2_3": 0.0,
+        "raw_osc": 0.08664938062429428,
+        "quantum_advantage": false
+      },
+      "penrose_null_residual": 5.074149252143861e-38,
+      "spinor_winding": 13.30826330143503,
+      "ssm_omega_mean": 0.7062901258468628,
+      "ssm_gamma_mean": 0.5205958485603333,
+      "probe_details": {
+        "oat": {
+          "fit": 0.05868490704010633,
+          "raw_mean": 0.5499881505966187,
+          "raw_min": 0.37264344096183777,
+          "margin_above_2_3": 0.0,
+          "raw_osc": 0.08664938062429428,
+          "quantum_advantage": false
+        },
+        "separable": {
+          "fit": 0.2568581951698702,
+          "raw_mean": 0.5499881505966187,
+          "raw_std": 0.08752270042896271
+        },
+        "hamiltonian": {
+          "fit": 0.609318442931452,
+          "eom_ratio": 1.0532066804806506,
+          "eom_fit": 0.8990529378693144,
+          "norm_variance": 0.05227651819586754,
+          "gamma_mean": 0.5205958485603333
+        },
+        "lindblad": {
+          "fit": 0.5530613817086535,
+          "N_BLP": 0.0,
+          "markov_fit": 1.0,
+          "gamma_mean": 0.5205958485603333,
+          "decay": 0.45902156829833984
+        },
+        "penrose_or": {
+          "fit": 0.3333333333333333,
+          "null_surface_residual": 5.074149252143861e-38,
+          "spinor_winding": 13.30826330143503,
+          "or_threshold_crossings": 0,
+          "E_G_phenom": 0.01,
+          "collapse_spike": 4.822598644452939e-29,
+          "bi_twistor_norm_mean": 5.074149252143861e-38,
+          "note": "E_G is phenomenological. Null surface = topological probe, not gravitational."
+        },
+        "novel": {
+          "fit": 0.12209021156531963,
+          "effective_dim": 1.1390691995620728,
+          "level_spacing_r": 0.3870435059070587,
+          "lyapunov_proxy": -0.012484786845061366,
+          "time_reversal_symmetry": 0.6482270956039429,
+          "topological_winding": 0.0
+        }
+      }
+    }
+  },
+  "hypothesis_test": {
+    "verdict": "CONFIRMED",
+    "criteria_met": 4,
+    "oat_probe_on_oat": 1.0,
+    "oat_probe_on_separable": 0.033219658020675544,
+    "oat_probe_on_thermal": 0.05868490704010633,
+    "penrose_null_oat": 5.41333515652895e-34,
+    "penrose_null_separable": 8.358451834685091e-38,
+    "penrose_null_gap": 5.412499311345481e-34,
+    "h1_oat_high": true,
+    "h0_sep_low": true,
+    "h0_thermal_low": true,
+    "h1_bt_gap": true
+  },
+  "base_curves": {
+    "N2": {
+      "F_peak": 0.999999980131785,
+      "C_peak": 0.9999999403953552
+    },
+    "N4": {
+      "F_peak": 0.7696626385052999,
+      "C_peak": 0.30898791551589966
+    },
+    "N6": {
+      "F_peak": 0.730670690536499,
+      "C_peak": 0.19201207160949707
+    },
+    "N8": {
+      "F_peak": 0.71314504245917,
+      "C_peak": 0.13943512737751007
+    },
+    "N10": {
+      "F_peak": 0.7030383770664533,
+      "C_peak": 0.1091151311993599
+    },
+    "N12": {
+      "F_peak": 0.6966263776024183,
+      "C_peak": 0.08987913280725479
+    }
+  }
+}
