@@ -1,0 +1,387 @@
+{
+  "experiment": "OAT-MoQE v5 Validation",
+  "results": {
+    "seed_0": {
+      "oat": {
+        "oat": {
+          "fit": 1.0,
+          "raw_mean": 0.7167048454284668,
+          "margin": 0.05003817876180017,
+          "quantum_advantage": true
+        },
+        "separable": {
+          "fit": 0.3918296142020332,
+          "raw_mean": 0.7167048454284668
+        },
+        "bitwistor": {
+          "fit": 0.7098569606827972,
+          "temporal_ac": 0.12957088204839184,
+          "null_residual_mean": 1.0,
+          "spinor_winding": 13.407923124278318,
+          "or_crossings": 680,
+          "E_G_phenom_used": 0.07178702248602291,
+          "collapse_spike": 155.3741552409266
+        }
+      },
+      "sep": {
+        "oat": {
+          "fit": 0.03325607833048851,
+          "raw_mean": 0.6666325926780701,
+          "margin": 0.0,
+          "quantum_advantage": false
+        },
+        "separable": {
+          "fit": 0.975189428693817,
+          "raw_mean": 0.6666325926780701
+        },
+        "bitwistor": {
+          "fit": 0.7079202664543721,
+          "temporal_ac": 0.12376079936311646,
+          "null_residual_mean": 1.0,
+          "spinor_winding": 13.438768425818512,
+          "or_crossings": 537,
+          "E_G_phenom_used": 0.07178702248602291,
+          "collapse_spike": 436.5804584169605
+        }
+      },
+      "th": {
+        "oat": {
+          "fit": 0.05869849792807796,
+          "raw_mean": 0.550032913684845,
+          "margin": 0.0,
+          "quantum_advantage": false
+        },
+        "separable": {
+          "fit": 0.2569496543119403,
+          "raw_mean": 0.550032913684845
+        },
+        "bitwistor": {
+          "fit": 0.7147014099225574,
+          "temporal_ac": 0.1441042297676718,
+          "null_residual_mean": 1.0000000000000002,
+          "spinor_winding": 13.876563313273333,
+          "or_crossings": 503,
+          "E_G_phenom_used": 0.07178702248602291,
+          "collapse_spike": 211.58401878283368
+        }
+      },
+      "hypothesis": {
+        "label": "seed=0",
+        "verdict": "CONFIRMED",
+        "n_pass": 4,
+        "oat_fit": 1.0,
+        "sep_fit": 0.03325607833048851,
+        "th_fit": 0.05869849792807796,
+        "bt_ac_oat": 0.12957088204839184,
+        "bt_ac_sep": 0.12376079936311646,
+        "h1_oat_high": true,
+        "h0_sep_low": true,
+        "h0_th_low": true,
+        "h4_bt": true
+      }
+    },
+    "seed_1": {
+      "oat": {
+        "oat": {
+          "fit": 1.0,
+          "raw_mean": 0.7166950702667236,
+          "margin": 0.050028403600057,
+          "quantum_advantage": true
+        },
+        "separable": {
+          "fit": 0.3920418081167001,
+          "raw_mean": 0.7166950702667236
+        },
+        "bitwistor": {
+          "fit": 0.7103134396806343,
+          "temporal_ac": 0.13094031904190293,
+          "null_residual_mean": 0.9999999999999999,
+          "spinor_winding": 13.638070583562788,
+          "or_crossings": 672,
+          "E_G_phenom_used": 0.07014779674949906,
+          "collapse_spike": 143.1874861496141
+        }
+      },
+      "sep": {
+        "oat": {
+          "fit": 0.033305065954638766,
+          "raw_mean": 0.6666738986968994,
+          "margin": 7.232030232784403e-06,
+          "quantum_advantage": true
+        },
+        "separable": {
+          "fit": 0.975563916742261,
+          "raw_mean": 0.6666738986968994
+        },
+        "bitwistor": {
+          "fit": 0.703174435533846,
+          "temporal_ac": 0.10952330660153768,
+          "null_residual_mean": 0.9999999999999999,
+          "spinor_winding": 13.70690338775239,
+          "or_crossings": 484,
+          "E_G_phenom_used": 0.07014779674949906,
+          "collapse_spike": 394.99116011262333
+        }
+      },
+      "th": {
+        "oat": {
+          "fit": 0.05902858933483632,
+          "raw_mean": 0.5513945817947388,
+          "margin": 0.0,
+          "quantum_advantage": false
+        },
+        "separable": {
+          "fit": 0.2591142682001152,
+          "raw_mean": 0.5513945817947388
+        },
+        "bitwistor": {
+          "fit": 0.7159160635436311,
+          "temporal_ac": 0.14774819063089348,
+          "null_residual_mean": 0.9999999999999999,
+          "spinor_winding": 13.923201702400434,
+          "or_crossings": 580,
+          "E_G_phenom_used": 0.07014779674949906,
+          "collapse_spike": 303.8356849257994
+        }
+      },
+      "hypothesis": {
+        "label": "seed=1",
+        "verdict": "CONFIRMED",
+        "n_pass": 4,
+        "oat_fit": 1.0,
+        "sep_fit": 0.033305065954638766,
+        "th_fit": 0.05902858933483632,
+        "bt_ac_oat": 0.13094031904190293,
+        "bt_ac_sep": 0.10952330660153768,
+        "h1_oat_high": true,
+        "h0_sep_low": true,
+        "h0_th_low": true,
+        "h4_bt": true
+      }
+    },
+    "seed_2": {
+      "oat": {
+        "oat": {
+          "fit": 1.0,
+          "raw_mean": 0.716693639755249,
+          "margin": 0.050026973088582394,
+          "quantum_advantage": true
+        },
+        "separable": {
+          "fit": 0.39204455473539124,
+          "raw_mean": 0.716693639755249
+        },
+        "bitwistor": {
+          "fit": 0.7100285046544338,
+          "temporal_ac": 0.13008551396330117,
+          "null_residual_mean": 0.9999999999999999,
+          "spinor_winding": 13.679740252335627,
+          "or_crossings": 688,
+          "E_G_phenom_used": 0.06398217163446643,
+          "collapse_spike": 103.79048047968233
+        }
+      },
+      "sep": {
+        "oat": {
+          "fit": 0.03363738067350639,
+          "raw_mean": 0.6667148470878601,
+          "margin": 4.818042119347776e-05,
+          "quantum_advantage": true
+        },
+        "separable": {
+          "fit": 0.9751303279019696,
+          "raw_mean": 0.6667148470878601
+        },
+        "bitwistor": {
+          "fit": 0.7135869386731041,
+          "temporal_ac": 0.1407608160193123,
+          "null_residual_mean": 1.0,
+          "spinor_winding": 13.217190856135552,
+          "or_crossings": 534,
+          "E_G_phenom_used": 0.06398217163446643,
+          "collapse_spike": 250.00171787746248
+        }
+      },
+      "th": {
+        "oat": {
+          "fit": 0.05855957164928291,
+          "raw_mean": 0.550196647644043,
+          "margin": 0.0,
+          "quantum_advantage": false
+        },
+        "separable": {
+          "fit": 0.2568783581788315,
+          "raw_mean": 0.550196647644043
+        },
+        "bitwistor": {
+          "fit": 0.6949036354088878,
+          "temporal_ac": 0.08471090622666329,
+          "null_residual_mean": 1.0,
+          "spinor_winding": 13.240333374047204,
+          "or_crossings": 482,
+          "E_G_phenom_used": 0.06398217163446643,
+          "collapse_spike": 1255.8744169124056
+        }
+      },
+      "hypothesis": {
+        "label": "seed=2",
+        "verdict": "PARTIAL",
+        "n_pass": 3,
+        "oat_fit": 1.0,
+        "sep_fit": 0.03363738067350639,
+        "th_fit": 0.05855957164928291,
+        "bt_ac_oat": 0.13008551396330117,
+        "bt_ac_sep": 0.1407608160193123,
+        "h1_oat_high": true,
+        "h0_sep_low": true,
+        "h0_th_low": true,
+        "h4_bt": false
+      }
+    },
+    "noise_tolerance": {
+      "shot_noise_M=100": {
+        "oat_fit": 1.0,
+        "raw_mean": 0.714961051940918,
+        "hypothesis": {
+          "label": "shot_noise_M=100",
+          "verdict": "CONFIRMED",
+          "n_pass": 4,
+          "oat_fit": 1.0,
+          "sep_fit": 0.04580046786504477,
+          "th_fit": 0.05869849792807796,
+          "bt_ac_oat": 0.11212239632762738,
+          "bt_ac_sep": 0.0894579352129702,
+          "h1_oat_high": true,
+          "h0_sep_low": true,
+          "h0_th_low": true,
+          "h4_bt": true
+        }
+      },
+      "shot_noise_M=300": {
+        "oat_fit": 1.0,
+        "raw_mean": 0.7159897685050964,
+        "hypothesis": {
+          "label": "shot_noise_M=300",
+          "verdict": "CONFIRMED",
+          "n_pass": 4,
+          "oat_fit": 1.0,
+          "sep_fit": 0.09454743903911171,
+          "th_fit": 0.05869849792807796,
+          "bt_ac_oat": 0.1380497370140377,
+          "bt_ac_sep": 0.07583893607098206,
+          "h1_oat_high": true,
+          "h0_sep_low": true,
+          "h0_th_low": true,
+          "h4_bt": true
+        }
+      },
+      "shot_noise_M=1000": {
+        "oat_fit": 1.0,
+        "raw_mean": 0.716412365436554,
+        "hypothesis": {
+          "label": "shot_noise_M=1000",
+          "verdict": "CONFIRMED",
+          "n_pass": 4,
+          "oat_fit": 1.0,
+          "sep_fit": 0.0563581779276952,
+          "th_fit": 0.05869849792807796,
+          "bt_ac_oat": 0.09887962419951275,
+          "bt_ac_sep": 0.08734801188371825,
+          "h1_oat_high": true,
+          "h0_sep_low": true,
+          "h0_th_low": true,
+          "h4_bt": true
+        }
+      },
+      "decoherence_T2chi=0.5": {
+        "oat_fit": 0.08181617465844765,
+        "raw_mean": 0.6725162863731384,
+        "hypothesis": {
+          "label": "decoherence_T2chi=0.5",
+          "verdict": "PARTIAL",
+          "n_pass": 3,
+          "oat_fit": 0.08181617465844765,
+          "sep_fit": 0.03325607833048851,
+          "th_fit": 0.05869849792807796,
+          "bt_ac_oat": 0.2078220205691085,
+          "bt_ac_sep": 0.12376079936311646,
+          "h1_oat_high": false,
+          "h0_sep_low": true,
+          "h0_th_low": true,
+          "h4_bt": true
+        },
+        "F_still_above_CL": true
+      },
+      "decoherence_T2chi=1.0": {
+        "oat_fit": 0.7442671738985347,
+        "raw_mean": 0.6799376010894775,
+        "hypothesis": {
+          "label": "decoherence_T2chi=1.0",
+          "verdict": "PARTIAL",
+          "n_pass": 2,
+          "oat_fit": 0.7442671738985347,
+          "sep_fit": 0.03325607833048851,
+          "th_fit": 0.05869849792807796,
+          "bt_ac_oat": 0.1041500732574735,
+          "bt_ac_sep": 0.12376079936311646,
+          "h1_oat_high": false,
+          "h0_sep_low": true,
+          "h0_th_low": true,
+          "h4_bt": false
+        },
+        "F_still_above_CL": true
+      },
+      "decoherence_T2chi=2.0": {
+        "oat_fit": 0.8316433332184413,
+        "raw_mean": 0.6903865337371826,
+        "hypothesis": {
+          "label": "decoherence_T2chi=2.0",
+          "verdict": "PARTIAL",
+          "n_pass": 3,
+          "oat_fit": 0.8316433332184413,
+          "sep_fit": 0.03325607833048851,
+          "th_fit": 0.05869849792807796,
+          "bt_ac_oat": 0.12064676314048865,
+          "bt_ac_sep": 0.12376079936311646,
+          "h1_oat_high": true,
+          "h0_sep_low": true,
+          "h0_th_low": true,
+          "h4_bt": false
+        },
+        "F_still_above_CL": true
+      }
+    },
+    "bitwistor_calibration": {
+      "rows": [
+        {
+          "label": "seed_0",
+          "ac_oat": 0.12957088204839184,
+          "ac_sep": 0.12376079936311646,
+          "gap": 0.005810082685275386,
+          "E_G_phenom": 0.07178702248602291
+        },
+        {
+          "label": "seed_1",
+          "ac_oat": 0.13094031904190293,
+          "ac_sep": 0.10952330660153768,
+          "gap": 0.021417012440365243,
+          "E_G_phenom": 0.07014779674949906
+        },
+        {
+          "label": "seed_2",
+          "ac_oat": 0.13008551396330117,
+          "ac_sep": 0.1407608160193123,
+          "gap": -0.010675302056011138,
+          "E_G_phenom": 0.06398217163446643
+        }
+      ],
+      "verdict": "NEEDS_WORK"
+    },
+    "summary": {
+      "open_item_1_seed": "PARTIAL (2/3)",
+      "seeds_confirmed": 2,
+      "open_item_2_noise": "3/6",
+      "open_item_3_bitwistor": "NEEDS_WORK"
+    }
+  }
+}
