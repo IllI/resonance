@@ -143,16 +143,34 @@ def _safe(x): return float(np.clip(x,0,1))
 class HamiltonianProbe:
     name="hamiltonian"
     def score(self,z,omega,gamma,raw,norm):
-        # Unitarity proxy: norm of z should be conserved over time
-        norms=np.linalg.norm(z,axis=-1)         # (B,T)
-        norm_var=float(norms.std(axis=1).mean()) # low = unitary
-        # Energy conservation: total power stable
-        power=(z**2).sum(-1)                    # (B,T)
-        power_drift=float(np.abs(power[:,-1]-power[:,0]).mean()/(power[:,0].mean()+1e-8))
-        # Low gamma = unitary
-        gamma_score=float(np.exp(-gamma.mean()*5))
-        fit=_safe((gamma_score+np.exp(-norm_var*3)+np.exp(-power_drift*2))/3)
-        return {"fit":fit,"norm_variance":norm_var,"power_drift":power_drift,"gamma_mean":float(gamma.mean())}
+        """
+        Tests Heisenberg equation of motion: dz_k/dt = -i[z_k, H]
+        For H = sum_k Omega_k * n_k, this predicts each mode rotates
+        as exp(-i Omega_k t), so |dz/dt| ~ Omega * |z|.
+        EOM residual: ratio of actual dz/dt to predicted Omega*z scale.
+        Perfect Heisenberg dynamics -> ratio near 1.
+        Also checks: norm conservation (unitary) and gamma near zero.
+        Note: [Omega_i, Omega_j] = 0 trivially for scalar frequencies;
+        we instead test whether the inferred H generates correct EOM.
+        """
+        B,T,S=z.shape
+        dt=1.0/(T-1)
+        dz=np.diff(z,axis=1)                        # (B,T-1,S)
+        dz_mag=float(np.linalg.norm(dz,axis=-1).mean())
+        z_mag=float(np.linalg.norm(z[:,:-1,:],axis=-1).mean())
+        omega_scale=float(omega.mean())
+        # EOM ratio: |dz/dt| / (Omega * |z|) -- should be ~1 for Heisenberg
+        eom_ratio=dz_mag/(omega_scale*z_mag*dt+1e-8)
+        eom_fit=float(np.exp(-abs(eom_ratio-1.0)*2))
+        # Norm conservation: unitary => ||z(t)|| stable
+        norms=np.linalg.norm(z,axis=-1)
+        norm_var=float(norms.std(axis=1).mean())
+        norm_fit=float(np.exp(-norm_var*3))
+        # Low gamma => near-unitary
+        gamma_fit=float(np.exp(-gamma.mean()*5))
+        fit=_safe((eom_fit+norm_fit+gamma_fit)/3)
+        return {"fit":fit,"eom_ratio":eom_ratio,"norm_variance":norm_var,
+                "gamma_mean":float(gamma.mean()),"eom_fit":eom_fit}
 
 class SYKProbe:
     name="syk"
@@ -193,19 +211,35 @@ class MBLProbe:
 class LindbladProbe:
     name="lindblad"
     def score(self,z,omega,gamma,raw,norm):
-        # Uniform gamma AND gamma_mean near 0.3 (thermal bath rate)
+        """
+        BLP (Breuer-Laine-Piilo) Markovianity measure.
+        Non-Markovianity N_BLP = integral of sigma(t) dt where sigma > 0,
+        sigma(t) = d/dt [trace_distance(rho_1(t), rho_2(t))].
+        For Markovian (Lindblad) channels: trace distance is monotonically
+        non-increasing => N_BLP = 0.
+        For non-Markovian: distance increases (information backflow) => N_BLP > 0.
+        We use L1 norm of z as a proxy for trace distance between pairs.
+        """
+        B,T,S=z.shape
+        # BLP: pair up trajectories and measure trace distance evolution
+        n_pairs=min(B//2,16)
+        z1=z[:n_pairs];  z2=z[n_pairs:n_pairs*2]
+        D=np.linalg.norm(z1-z2,axis=-1)            # (n_pairs,T) trace distance proxy
+        dD=np.diff(D,axis=1)                        # (n_pairs,T-1)
+        N_BLP=float(np.sum(np.maximum(dD,0)))       # total information backflow
+        # Lindblad = Markovian => low N_BLP
+        markov_fit=float(np.exp(-N_BLP*0.05))
+        # Also: uniform gamma (all bath modes decay at same rate)
         gamma_uniformity=float(np.exp(-gamma.std()*10))
         gamma_mean_fit=float(np.exp(-abs(gamma.mean()-0.30)*5))
         # Moderate decay
         norms=np.linalg.norm(z,axis=-1)
         decay=float((norms[:,-1]/np.maximum(norms[:,0],1e-8)).mean())
-        decay_fit=np.exp(-abs(decay-0.3)*5)
-        # Oscillations persist
-        signs=np.sign(norm)
-        zc=np.abs(np.diff(signs,axis=1)).mean()
-        osc_fit=float(np.exp(-abs(zc-0.3)*5))
-        fit=_safe((gamma_uniformity*gamma_mean_fit+decay_fit+osc_fit)/3)
-        return {"fit":fit,"gamma_uniformity":gamma_uniformity,"gamma_mean":float(gamma.mean()),"decay":decay,"zero_crossings":float(zc)}
+        decay_fit=float(np.exp(-abs(decay-0.3)*5))
+        fit=_safe((markov_fit+gamma_uniformity*gamma_mean_fit+decay_fit)/3)
+        return {"fit":fit,"N_BLP":N_BLP,"markov_fit":markov_fit,
+                "gamma_uniformity":gamma_uniformity,"gamma_mean":float(gamma.mean()),
+                "decay":decay}
 
 class OATProbe:
     name="oat"
@@ -229,7 +263,26 @@ class OATProbe:
         return {"fit":fit,"raw_mean":raw_mean,"raw_min":min_val,"raw_osc":raw_osc,"margin_above_threshold":margin}
 
 class PenroseBiTwistorProbe:
+    """
+    Penrose bi-twistor probe with phenomenological OR threshold.
+
+    DISCLAIMER: The spinor identification
+      xi^A = (z_mode0+i*z_mode1) * exp(i*Omega_0*t)   [Alice spinor]
+      pi_A' = (z_mode2+i*z_mode3) * exp(i*Omega_2*t)  [Bob co-spinor]
+    embeds C^4 into twistor space via a specific basis choice. The null
+    surface condition Z^{AB}Z_{AB}=0 and the Plucker condition are
+    mathematically meaningful as topological probes of the 2-qubit
+    boundary state regardless of the gravitational interpretation.
+
+    E_G_phenom is NOT E_G = hbar*c^5/G (gravitational self-energy).
+    For cold atoms E_G ~ 10^-58 J, experimentally unreachable.
+    Instead E_G_phenom is a tunable phenomenological collapse threshold
+    in units of the bi-twistor norm ||Z||^2, calibrated to the
+    observed scale of the latent representation.
+    """
     name="penrose_or"
+    def __init__(self, E_G_phenom=0.01):
+        self.E_G=E_G_phenom
     def score(self,z,omega,gamma,raw,norm):
         """
         Penrose bi-twistor analysis.
@@ -265,47 +318,124 @@ class PenroseBiTwistorProbe:
         angles = np.angle(Z_pfaff)          # (B,T)
         winding = float(np.abs(np.diff(angles,axis=1)).sum(axis=1).mean()/(2*math.pi))
 
-        # Penrose OR: sudden collapse = large spike in d(Z_norm)/dt
-        dZ = np.abs(np.diff(Z_norm_sq,axis=1))
-        or_events = int((dZ > dZ.mean()+3*dZ.std()).sum())
+        # OR threshold crossings: ||Z||^2 crossing E_G_phenom (phenomenological)
+        # NOT the gravitational formula. A tunable collapse threshold.
+        or_crossings=int(np.sum(
+            (Z_norm_sq[:,:-1] < self.E_G) & (Z_norm_sq[:,1:] >= self.E_G)
+        ))  # rising edge crossings
 
-        # Sudden decay: signal drops sharply (OR signature)
-        norms=np.linalg.norm(z,axis=-1)
-        late=float((norms[:,-1]/np.maximum(norms[:,0],1e-8)).mean())
-        collapse_fit=np.exp(-late*3)   # very low late amplitude = collapse
+        # Sudden collapse signature: high d^2(Z)/dt^2 spike (not just low late amplitude)
+        dZ=np.diff(Z_norm_sq,axis=1)
+        d2Z=np.diff(dZ,axis=1)
+        collapse_spike=float(d2Z.std()/(d2Z.mean()+1e-8))  # high = sudden collapse
+        collapse_fit=_safe(collapse_spike/10)
 
-        # Combine: high null_residual (entangled) + winding + OR events
-        entangle_fit=_safe(null_residual*2)
+        # BLP-style: does Z_norm increase after decreasing? (non-Markovian backflow)
+        Z_increase=float(np.sum(np.maximum(dZ,0)))/(Z_norm_sq.size+1e-8)
+
+        # Combine
+        entangle_fit=_safe(null_residual*10)   # recalibrated to latent scale
         winding_fit=_safe(min(winding,1.0))
         fit=_safe((entangle_fit+winding_fit+collapse_fit)/3)
         return {
             "fit":fit,
             "null_surface_residual":null_residual,
             "spinor_winding":winding,
-            "or_threshold_events":or_events,
-            "late_amplitude":late,
+            "or_threshold_crossings":or_crossings,
+            "E_G_phenom":self.E_G,
+            "collapse_spike":collapse_spike,
+            "z_backflow":Z_increase,
             "bi_twistor_norm_mean":float(Z_norm_sq.mean()),
+            "note":"E_G is phenomenological, not gravitational. Null surface = topological probe."
         }
 
 class NovelProbe:
+    """
+    Residual geometry probe. Fires when no known formalism fits well.
+    Extracts topological invariants from the latent trajectory:
+      - SVD effective dimension (proxy for Hausdorff dim of trajectory manifold)
+      - Level spacing ratio r (Poisson vs GOE spectral statistics)
+      - Lyapunov exponent proxy (exponential divergence of nearby trajectories)
+      - Time-reversal symmetry score
+      - Topological winding of leading SSM mode
+    These invariants are passed to an optional LLM narrative generator
+    (generate_novel_narrative) when no standard formalism fits.
+    """
     name="novel"
     def score(self,z,omega,gamma,raw,norm):
-        # Hausdorff dimension proxy via box-counting on z trajectory
         B,T,S=z.shape
-        z_flat=z[0].reshape(T,-1)   # single sample trajectory
-        # Estimate effective dimension via singular values
+        # SVD effective dimension of latent trajectory manifold
+        z_flat=z[0].reshape(T,-1)
         U,sv,Vt=np.linalg.svd(z_flat,full_matrices=False)
-        sv_norm=sv/sv.sum()
+        sv_norm=sv/(sv.sum()+1e-10)
         effective_dim=float(np.exp(-np.sum(sv_norm*np.log(sv_norm+1e-10))))
-        # Topological: count sign changes in leading mode
-        lead=z[:,: ,0]
+        # Level spacing ratio (Poisson=0.386, GOE=0.53)
+        s=np.sort(omega); gaps=np.diff(s)+1e-10
+        r=float(np.mean(np.minimum(gaps[:-1],gaps[1:])/np.maximum(gaps[:-1],gaps[1:])))
+        # Lyapunov: exponential divergence of nearby trajectory pairs
+        n_pairs=min(B//2,8)
+        D=np.linalg.norm(z[:n_pairs]-z[n_pairs:n_pairs*2],axis=-1)  # (pairs,T)
+        D_safe=np.maximum(D,1e-10)
+        log_D=np.log(D_safe)
+        lyap=float(np.polyfit(np.arange(T),log_D.mean(0),1)[0])  # slope of log divergence
+        # Time-reversal symmetry: compare forward vs reversed trajectory
+        z_rev=z[:,::-1,:]
+        trs=float(np.exp(-np.linalg.norm(z-z_rev)/(np.linalg.norm(z)+1e-8)))
+        # Topological winding of leading mode
+        lead=z[:,:,0]
         winding=float(np.abs(np.diff(np.sign(lead),axis=1)).mean())
-        fit=_safe(1.0-(1.0/max(effective_dim,1)))  # higher dim = more novel
-        return {"fit":fit,"effective_dim":effective_dim,"topological_winding":winding}
+        fit=_safe(1.0-(1.0/max(effective_dim,1)))
+        return {
+            "fit":fit,
+            "effective_dim":effective_dim,
+            "level_spacing_r":r,
+            "lyapunov_proxy":lyap,
+            "time_reversal_symmetry":trs,
+            "topological_winding":winding,
+        }
+
+def generate_novel_narrative(invariants, max_fit):
+    """
+    Called when max probe fit < 0.5: nothing known fits well.
+    Outputs a structured prompt for LLM narrative generation.
+    The LLM names the geometry from invariants -- not from numbers it invents.
+    On TPU VM: returns the prompt text (no API call).
+    Locally with GEMINI_API_KEY: calls the API.
+    """
+    prompt=(
+        f"A physical system's latent dynamics have these measured invariants:\n"
+        f"  Hausdorff dim (SVD proxy): {invariants['effective_dim']:.3f}\n"
+        f"  Level spacing ratio r:     {invariants['level_spacing_r']:.4f} "
+        f"(Poisson=0.386, GOE=0.530)\n"
+        f"  Lyapunov exponent proxy:   {invariants['lyapunov_proxy']:.5f}\n"
+        f"  Time-reversal symmetry:    {invariants['time_reversal_symmetry']:.3f} "
+        f"(1=symmetric, 0=broken)\n"
+        f"  Topological winding:       {invariants['topological_winding']:.3f}\n\n"
+        f"None of: Heisenberg, SYK, MBL, Lindblad, OAT, Penrose OR fit (max={max_fit:.2f}).\n"
+        f"What mathematical structure might describe this geometry? Be specific about "
+        f"known frameworks (non-associative algebras, anyonic statistics, "
+        f"non-commutative geometry, hyperbolic dynamics, etc.) that could "
+        f"accommodate these invariants."
+    )
+    import os
+    api_key=os.environ.get("GEMINI_API_KEY","")
+    if not api_key:
+        return f"[NOVEL GEOMETRY DETECTED — LLM narrative pending API key]\n\nPrompt:\n{prompt}"
+    try:
+        import urllib.request, json as _json
+        body=_json.dumps({"contents":[{"parts":[{"text":prompt}]}]}).encode()
+        req=urllib.request.Request(
+            f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={api_key}",
+            data=body, headers={"Content-Type":"application/json"}, method="POST")
+        with urllib.request.urlopen(req,timeout=30) as resp:
+            data=_json.loads(resp.read())
+        return data["candidates"][0]["content"]["parts"][0]["text"]
+    except Exception as e:
+        return f"[LLM call failed: {e}]\n\nPrompt:\n{prompt}"
 
 ALL_PROBES=[
     HamiltonianProbe(),SYKProbe(),MBLProbe(),LindbladProbe(),
-    OATProbe(),PenroseBiTwistorProbe(),NovelProbe()
+    OATProbe(),PenroseBiTwistorProbe(E_G_phenom=0.01),NovelProbe()
 ]
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -327,12 +457,17 @@ def emergence_report(source, z, omega, gamma, raw, norm, probe_results):
     lines=[
         f"Source: {source} | Dominant formalism: {dominant} ({dom_score:.2f}) | Secondary: {secondary} ({sec_score:.2f})",
         f"OAT signal: raw_mean={oat['raw_mean']:.4f} (threshold 2/3={2/3:.4f}), quantum advantage={'YES' if oat['raw_mean']>2/3 else 'NO'}",
-        f"Penrose bi-twistor: null_surface_residual={bi['null_surface_residual']:.4f}, spinor_winding={bi['spinor_winding']:.3f}, OR_events={bi['or_threshold_events']}",
+        f"Penrose bi-twistor: null_residual={bi['null_surface_residual']:.4f}, winding={bi['spinor_winding']:.3f}, OR_crossings={bi['or_threshold_crossings']}",
         f"MBL level spacing r={mbl['level_spacing_r']:.4f} (Poisson=0.386, GOE=0.53)",
-        f"Effective Hilbert dim (SVD proxy)={novel['effective_dim']:.2f}",
-        f"Learned SSM: omega_mean={omega.mean():.4f} omega_std={omega.std():.4f} gamma_mean={gamma.mean():.4f}",
+        f"BLP N_BLP={probe_results[3]['N_BLP']:.2f} | EOM_fit={probe_results[0]['eom_fit']:.3f}",
+        f"Effective Hilbert dim (SVD)={novel['effective_dim']:.2f} | Lyapunov={novel['lyapunov_proxy']:.5f}",
+        f"Learned SSM: omega_mean={omega.mean():.4f} gamma_mean={gamma.mean():.4f}",
     ]
     narrative=" | ".join(lines)
+
+    # Novel narrative: LLM generation when no known formalism fits well
+    max_fit_score=max(scores.values())
+    novel_narrative=generate_novel_narrative(novel, max_fit_score) if max_fit_score < 0.5 else None
 
     return {
         "source":source,
@@ -347,6 +482,7 @@ def emergence_report(source, z, omega, gamma, raw, norm, probe_results):
         "novel_geometry":{k:v for k,v in novel.items() if k!='name'},
         "ssm_params":{"omega_mean":float(omega.mean()),"omega_std":float(omega.std()),"gamma_mean":float(gamma.mean()),"gamma_std":float(gamma.std())},
         "emergence_narrative":narrative,
+        "novel_narrative":novel_narrative,
     }
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -393,11 +529,14 @@ def main():
 
     print(f"\n\n{'='*60}")
     print("  EMERGENCE SUMMARY")
-    print(f"  {'Source':<14} {'Dominant':<14} {'Score':>7}  {'Bi-Twistor Null':>16}  {'OR Events':>9}")
-    print(f"  {'-'*58}")
+    print(f"  {'Source':<14} {'Dominant':<14} {'Score':>7}  {'BT Null Res':>12}  {'OR Cross':>8}  {'N_BLP':>7}  {'EOM fit':>7}")
+    print(f"  {'-'*68}")
     for src,r in all_reports.items():
-        bt=r['penrose_bitwistor']
-        print(f"  {src:<14} {r['dominant']:<14} {r['dominant_score']:>7.3f}  {bt['null_surface_residual']:>16.4f}  {bt['or_threshold_events']:>9d}")
+        bt=r['penrose_bitwistor']; lb=r['probe_results']['lindblad']
+        hm=r['probe_results']['hamiltonian']
+        print(f"  {src:<14} {r['dominant']:<14} {r['dominant_score']:>7.3f}"
+              f"  {bt['null_surface_residual']:>12.6f}  {bt['or_threshold_crossings']:>8d}"
+              f"  {lb['N_BLP']:>7.2f}  {hm['eom_fit']:>7.3f}")
     print(f"{'='*60}\n")
 
     out=Path("oat_moqe_v3_results.json")
