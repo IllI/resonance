@@ -1,0 +1,715 @@
+﻿python.exe : Using ssh batch size of 1. Attempting to SSH into 1 nodes with a total of 1 workers.
+At C:\Users\cityz\AppData\Local\Google\Cloud SDK\google-cloud-sdk\bin\gcloud.ps1:114 char:3
++   & "$cloudsdk_python" $run_args_array
++   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Using ssh batch...l of 1 workers.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+SSH: Attempting to connect to worker 0...
+{
+  "experiment": "OAT-MoQE v3",
+  "reports": {
+    "oat": {
+      "source": "oat",
+      "probe_results": {
+        "hamiltonian": {
+          "fit": 0.14042497368309192,
+          "norm_variance": 0.6967171430587769,
+          "power_drift": 0.7797912955284119,
+          "gamma_mean": 0.48749154806137085,
+          "name": "hamiltonian"
+        },
+        "syk": {
+          "fit": 0.11492813303149149,
+          "decay_late": 0.46924981474876404,
+          "gamma_vs_lyapunov": -0.7691455483436584,
+          "name": "syk"
+        },
+        "mbl": {
+          "fit": 0.3136262044476268,
+          "level_spacing_r": 0.4112018644809723,
+          "freq_disorder": 0.09520062804222107,
+          "sustain": 0.46924981474876404,
+          "name": "mbl"
+        },
+        "lindblad": {
+          "fit": 0.4649200723801485,
+          "gamma_uniformity": 0.6206688284873962,
+          "gamma_mean": 0.48749154806137085,
+          "decay": 0.46924981474876404,
+          "zero_crossings": 0.23503988981246948,
+          "name": "lindblad"
+        },
+        "oat": {
+          "fit": 0.7524661803673662,
+          "raw_mean": 0.6813784837722778,
+          "raw_min": 0.6467461585998535,
+          "raw_osc": 0.009575468488037586,
+          "margin_above_threshold": 0.014711817105611202,
+          "name": "oat"
+        },
+        "penrose_or": {
+          "fit": 0.4148977866603912,
+          "null_surface_residual": 9.97780299054735e-34,
+          "spinor_winding": 10.243362112007627,
+          "or_threshold_events": 298,
+          "late_amplitude": 0.46924981474876404,
+          "bi_twistor_norm_mean": 9.97780299054735e-34,
+          "name": "penrose_or"
+        },
+        "novel": {
+          "fit": 0.17441989436922944,
+          "effective_dim": 1.211269497871399,
+          "topological_winding": 0.0,
+          "name": "novel"
+        }
+      },
+      "ranked_formalisms": [
+        [
+          "oat",
+          0.7524661803673662
+        ],
+        [
+          "lindblad",
+          0.4649200723801485
+        ],
+        [
+          "penrose_or",
+          0.4148977866603912
+        ],
+        [
+          "mbl",
+          0.3136262044476268
+        ],
+        [
+          "novel",
+          0.17441989436922944
+        ],
+        [
+          "hamiltonian",
+          0.14042497368309192
+        ],
+        [
+          "syk",
+          0.11492813303149149
+        ]
+      ],
+      "dominant": "oat",
+      "dominant_score": 0.7524661803673662,
+      "secondary": "lindblad",
+      "secondary_score": 0.4649200723801485,
+      "penrose_bitwistor": {
+        "fit": 0.4148977866603912,
+        "null_surface_residual": 9.97780299054735e-34,
+        "spinor_winding": 10.243362112007627,
+        "or_threshold_events": 298,
+        "late_amplitude": 0.46924981474876404,
+        "bi_twistor_norm_mean": 9.97780299054735e-34
+      },
+      "oat_analysis": {
+        "fit": 0.7524661803673662,
+        "raw_mean": 0.6813784837722778,
+        "raw_min": 0.6467461585998535,
+        "raw_osc": 0.009575468488037586,
+        "margin_above_threshold": 0.014711817105611202
+      },
+      "novel_geometry": {
+        "fit": 0.17441989436922944,
+        "effective_dim": 1.211269497871399,
+        "topological_winding": 0.0
+      },
+      "ssm_params": {
+        "omega_mean": 0.6951979398727417,
+        "omega_std": 0.09520062804222107,
+        "gamma_mean": 0.48749154806137085,
+        "gamma_std": 0.04769575595855713
+      },
+      "emergence_narrative": "Source: oat | Dominant formalism: oat (0.75) | Secondary: lindblad (0.46) | OAT signal: raw_mean=0.6814 (threshold 2/3=0.6667), quantum advantage=YES | Penrose bi-twistor: null_surface_residual=0.0000, spinor_winding=10.243, OR_events=298 | MBL level spacing r=0.4112 (Poisson=0.386, GOE=0.53) | Effective Hilbert dim (SVD proxy)=1.21 | Learned SSM: omega_mean=0.6952 omega_std=0.0952 gamma_mean=0.4875"
+    },
+    "heisenberg": {
+      "source": "heisenberg",
+      "probe_results": {
+        "hamiltonian": {
+          "fit": 0.1748817628167969,
+          "norm_variance": 0.5178966522216797,
+          "power_drift": 0.7627652883529663,
+          "gamma_mean": 0.46936291456222534,
+          "name": "hamiltonian"
+        },
+        "syk": {
+          "fit": 0.10985261232219223,
+          "decay_late": 0.4873726963996887,
+          "gamma_vs_lyapunov": -0.787274181842804,
+          "name": "syk"
+        },
+        "mbl": {
+          "fit": 0.2313391807603716,
+          "level_spacing_r": 0.3224261999130249,
+          "freq_disorder": 0.07483633607625961,
+          "sustain": 0.4873726963996887,
+          "name": "mbl"
+        },
+        "lindblad": {
+          "fit": 0.29749588590022175,
+          "gamma_uniformity": 0.5446896553039551,
+          "gamma_mean": 0.46936291456222534,
+          "decay": 0.4873726963996887,
+          "zero_crossings": 0.03595966473221779,
+          "name": "lindblad"
+        },
+        "oat": {
+          "fit": 0.0007359855431106929,
+          "raw_mean": 0.4872969090938568,
+          "raw_min": -1.0218266248703003,
+          "raw_osc": 0.4074476659297943,
+          "margin_above_threshold": 0.0,
+          "name": "oat"
+        },
+        "penrose_or": {
+          "fit": 0.4105816327193441,
+          "null_surface_residual": 2.892264250772414e-34,
+          "spinor_winding": 10.087408573339877,
+          "or_threshold_events": 54,
+          "late_amplitude": 0.4873726963996887,
+          "bi_twistor_norm_mean": 2.892264250772414e-34,
+          "name": "penrose_or"
+        },
+        "novel": {
+          "fit": 0.16613016114648993,
+          "effective_dim": 1.1992279291152954,
+          "topological_winding": 0.0,
+          "name": "novel"
+        }
+      },
+      "ranked_formalisms": [
+        [
+          "penrose_or",
+          0.4105816327193441
+        ],
+        [
+          "lindblad",
+          0.29749588590022175
+        ],
+        [
+          "mbl",
+          0.2313391807603716
+        ],
+        [
+          "hamiltonian",
+          0.1748817628167969
+        ],
+        [
+          "novel",
+          0.16613016114648993
+        ],
+        [
+          "syk",
+          0.10985261232219223
+        ],
+        [
+          "oat",
+          0.0007359855431106929
+        ]
+      ],
+      "dominant": "penrose_or",
+      "dominant_score": 0.4105816327193441,
+      "secondary": "lindblad",
+      "secondary_score": 0.29749588590022175,
+      "penrose_bitwistor": {
+        "fit": 0.4105816327193441,
+        "null_surface_residual": 2.892264250772414e-34,
+        "spinor_winding": 10.087408573339877,
+        "or_threshold_events": 54,
+        "late_amplitude": 0.4873726963996887,
+        "bi_twistor_norm_mean": 2.892264250772414e-34
+      },
+      "oat_analysis": {
+        "fit": 0.0007359855431106929,
+        "raw_mean": 0.4872969090938568,
+        "raw_min": -1.0218266248703003,
+        "raw_osc": 0.4074476659297943,
+        "margin_above_threshold": 0.0
+      },
+      "novel_geometry": {
+        "fit": 0.16613016114648993,
+        "effective_dim": 1.1992279291152954,
+        "topological_winding": 0.0
+      },
+      "ssm_params": {
+        "omega_mean": 0.6566006541252136,
+        "omega_std": 0.07483633607625961,
+        "gamma_mean": 0.46936291456222534,
+        "gamma_std": 0.060753919184207916
+      },
+      "emergence_narrative": "Source: heisenberg | Dominant formalism: penrose_or (0.41) | Secondary: lindblad (0.30) | OAT signal: raw_mean=0.4873 (threshold 2/3=0.6667), quantum advantage=NO | Penrose bi-twistor: null_surface_residual=0.0000, spinor_winding=10.087, OR_events=54 | MBL level spacing r=0.3224 (Poisson=0.386, GOE=0.53) | Effective Hilbert dim (SVD proxy)=1.20 | Learned SSM: omega_mean=0.6566 omega_std=0.0748 gamma_mean=0.4694"
+    },
+    "syk": {
+      "source": "syk",
+      "probe_results": {
+        "hamiltonian": {
+          "fit": 0.05271039516820978,
+          "norm_variance": 1.5649337768554688,
+          "power_drift": 0.9742651581764221,
+          "gamma_mean": 1.0070313215255737,
+          "name": "hamiltonian"
+        },
+        "syk": {
+          "fit": 0.46914725610694563,
+          "decay_late": 0.16047750413417816,
+          "gamma_vs_lyapunov": -0.24960577487945557,
+          "name": "syk"
+        },
+        "mbl": {
+          "fit": 0.3586546564710796,
+          "level_spacing_r": 0.38146254420280457,
+          "freq_disorder": 0.19108374416828156,
+          "sustain": 0.16047750413417816,
+          "name": "mbl"
+        },
+        "lindblad": {
+          "fit": 0.26449534749010645,
+          "gamma_uniformity": 0.02412335015833378,
+          "gamma_mean": 1.0070313215255737,
+          "decay": 0.16047750413417816,
+          "zero_crossings": 0.05585106462240219,
+          "name": "lindblad"
+        },
+        "oat": {
+          "fit": 0.007935900879926362,
+          "raw_mean": 0.08356756716966629,
+          "raw_min": -0.446467787027359,
+          "raw_osc": 0.24891822040081024,
+          "margin_above_threshold": 0.0,
+          "name": "oat"
+        },
+        "penrose_or": {
+          "fit": 0.5392992038399981,
+          "null_surface_residual": 1.0283602956241592e-33,
+          "spinor_winding": 8.926326129985965,
+          "or_threshold_events": 260,
+          "late_amplitude": 0.16047750413417816,
+          "bi_twistor_norm_mean": 1.0283602956241592e-33,
+          "name": "penrose_or"
+        },
+        "novel": {
+          "fit": 0.3656856099029958,
+          "effective_dim": 1.5765053033828735,
+          "topological_winding": 0.0,
+          "name": "novel"
+        }
+      },
+      "ranked_formalisms": [
+        [
+          "penrose_or",
+          0.5392992038399981
+        ],
+        [
+          "syk",
+          0.46914725610694563
+        ],
+        [
+          "novel",
+          0.3656856099029958
+        ],
+        [
+          "mbl",
+          0.3586546564710796
+        ],
+        [
+          "lindblad",
+          0.26449534749010645
+        ],
+        [
+          "hamiltonian",
+          0.05271039516820978
+        ],
+        [
+          "oat",
+          0.007935900879926362
+        ]
+      ],
+      "dominant": "penrose_or",
+      "dominant_score": 0.5392992038399981,
+      "secondary": "syk",
+      "secondary_score": 0.46914725610694563,
+      "penrose_bitwistor": {
+        "fit": 0.5392992038399981,
+        "null_surface_residual": 1.0283602956241592e-33,
+        "spinor_winding": 8.926326129985965,
+        "or_threshold_events": 260,
+        "late_amplitude": 0.16047750413417816,
+        "bi_twistor_norm_mean": 1.0283602956241592e-33
+      },
+      "oat_analysis": {
+        "fit": 0.007935900879926362,
+        "raw_mean": 0.08356756716966629,
+        "raw_min": -0.446467787027359,
+        "raw_osc": 0.24891822040081024,
+        "margin_above_threshold": 0.0
+      },
+      "novel_geometry": {
+        "fit": 0.3656856099029958,
+        "effective_dim": 1.5765053033828735,
+        "topological_winding": 0.0
+      },
+      "ssm_params": {
+        "omega_mean": 1.2455427646636963,
+        "omega_std": 0.19108374416828156,
+        "gamma_mean": 1.0070313215255737,
+        "gamma_std": 0.37245750427246094
+      },
+      "emergence_narrative": "Source: syk | Dominant formalism: penrose_or (0.54) | Secondary: syk (0.47) | OAT signal: raw_mean=0.0836 (threshold 2/3=0.6667), quantum advantage=NO | Penrose bi-twistor: null_surface_residual=0.0000, spinor_winding=8.926, OR_events=260 | MBL level spacing r=0.3815 (Poisson=0.386, GOE=0.53) | Effective Hilbert dim (SVD proxy)=1.58 | Learned SSM: omega_mean=1.2455 omega_std=0.1911 gamma_mean=1.0070"
+    },
+    "mbl": {
+      "source": "mbl",
+      "probe_results": {
+        "hamiltonian": {
+          "fit": 0.2249455216524278,
+          "norm_variance": 0.2799339294433594,
+          "power_drift": 0.8394657969474792,
+          "gamma_mean": 0.5748188495635986,
+          "name": "hamiltonian"
+        },
+        "syk": {
+          "fit": 0.14243243336991027,
+          "decay_late": 0.40357890725135803,
+          "gamma_vs_lyapunov": -0.6818182468414307,
+          "name": "syk"
+        },
+        "mbl": {
+          "fit": 0.33176122548643294,
+          "level_spacing_r": 0.35930943489074707,
+          "freq_disorder": 0.2919425368309021,
+          "sustain": 0.40357890725135803,
+          "name": "mbl"
+        },
+        "lindblad": {
+          "fit": 0.35718923044580775,
+          "gamma_uniformity": 0.11180269718170166,
+          "gamma_mean": 0.5748188495635986,
+          "decay": 0.40357890725135803,
+          "zero_crossings": 0.1391844004392624,
+          "name": "lindblad"
+        },
+        "oat": {
+          "fit": 4.284141218945441e-05,
+          "raw_mean": 0.068238765001297,
+          "raw_min": -1.0097715854644775,
+          "raw_osc": 0.5970280170440674,
+          "margin_above_threshold": 0.0,
+          "name": "oat"
+        },
+        "penrose_or": {
+          "fit": 0.43265922397062545,
+          "null_surface_residual": 3.3664801879550833e-35,
+          "spinor_winding": 10.121414886209404,
+          "or_threshold_events": 155,
+          "late_amplitude": 0.40357890725135803,
+          "bi_twistor_norm_mean": 3.3664801879550833e-35,
+          "name": "penrose_or"
+        },
+        "novel": {
+          "fit": 0.3278479617032515,
+          "effective_dim": 1.4877586364746094,
+          "topological_winding": 0.0,
+          "name": "novel"
+        }
+      },
+      "ranked_formalisms": [
+        [
+          "penrose_or",
+          0.43265922397062545
+        ],
+        [
+          "lindblad",
+          0.35718923044580775
+        ],
+        [
+          "mbl",
+          0.33176122548643294
+        ],
+        [
+          "novel",
+          0.3278479617032515
+        ],
+        [
+          "hamiltonian",
+          0.2249455216524278
+        ],
+        [
+          "syk",
+          0.14243243336991027
+        ],
+        [
+          "oat",
+          4.284141218945441e-05
+        ]
+      ],
+      "dominant": "penrose_or",
+      "dominant_score": 0.43265922397062545,
+      "secondary": "lindblad",
+      "secondary_score": 0.35718923044580775,
+      "penrose_bitwistor": {
+        "fit": 0.43265922397062545,
+        "null_surface_residual": 3.3664801879550833e-35,
+        "spinor_winding": 10.121414886209404,
+        "or_threshold_events": 155,
+        "late_amplitude": 0.40357890725135803,
+        "bi_twistor_norm_mean": 3.3664801879550833e-35
+      },
+      "oat_analysis": {
+        "fit": 4.284141218945441e-05,
+        "raw_mean": 0.068238765001297,
+        "raw_min": -1.0097715854644775,
+        "raw_osc": 0.5970280170440674,
+        "margin_above_threshold": 0.0
+      },
+      "novel_geometry": {
+        "fit": 0.3278479617032515,
+        "effective_dim": 1.4877586364746094,
+        "topological_winding": 0.0
+      },
+      "ssm_params": {
+        "omega_mean": 0.8174703121185303,
+        "omega_std": 0.2919425368309021,
+        "gamma_mean": 0.5748188495635986,
+        "gamma_std": 0.2191019505262375
+      },
+      "emergence_narrative": "Source: mbl | Dominant formalism: penrose_or (0.43) | Secondary: lindblad (0.36) | OAT signal: raw_mean=0.0682 (threshold 2/3=0.6667), quantum advantage=NO | Penrose bi-twistor: null_surface_residual=0.0000, spinor_winding=10.121, OR_events=155 | MBL level spacing r=0.3593 (Poisson=0.386, GOE=0.53) | Effective Hilbert dim (SVD proxy)=1.49 | Learned SSM: omega_mean=0.8175 omega_std=0.2919 gamma_mean=0.5748"
+    },
+    "lindblad": {
+      "source": "lindblad",
+      "probe_results": {
+        "hamiltonian": {
+          "fit": 0.0564757082464713,
+          "norm_variance": 1.5473142862319946,
+          "power_drift": 0.9613021016120911,
+          "gamma_mean": 0.8600891828536987,
+          "name": "hamiltonian"
+        },
+        "syk": {
+          "fit": 0.3415072869087032,
+          "decay_late": 0.19671893119812012,
+          "gamma_vs_lyapunov": -0.39654791355133057,
+          "name": "syk"
+        },
+        "mbl": {
+          "fit": 0.29401413475397625,
+          "level_spacing_r": 0.35659822821617126,
+          "freq_disorder": 0.2141461819410324,
+          "sustain": 0.19671893119812012,
+          "name": "mbl"
+        },
+        "lindblad": {
+          "fit": 0.326751632161959,
+          "gamma_uniformity": 0.020564883947372437,
+          "gamma_mean": 0.8600891828536987,
+          "decay": 0.19671893119812012,
+          "zero_crossings": 0.1077127680182457,
+          "name": "lindblad"
+        },
+        "oat": {
+          "fit": 0.0008469995080820024,
+          "raw_mean": 0.08946815878152847,
+          "raw_min": -0.808282196521759,
+          "raw_osc": 0.3980816900730133,
+          "margin_above_threshold": 0.0,
+          "name": "oat"
+        },
+        "penrose_or": {
+          "fit": 0.5180801255268602,
+          "null_surface_residual": 1.6126238049825148e-33,
+          "spinor_winding": 9.403527775454224,
+          "or_threshold_events": 70,
+          "late_amplitude": 0.19671893119812012,
+          "bi_twistor_norm_mean": 1.6126238049825148e-33,
+          "name": "penrose_or"
+        },
+        "novel": {
+          "fit": 0.3651683237715653,
+          "effective_dim": 1.5752207040786743,
+          "topological_winding": 0.0,
+          "name": "novel"
+        }
+      },
+      "ranked_formalisms": [
+        [
+          "penrose_or",
+          0.5180801255268602
+        ],
+        [
+          "novel",
+          0.3651683237715653
+        ],
+        [
+          "syk",
+          0.3415072869087032
+        ],
+        [
+          "lindblad",
+          0.326751632161959
+        ],
+        [
+          "mbl",
+          0.29401413475397625
+        ],
+        [
+          "hamiltonian",
+          0.0564757082464713
+        ],
+        [
+          "oat",
+          0.0008469995080820024
+        ]
+      ],
+      "dominant": "penrose_or",
+      "dominant_score": 0.5180801255268602,
+      "secondary": "novel",
+      "secondary_score": 0.3651683237715653,
+      "penrose_bitwistor": {
+        "fit": 0.5180801255268602,
+        "null_surface_residual": 1.6126238049825148e-33,
+        "spinor_winding": 9.403527775454224,
+        "or_threshold_events": 70,
+        "late_amplitude": 0.19671893119812012,
+        "bi_twistor_norm_mean": 1.6126238049825148e-33
+      },
+      "oat_analysis": {
+        "fit": 0.0008469995080820024,
+        "raw_mean": 0.08946815878152847,
+        "raw_min": -0.808282196521759,
+        "raw_osc": 0.3980816900730133,
+        "margin_above_threshold": 0.0
+      },
+      "novel_geometry": {
+        "fit": 0.3651683237715653,
+        "effective_dim": 1.5752207040786743,
+        "topological_winding": 0.0
+      },
+      "ssm_params": {
+        "omega_mean": 1.185263991355896,
+        "omega_std": 0.2141461819410324,
+        "gamma_mean": 0.8600891828536987,
+        "gamma_std": 0.3884170353412628
+      },
+      "emergence_narrative": "Source: lindblad | Dominant formalism: penrose_or (0.52) | Secondary: novel (0.37) | OAT signal: raw_mean=0.0895 (threshold 2/3=0.6667), quantum advantage=NO | Penrose bi-twistor: null_surface_residual=0.0000, spinor_winding=9.404, OR_events=70 | MBL level spacing r=0.3566 (Poisson=0.386, GOE=0.53) | Effective Hilbert dim (SVD proxy)=1.58 | Learned SSM: omega_mean=1.1853 omega_std=0.2141 gamma_mean=0.8601"
+    },
+    "penrose_or": {
+      "source": "penrose_or",
+      "probe_results": {
+        "hamiltonian": {
+          "fit": 0.05773360337045786,
+          "norm_variance": 1.3623400926589966,
+          "power_drift": 0.9699059128761292,
+          "gamma_mean": 0.8735358715057373,
+          "name": "hamiltonian"
+        },
+        "syk": {
+          "fit": 0.3777779194175812,
+          "decay_late": 0.17351844906806946,
+          "gamma_vs_lyapunov": -0.383101224899292,
+          "name": "syk"
+        },
+        "mbl": {
+          "fit": 0.22482564953837217,
+          "level_spacing_r": 0.3277736306190491,
+          "freq_disorder": 0.1787843406200409,
+          "sustain": 0.17351844906806946,
+          "name": "mbl"
+        },
+        "lindblad": {
+          "fit": 0.282993069788105,
+          "gamma_uniformity": 0.021790923550724983,
+          "gamma_mean": 0.8735358715057373,
+          "decay": 0.17351844906806946,
+          "zero_crossings": 0.06986923515796661,
+          "name": "lindblad"
+        },
+        "oat": {
+          "fit": 0.0003151570076286219,
+          "raw_mean": 0.0968506932258606,
+          "raw_min": -1.0307271480560303,
+          "raw_osc": 0.46399030089378357,
+          "margin_above_threshold": 0.0,
+          "name": "oat"
+        },
+        "penrose_or": {
+          "fit": 0.5313968247690869,
+          "null_surface_residual": 1.2173349947444291e-33,
+          "spinor_winding": 9.291801578131423,
+          "or_threshold_events": 94,
+          "late_amplitude": 0.17351844906806946,
+          "bi_twistor_norm_mean": 1.2173349947444291e-33,
+          "name": "penrose_or"
+        },
+        "novel": {
+          "fit": 0.3685830828510548,
+          "effective_dim": 1.5837396383285522,
+          "topological_winding": 0.0,
+          "name": "novel"
+        }
+      },
+      "ranked_formalisms": [
+        [
+          "penrose_or",
+          0.5313968247690869
+        ],
+        [
+          "syk",
+          0.3777779194175812
+        ],
+        [
+          "novel",
+          0.3685830828510548
+        ],
+        [
+          "lindblad",
+          0.282993069788105
+        ],
+        [
+          "mbl",
+          0.22482564953837217
+        ],
+        [
+          "hamiltonian",
+          0.05773360337045786
+        ],
+        [
+          "oat",
+          0.0003151570076286219
+        ]
+      ],
+      "dominant": "penrose_or",
+      "dominant_score": 0.5313968247690869,
+      "secondary": "syk",
+      "secondary_score": 0.3777779194175812,
+      "penrose_bitwistor": {
+        "fit": 0.5313968247690869,
+        "null_surface_residual": 1.2173349947444291e-33,
+        "spinor_winding": 9.291801578131423,
+        "or_threshold_events": 94,
+        "late_amplitude": 0.17351844906806946,
+        "bi_twistor_norm_mean": 1.2173349947444291e-33
+      },
+      "oat_analysis": {
+        "fit": 0.0003151570076286219,
+        "raw_mean": 0.0968506932258606,
+        "raw_min": -1.0307271480560303,
+        "raw_osc": 0.46399030089378357,
+        "margin_above_threshold": 0.0
+      },
+      "novel_geometry": {
+        "fit": 0.3685830828510548,
+        "effective_dim": 1.5837396383285522,
+        "topological_winding": 0.0
+      },
+      "ssm_params": {
+        "omega_mean": 1.237825632095337,
+        "omega_std": 0.1787843406200409,
+        "gamma_mean": 0.8735358715057373,
+        "gamma_std": 0.38262617588043213
+      },
+      "emergence_narrative": "Source: penrose_or | Dominant formalism: penrose_or (0.53) | Secondary: syk (0.38) | OAT signal: raw_mean=0.0969 (threshold 2/3=0.6667), quantum advantage=NO | Penrose bi-twistor: null_surface_residual=0.0000, spinor_winding=9.292, OR_events=94 | MBL level spacing r=0.3278 (Poisson=0.386, GOE=0.53) | Effective Hilbert dim (SVD proxy)=1.58 | Learned SSM: omega_mean=1.2378 omega_std=0.1788 gamma_mean=0.8735"
+    }
+  }
+}
