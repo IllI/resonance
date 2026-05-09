@@ -120,7 +120,7 @@ def main():
             "time_series": series
         }
 
-    channels = ["chi_t", "witness", "C", "S_ent", "sz_A", "sz_B", "F_pred", "S_chsh"]
+    channels = ["N", "chi_t", "witness", "C", "S_ent", "sz_A", "sz_B", "F_pred", "S_chsh"]
     output = {
         "description": "OAT boundary witness decay + observables for D-LinOSS",
         "fix": "2026-05-09: witness replaces C as primary channel (linear in rho)",
