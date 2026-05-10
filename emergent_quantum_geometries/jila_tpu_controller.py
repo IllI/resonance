@@ -96,14 +96,22 @@ class JILATPUController:
 
     def reconstruct_witness(self, shots_array):
         """
-        Tr[W·ρ(τ)] ≈ (N_negative - N_positive) / N_total
+        Invert shot encoding to recover Tr[W·ρ(τ)].
 
-        shots_array: (n_tau, n_shots) with +1 (separable) or -1 (entangled)
-        Returns: (witness_vals, uncertainties)
+        Shot encoding (in synthetic_jila_shots and IBM circuit):
+          +1 = separable outcome, -1 = entangled outcome
+          p_entangled = P(-1) = (0.25 - Tr[W·ρ]) / 0.5
+          mean(shots) = P(+1) - P(-1) = 1 - 2·p_entangled
+
+        Inversion:
+          p_entangled = (1 - mean) / 2
+          Tr[W·ρ] = 0.25 - 0.5·p_entangled = mean / 4
+
+        Verification: mean=-0.68 → witness=-0.17 ✓ (entangled, negative)
         """
         n_shots = shots_array.shape[1]
-        witness_vals = np.mean(shots_array, axis=1) * (-1)  # convention: -1 = witness<0
-        uncertainties = 1.0 / np.sqrt(n_shots) * np.ones(len(witness_vals))
+        witness_vals = np.mean(shots_array, axis=1) / 4  # CORRECTED: was * (-1)
+        uncertainties = 0.5 / np.sqrt(n_shots) * np.ones(len(witness_vals))  # σ_W = σ_mean/4
         return witness_vals.tolist(), uncertainties.tolist()
 
     # ── Step 2: D-LinOSS fit ────────────────────────────────────────────────
@@ -292,10 +300,17 @@ class JILATPUController:
         # Step 2: D-LinOSS fit
         omega_k, gamma_k, A_k, recon_err = self.dlinoss_fit(tau, witness_vals)
         dom = np.argmax(A_k)
+        dom_gamma = float(gamma_k[dom]) if len(gamma_k) > 0 else 0.0
         print(f"  Step 2: D-LinOSS K_eff={len(gamma_k)}  "
-              f"dom_γ={gamma_k[dom]:.4f} s⁻¹  recon_err={recon_err:.4f}")
+              f"dom_γ={dom_gamma:.4f} s⁻¹  recon_err={recon_err:.4f}")
         expected_gamma = 4 * GAMMA_1_SR87
         print(f"          Expected (Markovian): γ_k = 4Γ₁ = {expected_gamma:.5f} s⁻¹")
+        # Adaptive tau recommendation: need tau_max ≥ 3/dom_gamma for clean decay
+        tau_max_current = tau[-1]
+        tau_max_recommended = 3.0 / max(dom_gamma, expected_gamma, 1e-10)
+        if tau_max_current < tau_max_recommended * 0.5:
+            print(f"  [⚠] tau_max={tau_max_current:.4f}s < 3/γ={tau_max_recommended:.4f}s"
+                  f" — extend range for reliable framework ID")
 
         # Step 3: Framework scoring
         scores, winner = self.score_frameworks(tau, witness_vals)
@@ -331,6 +346,12 @@ class JILATPUController:
             "framework_winner": winner,
             "Gamma_mb_data": Gamma_mb_data,
             "feedback": feedback,
+            "diagnostics": {
+                "tau_max_used": float(tau[-1]),
+                "tau_max_recommended": float(3.0 / max(dom_gamma, expected_gamma, 1e-10)),
+                "tau_range_adequate": tau_max_current >= tau_max_recommended * 0.5,
+                "sign_convention": "witness = mean(shots)/4  [corrected 2026-05-10]",
+            }
         }
         return result
 
