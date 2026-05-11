@@ -1,0 +1,262 @@
+{
+  "schema_version": "2.0",
+  "dataset_type": "gaussian_covariance_stream",
+  "role": "Alice_Scramble",
+  "t0_utc": 1777583229.4478061,
+  "duration_s": 1807.184199333191,
+  "n_chunks": 29,
+  "n_streams": 4,
+  "chunk_seconds": 5,
+  "sigma_gaussian": 1.0,
+  "stream_profile": [
+    0.3678794503211975,
+    1.0,
+    1.0,
+    0.3678794503211975
+  ],
+  "cycle_s": 600.0,
+  "ramp_up_s": 180.0,
+  "on_s": 180.0,
+  "ramp_down_s": 60.0,
+  "off_s": 180.0,
+  "base_matrix_size": 535,
+  "size_range": 267,
+  "infrastructure": {
+    "gcp_zone": null,
+    "gcp_machine_type": null,
+    "gcp_instance_id": null,
+    "ip": "136.118.225.36",
+    "city": "The Dalles",
+    "region": "Oregon",
+    "country": "US",
+    "timezone": "America/Los_Angeles",
+    "loc": "45.5946,-121.1787",
+    "org": "AS396982 Google LLC",
+    "hostname": "7a33542fc601",
+    "cpu_count": 24,
+    "jax_backend": "tpu",
+    "jax_devices": [
+      "TPU_0(process=0,(0,0,0,0))"
+    ],
+    "jax_version": "0.7.2"
+  },
+  "baseline_mean": [
+    20.788156576280294,
+    36.39316288136427,
+    17.402115728816433,
+    14.664246338971848
+  ],
+  "baseline_std": [
+    36.95045417523905,
+    42.55883068250372,
+    34.40507675067217,
+    32.38461392958631
+  ],
+  "chunk_files": [
+    "chunk_00000.npz",
+    "chunk_00001.npz",
+    "chunk_00002.npz",
+    "chunk_00003.npz",
+    "chunk_00004.npz",
+    "chunk_00005.npz",
+    "chunk_00006.npz",
+    "chunk_00007.npz",
+    "chunk_00008.npz",
+    "chunk_00009.npz",
+    "chunk_00010.npz",
+    "chunk_00011.npz",
+    "chunk_00012.npz",
+    "chunk_00013.npz",
+    "chunk_00014.npz",
+    "chunk_00015.npz",
+    "chunk_00016.npz",
+    "chunk_00017.npz",
+    "chunk_00018.npz",
+    "chunk_00019.npz",
+    "chunk_00020.npz",
+    "chunk_00021.npz",
+    "chunk_00022.npz",
+    "chunk_00023.npz",
+    "chunk_00024.npz",
+    "chunk_00025.npz",
+    "chunk_00026.npz",
+    "chunk_00027.npz",
+    "chunk_00028.npz"
+  ],
+  "chunks": [
+    {
+      "chunk": "chunk_00000.npz",
+      "host_time_mid": 1777583756.842469,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00001.npz",
+      "host_time_mid": 1777584293.8879037,
+      "lambda_val": 0.0,
+      "n_packets": 33
+    },
+    {
+      "chunk": "chunk_00002.npz",
+      "host_time_mid": 1777584313.185021,
+      "lambda_val": 0.0,
+      "n_packets": 33
+    },
+    {
+      "chunk": "chunk_00003.npz",
+      "host_time_mid": 1777584332.4860744,
+      "lambda_val": 0.0,
+      "n_packets": 33
+    },
+    {
+      "chunk": "chunk_00004.npz",
+      "host_time_mid": 1777584351.8671734,
+      "lambda_val": 0.0,
+      "n_packets": 33
+    },
+    {
+      "chunk": "chunk_00005.npz",
+      "host_time_mid": 1777584371.2554233,
+      "lambda_val": 0.0,
+      "n_packets": 33
+    },
+    {
+      "chunk": "chunk_00006.npz",
+      "host_time_mid": 1777584390.6230645,
+      "lambda_val": 0.0,
+      "n_packets": 33
+    },
+    {
+      "chunk": "chunk_00007.npz",
+      "host_time_mid": 1777584410.0179005,
+      "lambda_val": 0.0,
+      "n_packets": 33
+    },
+    {
+      "chunk": "chunk_00008.npz",
+      "host_time_mid": 1777584429.3665876,
+      "lambda_val": 0.0,
+      "n_packets": 33
+    },
+    {
+      "chunk": "chunk_00009.npz",
+      "host_time_mid": 1777584448.8932712,
+      "lambda_val": 0.028520606991099207,
+      "n_packets": 33
+    },
+    {
+      "chunk": "chunk_00010.npz",
+      "host_time_mid": 1777584468.6789489,
+      "lambda_val": 0.11269958064595692,
+      "n_packets": 33
+    },
+    {
+      "chunk": "chunk_00011.npz",
+      "host_time_mid": 1777584489.0275354,
+      "lambda_val": 0.2468305593650189,
+      "n_packets": 33
+    },
+    {
+      "chunk": "chunk_00012.npz",
+      "host_time_mid": 1777584517.1015148,
+      "lambda_val": 0.4795304679334674,
+      "n_packets": 33
+    },
+    {
+      "chunk": "chunk_00013.npz",
+      "host_time_mid": 1777584551.393208,
+      "lambda_val": 0.7645554523724544,
+      "n_packets": 33
+    },
+    {
+      "chunk": "chunk_00014.npz",
+      "host_time_mid": 1777584592.5085764,
+      "lambda_val": 0.9783071597618076,
+      "n_packets": 33
+    },
+    {
+      "chunk": "chunk_00015.npz",
+      "host_time_mid": 1777584648.6406078,
+      "lambda_val": 1.0,
+      "n_packets": 33
+    },
+    {
+      "chunk": "chunk_00016.npz",
+      "host_time_mid": 1777584711.8690472,
+      "lambda_val": 1.0,
+      "n_packets": 33
+    },
+    {
+      "chunk": "chunk_00017.npz",
+      "host_time_mid": 1777584775.1166444,
+      "lambda_val": 1.0,
+      "n_packets": 33
+    },
+    {
+      "chunk": "chunk_00018.npz",
+      "host_time_mid": 1777584824.4829383,
+      "lambda_val": 0.36970227884204,
+      "n_packets": 33
+    },
+    {
+      "chunk": "chunk_00019.npz",
+      "host_time_mid": 1777584851.959128,
+      "lambda_val": 0.0,
+      "n_packets": 33
+    },
+    {
+      "chunk": "chunk_00020.npz",
+      "host_time_mid": 1777584871.4994478,
+      "lambda_val": 0.0,
+      "n_packets": 33
+    },
+    {
+      "chunk": "chunk_00021.npz",
+      "host_time_mid": 1777584890.9451716,
+      "lambda_val": 0.0,
+      "n_packets": 33
+    },
+    {
+      "chunk": "chunk_00022.npz",
+      "host_time_mid": 1777584910.3291373,
+      "lambda_val": 0.0,
+      "n_packets": 33
+    },
+    {
+      "chunk": "chunk_00023.npz",
+      "host_time_mid": 1777584929.8207111,
+      "lambda_val": 0.0,
+      "n_packets": 33
+    },
+    {
+      "chunk": "chunk_00024.npz",
+      "host_time_mid": 1777584949.2992396,
+      "lambda_val": 0.0,
+      "n_packets": 33
+    },
+    {
+      "chunk": "chunk_00025.npz",
+      "host_time_mid": 1777584968.6071181,
+      "lambda_val": 0.0,
+      "n_packets": 33
+    },
+    {
+      "chunk": "chunk_00026.npz",
+      "host_time_mid": 1777584988.1652594,
+      "lambda_val": 0.0,
+      "n_packets": 33
+    },
+    {
+      "chunk": "chunk_00027.npz",
+      "host_time_mid": 1777585007.742454,
+      "lambda_val": 0.0,
+      "n_packets": 33
+    },
+    {
+      "chunk": "chunk_00028.npz",
+      "host_time_mid": 1777585027.0139933,
+      "lambda_val": 0.0,
+      "n_packets": 33
+    }
+  ]
+}

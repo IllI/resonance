@@ -1,0 +1,2567 @@
+{
+  "schema_version": "3.0",
+  "dataset_type": "gaussian_covariance_stream_v3",
+  "role": "Alice_Scramble",
+  "t0_utc": 1777912451.587195,
+  "duration_s": 1800.0,
+  "n_chunks": 359,
+  "n_streams": 4,
+  "chunk_seconds": 5,
+  "sigma_gaussian": 1.0,
+  "stream_profile": [
+    0.3678794503211975,
+    1.0,
+    1.0,
+    0.3678794503211975
+  ],
+  "cycle_s": 600.0,
+  "ramp_up_s": 180.0,
+  "on_s": 180.0,
+  "ramp_down_s": 60.0,
+  "off_s": 180.0,
+  "base_matrix_size": 32,
+  "size_range": 32,
+  "infrastructure": {
+    "gcp_zone": null,
+    "gcp_machine_type": null,
+    "gcp_instance_id": null,
+    "ip": "8.231.246.233",
+    "city": "The Dalles",
+    "region": "Oregon",
+    "country": "US",
+    "timezone": "America/Los_Angeles",
+    "loc": "45.5946,-121.1787",
+    "org": "AS396982 Google LLC",
+    "hostname": "856a6554383f",
+    "cpu_count": 24
+  },
+  "baseline_mean": [
+    30.15510403380102,
+    30.153858418367346,
+    30.153858418367346,
+    30.152612802933675
+  ],
+  "baseline_std": [
+    144.32411395521157,
+    129.28893339275942,
+    145.56803889662794,
+    184.77415360256344
+  ],
+  "chunk_files": [
+    "chunk_00000.npz",
+    "chunk_00001.npz",
+    "chunk_00002.npz",
+    "chunk_00003.npz",
+    "chunk_00004.npz",
+    "chunk_00005.npz",
+    "chunk_00006.npz",
+    "chunk_00007.npz",
+    "chunk_00008.npz",
+    "chunk_00009.npz",
+    "chunk_00010.npz",
+    "chunk_00011.npz",
+    "chunk_00012.npz",
+    "chunk_00013.npz",
+    "chunk_00014.npz",
+    "chunk_00015.npz",
+    "chunk_00016.npz",
+    "chunk_00017.npz",
+    "chunk_00018.npz",
+    "chunk_00019.npz",
+    "chunk_00020.npz",
+    "chunk_00021.npz",
+    "chunk_00022.npz",
+    "chunk_00023.npz",
+    "chunk_00024.npz",
+    "chunk_00025.npz",
+    "chunk_00026.npz",
+    "chunk_00027.npz",
+    "chunk_00028.npz",
+    "chunk_00029.npz",
+    "chunk_00030.npz",
+    "chunk_00031.npz",
+    "chunk_00032.npz",
+    "chunk_00033.npz",
+    "chunk_00034.npz",
+    "chunk_00035.npz",
+    "chunk_00036.npz",
+    "chunk_00037.npz",
+    "chunk_00038.npz",
+    "chunk_00039.npz",
+    "chunk_00040.npz",
+    "chunk_00041.npz",
+    "chunk_00042.npz",
+    "chunk_00043.npz",
+    "chunk_00044.npz",
+    "chunk_00045.npz",
+    "chunk_00046.npz",
+    "chunk_00047.npz",
+    "chunk_00048.npz",
+    "chunk_00049.npz",
+    "chunk_00050.npz",
+    "chunk_00051.npz",
+    "chunk_00052.npz",
+    "chunk_00053.npz",
+    "chunk_00054.npz",
+    "chunk_00055.npz",
+    "chunk_00056.npz",
+    "chunk_00057.npz",
+    "chunk_00058.npz",
+    "chunk_00059.npz",
+    "chunk_00060.npz",
+    "chunk_00061.npz",
+    "chunk_00062.npz",
+    "chunk_00063.npz",
+    "chunk_00064.npz",
+    "chunk_00065.npz",
+    "chunk_00066.npz",
+    "chunk_00067.npz",
+    "chunk_00068.npz",
+    "chunk_00069.npz",
+    "chunk_00070.npz",
+    "chunk_00071.npz",
+    "chunk_00072.npz",
+    "chunk_00073.npz",
+    "chunk_00074.npz",
+    "chunk_00075.npz",
+    "chunk_00076.npz",
+    "chunk_00077.npz",
+    "chunk_00078.npz",
+    "chunk_00079.npz",
+    "chunk_00080.npz",
+    "chunk_00081.npz",
+    "chunk_00082.npz",
+    "chunk_00083.npz",
+    "chunk_00084.npz",
+    "chunk_00085.npz",
+    "chunk_00086.npz",
+    "chunk_00087.npz",
+    "chunk_00088.npz",
+    "chunk_00089.npz",
+    "chunk_00090.npz",
+    "chunk_00091.npz",
+    "chunk_00092.npz",
+    "chunk_00093.npz",
+    "chunk_00094.npz",
+    "chunk_00095.npz",
+    "chunk_00096.npz",
+    "chunk_00097.npz",
+    "chunk_00098.npz",
+    "chunk_00099.npz",
+    "chunk_00100.npz",
+    "chunk_00101.npz",
+    "chunk_00102.npz",
+    "chunk_00103.npz",
+    "chunk_00104.npz",
+    "chunk_00105.npz",
+    "chunk_00106.npz",
+    "chunk_00107.npz",
+    "chunk_00108.npz",
+    "chunk_00109.npz",
+    "chunk_00110.npz",
+    "chunk_00111.npz",
+    "chunk_00112.npz",
+    "chunk_00113.npz",
+    "chunk_00114.npz",
+    "chunk_00115.npz",
+    "chunk_00116.npz",
+    "chunk_00117.npz",
+    "chunk_00118.npz",
+    "chunk_00119.npz",
+    "chunk_00120.npz",
+    "chunk_00121.npz",
+    "chunk_00122.npz",
+    "chunk_00123.npz",
+    "chunk_00124.npz",
+    "chunk_00125.npz",
+    "chunk_00126.npz",
+    "chunk_00127.npz",
+    "chunk_00128.npz",
+    "chunk_00129.npz",
+    "chunk_00130.npz",
+    "chunk_00131.npz",
+    "chunk_00132.npz",
+    "chunk_00133.npz",
+    "chunk_00134.npz",
+    "chunk_00135.npz",
+    "chunk_00136.npz",
+    "chunk_00137.npz",
+    "chunk_00138.npz",
+    "chunk_00139.npz",
+    "chunk_00140.npz",
+    "chunk_00141.npz",
+    "chunk_00142.npz",
+    "chunk_00143.npz",
+    "chunk_00144.npz",
+    "chunk_00145.npz",
+    "chunk_00146.npz",
+    "chunk_00147.npz",
+    "chunk_00148.npz",
+    "chunk_00149.npz",
+    "chunk_00150.npz",
+    "chunk_00151.npz",
+    "chunk_00152.npz",
+    "chunk_00153.npz",
+    "chunk_00154.npz",
+    "chunk_00155.npz",
+    "chunk_00156.npz",
+    "chunk_00157.npz",
+    "chunk_00158.npz",
+    "chunk_00159.npz",
+    "chunk_00160.npz",
+    "chunk_00161.npz",
+    "chunk_00162.npz",
+    "chunk_00163.npz",
+    "chunk_00164.npz",
+    "chunk_00165.npz",
+    "chunk_00166.npz",
+    "chunk_00167.npz",
+    "chunk_00168.npz",
+    "chunk_00169.npz",
+    "chunk_00170.npz",
+    "chunk_00171.npz",
+    "chunk_00172.npz",
+    "chunk_00173.npz",
+    "chunk_00174.npz",
+    "chunk_00175.npz",
+    "chunk_00176.npz",
+    "chunk_00177.npz",
+    "chunk_00178.npz",
+    "chunk_00179.npz",
+    "chunk_00180.npz",
+    "chunk_00181.npz",
+    "chunk_00182.npz",
+    "chunk_00183.npz",
+    "chunk_00184.npz",
+    "chunk_00185.npz",
+    "chunk_00186.npz",
+    "chunk_00187.npz",
+    "chunk_00188.npz",
+    "chunk_00189.npz",
+    "chunk_00190.npz",
+    "chunk_00191.npz",
+    "chunk_00192.npz",
+    "chunk_00193.npz",
+    "chunk_00194.npz",
+    "chunk_00195.npz",
+    "chunk_00196.npz",
+    "chunk_00197.npz",
+    "chunk_00198.npz",
+    "chunk_00199.npz",
+    "chunk_00200.npz",
+    "chunk_00201.npz",
+    "chunk_00202.npz",
+    "chunk_00203.npz",
+    "chunk_00204.npz",
+    "chunk_00205.npz",
+    "chunk_00206.npz",
+    "chunk_00207.npz",
+    "chunk_00208.npz",
+    "chunk_00209.npz",
+    "chunk_00210.npz",
+    "chunk_00211.npz",
+    "chunk_00212.npz",
+    "chunk_00213.npz",
+    "chunk_00214.npz",
+    "chunk_00215.npz",
+    "chunk_00216.npz",
+    "chunk_00217.npz",
+    "chunk_00218.npz",
+    "chunk_00219.npz",
+    "chunk_00220.npz",
+    "chunk_00221.npz",
+    "chunk_00222.npz",
+    "chunk_00223.npz",
+    "chunk_00224.npz",
+    "chunk_00225.npz",
+    "chunk_00226.npz",
+    "chunk_00227.npz",
+    "chunk_00228.npz",
+    "chunk_00229.npz",
+    "chunk_00230.npz",
+    "chunk_00231.npz",
+    "chunk_00232.npz",
+    "chunk_00233.npz",
+    "chunk_00234.npz",
+    "chunk_00235.npz",
+    "chunk_00236.npz",
+    "chunk_00237.npz",
+    "chunk_00238.npz",
+    "chunk_00239.npz",
+    "chunk_00240.npz",
+    "chunk_00241.npz",
+    "chunk_00242.npz",
+    "chunk_00243.npz",
+    "chunk_00244.npz",
+    "chunk_00245.npz",
+    "chunk_00246.npz",
+    "chunk_00247.npz",
+    "chunk_00248.npz",
+    "chunk_00249.npz",
+    "chunk_00250.npz",
+    "chunk_00251.npz",
+    "chunk_00252.npz",
+    "chunk_00253.npz",
+    "chunk_00254.npz",
+    "chunk_00255.npz",
+    "chunk_00256.npz",
+    "chunk_00257.npz",
+    "chunk_00258.npz",
+    "chunk_00259.npz",
+    "chunk_00260.npz",
+    "chunk_00261.npz",
+    "chunk_00262.npz",
+    "chunk_00263.npz",
+    "chunk_00264.npz",
+    "chunk_00265.npz",
+    "chunk_00266.npz",
+    "chunk_00267.npz",
+    "chunk_00268.npz",
+    "chunk_00269.npz",
+    "chunk_00270.npz",
+    "chunk_00271.npz",
+    "chunk_00272.npz",
+    "chunk_00273.npz",
+    "chunk_00274.npz",
+    "chunk_00275.npz",
+    "chunk_00276.npz",
+    "chunk_00277.npz",
+    "chunk_00278.npz",
+    "chunk_00279.npz",
+    "chunk_00280.npz",
+    "chunk_00281.npz",
+    "chunk_00282.npz",
+    "chunk_00283.npz",
+    "chunk_00284.npz",
+    "chunk_00285.npz",
+    "chunk_00286.npz",
+    "chunk_00287.npz",
+    "chunk_00288.npz",
+    "chunk_00289.npz",
+    "chunk_00290.npz",
+    "chunk_00291.npz",
+    "chunk_00292.npz",
+    "chunk_00293.npz",
+    "chunk_00294.npz",
+    "chunk_00295.npz",
+    "chunk_00296.npz",
+    "chunk_00297.npz",
+    "chunk_00298.npz",
+    "chunk_00299.npz",
+    "chunk_00300.npz",
+    "chunk_00301.npz",
+    "chunk_00302.npz",
+    "chunk_00303.npz",
+    "chunk_00304.npz",
+    "chunk_00305.npz",
+    "chunk_00306.npz",
+    "chunk_00307.npz",
+    "chunk_00308.npz",
+    "chunk_00309.npz",
+    "chunk_00310.npz",
+    "chunk_00311.npz",
+    "chunk_00312.npz",
+    "chunk_00313.npz",
+    "chunk_00314.npz",
+    "chunk_00315.npz",
+    "chunk_00316.npz",
+    "chunk_00317.npz",
+    "chunk_00318.npz",
+    "chunk_00319.npz",
+    "chunk_00320.npz",
+    "chunk_00321.npz",
+    "chunk_00322.npz",
+    "chunk_00323.npz",
+    "chunk_00324.npz",
+    "chunk_00325.npz",
+    "chunk_00326.npz",
+    "chunk_00327.npz",
+    "chunk_00328.npz",
+    "chunk_00329.npz",
+    "chunk_00330.npz",
+    "chunk_00331.npz",
+    "chunk_00332.npz",
+    "chunk_00333.npz",
+    "chunk_00334.npz",
+    "chunk_00335.npz",
+    "chunk_00336.npz",
+    "chunk_00337.npz",
+    "chunk_00338.npz",
+    "chunk_00339.npz",
+    "chunk_00340.npz",
+    "chunk_00341.npz",
+    "chunk_00342.npz",
+    "chunk_00343.npz",
+    "chunk_00344.npz",
+    "chunk_00345.npz",
+    "chunk_00346.npz",
+    "chunk_00347.npz",
+    "chunk_00348.npz",
+    "chunk_00349.npz",
+    "chunk_00350.npz",
+    "chunk_00351.npz",
+    "chunk_00352.npz",
+    "chunk_00353.npz",
+    "chunk_00354.npz",
+    "chunk_00355.npz",
+    "chunk_00356.npz",
+    "chunk_00357.npz",
+    "chunk_00358.npz"
+  ],
+  "chunks": [
+    {
+      "chunk": "chunk_00000.npz",
+      "host_time_mid": 1777912454.089214,
+      "lambda_val": 0.0004766581171032902,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00001.npz",
+      "host_time_mid": 1777912459.0936663,
+      "lambda_val": 0.004284943756323045,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00002.npz",
+      "host_time_mid": 1777912464.0965428,
+      "lambda_val": 0.011869659204653993,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00003.npz",
+      "host_time_mid": 1777912469.0988123,
+      "lambda_val": 0.023172020322807907,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00004.npz",
+      "host_time_mid": 1777912474.1018229,
+      "lambda_val": 0.03810909941077206,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00005.npz",
+      "host_time_mid": 1777912479.1060338,
+      "lambda_val": 0.056570518976634065,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00006.npz",
+      "host_time_mid": 1777912484.1107259,
+      "lambda_val": 0.07841464517523489,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00007.npz",
+      "host_time_mid": 1777912489.1145344,
+      "lambda_val": 0.10346861439468275,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00008.npz",
+      "host_time_mid": 1777912494.1181545,
+      "lambda_val": 0.13154391199485288,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00009.npz",
+      "host_time_mid": 1777912499.1212654,
+      "lambda_val": 0.16242416403205318,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00010.npz",
+      "host_time_mid": 1777912504.1240487,
+      "lambda_val": 0.19587449880479862,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00011.npz",
+      "host_time_mid": 1777912509.4590716,
+      "lambda_val": 0.23409283994620994,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00012.npz",
+      "host_time_mid": 1777912514.793316,
+      "lambda_val": 0.274608908878467,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00013.npz",
+      "host_time_mid": 1777912519.7952623,
+      "lambda_val": 0.3143814508562093,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00014.npz",
+      "host_time_mid": 1777912525.059389,
+      "lambda_val": 0.35775968540396197,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00015.npz",
+      "host_time_mid": 1777912530.3236866,
+      "lambda_val": 0.4023392244509867,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00016.npz",
+      "host_time_mid": 1777912535.3263352,
+      "lambda_val": 0.44547235782372746,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00017.npz",
+      "host_time_mid": 1777912540.6115274,
+      "lambda_val": 0.4914861065451255,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00018.npz",
+      "host_time_mid": 1777912545.8970737,
+      "lambda_val": 0.5375753292098121,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00019.npz",
+      "host_time_mid": 1777912550.9003942,
+      "lambda_val": 0.5809155798384006,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00020.npz",
+      "host_time_mid": 1777912555.9043984,
+      "lambda_val": 0.6236449782019278,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00021.npz",
+      "host_time_mid": 1777912560.9088852,
+      "lambda_val": 0.6654358307018201,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00022.npz",
+      "host_time_mid": 1777912565.9131107,
+      "lambda_val": 0.705963279514223,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00023.npz",
+      "host_time_mid": 1777912570.917229,
+      "lambda_val": 0.7449197583295621,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00024.npz",
+      "host_time_mid": 1777912575.9219897,
+      "lambda_val": 0.7820138102721726,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00025.npz",
+      "host_time_mid": 1777912580.926175,
+      "lambda_val": 0.8169535974399393,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00026.npz",
+      "host_time_mid": 1777912585.9297712,
+      "lambda_val": 0.8494734604848379,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00027.npz",
+      "host_time_mid": 1777912590.932832,
+      "lambda_val": 0.879326751673337,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00028.npz",
+      "host_time_mid": 1777912595.935097,
+      "lambda_val": 0.9062855559337343,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00029.npz",
+      "host_time_mid": 1777912600.9383817,
+      "lambda_val": 0.9301540179435565,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00030.npz",
+      "host_time_mid": 1777912605.9421976,
+      "lambda_val": 0.9507464544465208,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00031.npz",
+      "host_time_mid": 1777912610.9463477,
+      "lambda_val": 0.9679042317776514,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00032.npz",
+      "host_time_mid": 1777912615.9504304,
+      "lambda_val": 0.9814949064445715,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00033.npz",
+      "host_time_mid": 1777912620.9546876,
+      "lambda_val": 0.9914154121722483,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00034.npz",
+      "host_time_mid": 1777912625.9588952,
+      "lambda_val": 0.9975895400652828,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00035.npz",
+      "host_time_mid": 1777912630.9624205,
+      "lambda_val": 0.9999702739659704,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00036.npz",
+      "host_time_mid": 1777912635.9650257,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00037.npz",
+      "host_time_mid": 1777912640.968576,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00038.npz",
+      "host_time_mid": 1777912645.9726994,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00039.npz",
+      "host_time_mid": 1777912650.9757142,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00040.npz",
+      "host_time_mid": 1777912655.9787724,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00041.npz",
+      "host_time_mid": 1777912660.9825215,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00042.npz",
+      "host_time_mid": 1777912665.985875,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00043.npz",
+      "host_time_mid": 1777912670.989673,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00044.npz",
+      "host_time_mid": 1777912675.9930556,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00045.npz",
+      "host_time_mid": 1777912680.9956238,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00046.npz",
+      "host_time_mid": 1777912685.9995692,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00047.npz",
+      "host_time_mid": 1777912691.0044,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00048.npz",
+      "host_time_mid": 1777912696.0086634,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00049.npz",
+      "host_time_mid": 1777912701.0125403,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00050.npz",
+      "host_time_mid": 1777912706.0163589,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00051.npz",
+      "host_time_mid": 1777912711.0201664,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00052.npz",
+      "host_time_mid": 1777912716.024804,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00053.npz",
+      "host_time_mid": 1777912721.0285873,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00054.npz",
+      "host_time_mid": 1777912726.0309453,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00055.npz",
+      "host_time_mid": 1777912731.034183,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00056.npz",
+      "host_time_mid": 1777912736.0371604,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00057.npz",
+      "host_time_mid": 1777912741.0395374,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00058.npz",
+      "host_time_mid": 1777912746.042077,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00059.npz",
+      "host_time_mid": 1777912751.0446022,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00060.npz",
+      "host_time_mid": 1777912756.0480094,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00061.npz",
+      "host_time_mid": 1777912761.051764,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00062.npz",
+      "host_time_mid": 1777912766.0553617,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00063.npz",
+      "host_time_mid": 1777912771.0590816,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00064.npz",
+      "host_time_mid": 1777912776.0614364,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00065.npz",
+      "host_time_mid": 1777912781.0643702,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00066.npz",
+      "host_time_mid": 1777912786.0687861,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00067.npz",
+      "host_time_mid": 1777912791.0724056,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00068.npz",
+      "host_time_mid": 1777912796.0758357,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00069.npz",
+      "host_time_mid": 1777912801.079956,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00070.npz",
+      "host_time_mid": 1777912806.0834594,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00071.npz",
+      "host_time_mid": 1777912811.0864847,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00072.npz",
+      "host_time_mid": 1777912816.0895526,
+      "lambda_val": 0.9861705470790744,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00073.npz",
+      "host_time_mid": 1777912821.0915608,
+      "lambda_val": 0.9393540058210448,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00074.npz",
+      "host_time_mid": 1777912826.0940433,
+      "lambda_val": 0.8625637477898074,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00075.npz",
+      "host_time_mid": 1777912831.0981176,
+      "lambda_val": 0.7610054230634558,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00076.npz",
+      "host_time_mid": 1777912836.1013694,
+      "lambda_val": 0.6416518281851902,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00077.npz",
+      "host_time_mid": 1777912841.1048253,
+      "lambda_val": 0.5126270656212364,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00078.npz",
+      "host_time_mid": 1777912846.1079814,
+      "lambda_val": 0.3827482333994528,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00079.npz",
+      "host_time_mid": 1777912851.1095326,
+      "lambda_val": 0.26090685183159984,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00080.npz",
+      "host_time_mid": 1777912856.1109686,
+      "lambda_val": 0.15537151082192097,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00081.npz",
+      "host_time_mid": 1777912861.1134844,
+      "lambda_val": 0.07332070877892666,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00082.npz",
+      "host_time_mid": 1777912866.116339,
+      "lambda_val": 0.020373990129093966,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00083.npz",
+      "host_time_mid": 1777912871.1195734,
+      "lambda_val": 0.00014986651851134347,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00084.npz",
+      "host_time_mid": 1777912876.1234388,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00085.npz",
+      "host_time_mid": 1777912881.1255445,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00086.npz",
+      "host_time_mid": 1777912886.127635,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00087.npz",
+      "host_time_mid": 1777912891.1309538,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00088.npz",
+      "host_time_mid": 1777912896.1350384,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00089.npz",
+      "host_time_mid": 1777912901.1381135,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00090.npz",
+      "host_time_mid": 1777912906.1404877,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00091.npz",
+      "host_time_mid": 1777912911.1439037,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00092.npz",
+      "host_time_mid": 1777912916.1470895,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00093.npz",
+      "host_time_mid": 1777912921.1493196,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00094.npz",
+      "host_time_mid": 1777912926.1518397,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00095.npz",
+      "host_time_mid": 1777912931.1541133,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00096.npz",
+      "host_time_mid": 1777912936.1568608,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00097.npz",
+      "host_time_mid": 1777912941.1602597,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00098.npz",
+      "host_time_mid": 1777912946.163126,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00099.npz",
+      "host_time_mid": 1777912951.1657164,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00100.npz",
+      "host_time_mid": 1777912956.1687403,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00101.npz",
+      "host_time_mid": 1777912961.1727824,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00102.npz",
+      "host_time_mid": 1777912966.177186,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00103.npz",
+      "host_time_mid": 1777912971.1804562,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00104.npz",
+      "host_time_mid": 1777912976.183557,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00105.npz",
+      "host_time_mid": 1777912981.187488,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00106.npz",
+      "host_time_mid": 1777912986.1918597,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00107.npz",
+      "host_time_mid": 1777912991.1948576,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00108.npz",
+      "host_time_mid": 1777912996.1965823,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00109.npz",
+      "host_time_mid": 1777913001.1979554,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00110.npz",
+      "host_time_mid": 1777913006.199874,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00111.npz",
+      "host_time_mid": 1777913011.2019296,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00112.npz",
+      "host_time_mid": 1777913016.2051876,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00113.npz",
+      "host_time_mid": 1777913021.2082882,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00114.npz",
+      "host_time_mid": 1777913026.2112741,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00115.npz",
+      "host_time_mid": 1777913031.2153068,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00116.npz",
+      "host_time_mid": 1777913036.2196884,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00117.npz",
+      "host_time_mid": 1777913041.223867,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00118.npz",
+      "host_time_mid": 1777913046.2272735,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00119.npz",
+      "host_time_mid": 1777913051.2308183,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00120.npz",
+      "host_time_mid": 1777913056.2341332,
+      "lambda_val": 0.0016435786256607798,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00121.npz",
+      "host_time_mid": 1777913061.235658,
+      "lambda_val": 0.007072687576134329,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00122.npz",
+      "host_time_mid": 1777913066.2372172,
+      "lambda_val": 0.016255634137472164,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00123.npz",
+      "host_time_mid": 1777913071.2393508,
+      "lambda_val": 0.029124148140233064,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00124.npz",
+      "host_time_mid": 1777913076.2430696,
+      "lambda_val": 0.045585139714141854,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00125.npz",
+      "host_time_mid": 1777913081.247016,
+      "lambda_val": 0.0655106280868149,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00126.npz",
+      "host_time_mid": 1777913086.2503142,
+      "lambda_val": 0.08874484507094038,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00127.npz",
+      "host_time_mid": 1777913091.253879,
+      "lambda_val": 0.11511457495725863,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00128.npz",
+      "host_time_mid": 1777913096.257509,
+      "lambda_val": 0.14441809034223685,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00129.npz",
+      "host_time_mid": 1777913101.2613678,
+      "lambda_val": 0.1764332497489735,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00130.npz",
+      "host_time_mid": 1777913106.2643633,
+      "lambda_val": 0.2109086005895947,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00131.npz",
+      "host_time_mid": 1777913111.2658072,
+      "lambda_val": 0.24757505851838052,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00132.npz",
+      "host_time_mid": 1777913116.2681446,
+      "lambda_val": 0.28617078061454615,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00133.npz",
+      "host_time_mid": 1777913121.2705374,
+      "lambda_val": 0.3263958458025712,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00134.npz",
+      "host_time_mid": 1777913126.2734108,
+      "lambda_val": 0.3679474530341546,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00135.npz",
+      "host_time_mid": 1777913131.2776701,
+      "lambda_val": 0.4105171138042813,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00136.npz",
+      "host_time_mid": 1777913136.2810965,
+      "lambda_val": 0.4537617149530132,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00137.npz",
+      "host_time_mid": 1777913141.2839801,
+      "lambda_val": 0.497353964151498,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00138.npz",
+      "host_time_mid": 1777913146.2871943,
+      "lambda_val": 0.5409692485089449,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00139.npz",
+      "host_time_mid": 1777913151.2903638,
+      "lambda_val": 0.5842719479020767,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00140.npz",
+      "host_time_mid": 1777913156.2929204,
+      "lambda_val": 0.6269273000457869,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00141.npz",
+      "host_time_mid": 1777913161.2950659,
+      "lambda_val": 0.6686122944889483,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00142.npz",
+      "host_time_mid": 1777913166.2967196,
+      "lambda_val": 0.7090090474776445,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00143.npz",
+      "host_time_mid": 1777913171.2998614,
+      "lambda_val": 0.7478253433586421,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00144.npz",
+      "host_time_mid": 1777913176.3039498,
+      "lambda_val": 0.7847599586779949,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00145.npz",
+      "host_time_mid": 1777913181.3070748,
+      "lambda_val": 0.8195173684697674,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00146.npz",
+      "host_time_mid": 1777913186.3109498,
+      "lambda_val": 0.8518446702310823,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00147.npz",
+      "host_time_mid": 1777913191.3145785,
+      "lambda_val": 0.8814886827733703,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00148.npz",
+      "host_time_mid": 1777913196.3182564,
+      "lambda_val": 0.9082253705190857,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00149.npz",
+      "host_time_mid": 1777913201.32285,
+      "lambda_val": 0.9318546750598709,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00150.npz",
+      "host_time_mid": 1777913206.3266664,
+      "lambda_val": 0.952188372358383,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00151.npz",
+      "host_time_mid": 1777913211.3299346,
+      "lambda_val": 0.9690737348182981,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00152.npz",
+      "host_time_mid": 1777913216.3321843,
+      "lambda_val": 0.982382158825799,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00153.npz",
+      "host_time_mid": 1777913221.3345726,
+      "lambda_val": 0.9920162761658534,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00154.npz",
+      "host_time_mid": 1777913226.3374124,
+      "lambda_val": 0.9979026374082751,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00155.npz",
+      "host_time_mid": 1777913231.3399055,
+      "lambda_val": 0.9999953430117872,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00156.npz",
+      "host_time_mid": 1777913236.3416524,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00157.npz",
+      "host_time_mid": 1777913241.3431864,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00158.npz",
+      "host_time_mid": 1777913246.3448162,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00159.npz",
+      "host_time_mid": 1777913251.3466108,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00160.npz",
+      "host_time_mid": 1777913256.349877,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00161.npz",
+      "host_time_mid": 1777913261.3534117,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00162.npz",
+      "host_time_mid": 1777913266.3550487,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00163.npz",
+      "host_time_mid": 1777913271.3573642,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00164.npz",
+      "host_time_mid": 1777913276.3601432,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00165.npz",
+      "host_time_mid": 1777913281.3624973,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00166.npz",
+      "host_time_mid": 1777913286.3663397,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00167.npz",
+      "host_time_mid": 1777913291.37006,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00168.npz",
+      "host_time_mid": 1777913296.3728619,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00169.npz",
+      "host_time_mid": 1777913301.3758862,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00170.npz",
+      "host_time_mid": 1777913306.3793018,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00171.npz",
+      "host_time_mid": 1777913311.382686,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00172.npz",
+      "host_time_mid": 1777913316.3853736,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00173.npz",
+      "host_time_mid": 1777913321.3883379,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00174.npz",
+      "host_time_mid": 1777913326.3917577,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00175.npz",
+      "host_time_mid": 1777913331.3941278,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00176.npz",
+      "host_time_mid": 1777913336.396949,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00177.npz",
+      "host_time_mid": 1777913341.4003668,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00178.npz",
+      "host_time_mid": 1777913346.4035518,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00179.npz",
+      "host_time_mid": 1777913351.4067621,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00180.npz",
+      "host_time_mid": 1777913356.408935,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00181.npz",
+      "host_time_mid": 1777913361.4108763,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00182.npz",
+      "host_time_mid": 1777913366.4144285,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00183.npz",
+      "host_time_mid": 1777913371.418415,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00184.npz",
+      "host_time_mid": 1777913376.4210558,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00185.npz",
+      "host_time_mid": 1777913381.424161,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00186.npz",
+      "host_time_mid": 1777913386.4274302,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00187.npz",
+      "host_time_mid": 1777913391.429646,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00188.npz",
+      "host_time_mid": 1777913396.432248,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00189.npz",
+      "host_time_mid": 1777913401.435378,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00190.npz",
+      "host_time_mid": 1777913406.4382627,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00191.npz",
+      "host_time_mid": 1777913411.442107,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00192.npz",
+      "host_time_mid": 1777913416.4460752,
+      "lambda_val": 0.9839059286324643,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00193.npz",
+      "host_time_mid": 1777913421.4494312,
+      "lambda_val": 0.9348047442551919,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00194.npz",
+      "host_time_mid": 1777913426.453394,
+      "lambda_val": 0.8560216193843192,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00195.npz",
+      "host_time_mid": 1777913431.4570215,
+      "lambda_val": 0.7529455265596694,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00196.npz",
+      "host_time_mid": 1777913436.4606924,
+      "lambda_val": 0.6326056406540265,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00197.npz",
+      "host_time_mid": 1777913441.4651115,
+      "lambda_val": 0.5031961148399423,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00198.npz",
+      "host_time_mid": 1777913446.469431,
+      "lambda_val": 0.3735709203870735,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00199.npz",
+      "host_time_mid": 1777913451.4732773,
+      "lambda_val": 0.2525872275295624,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00200.npz",
+      "host_time_mid": 1777913456.477025,
+      "lambda_val": 0.14849194669884969,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00201.npz",
+      "host_time_mid": 1777913461.4808307,
+      "lambda_val": 0.0683863108768048,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00202.npz",
+      "host_time_mid": 1777913466.4831777,
+      "lambda_val": 0.017749053380332946,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00203.npz",
+      "host_time_mid": 1777913471.4849262,
+      "lambda_val": 7.168390423195614e-06,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00204.npz",
+      "host_time_mid": 1777913476.4874678,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00205.npz",
+      "host_time_mid": 1777913481.4901037,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00206.npz",
+      "host_time_mid": 1777913486.49204,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00207.npz",
+      "host_time_mid": 1777913491.4938388,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00208.npz",
+      "host_time_mid": 1777913496.495588,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00209.npz",
+      "host_time_mid": 1777913501.4982991,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00210.npz",
+      "host_time_mid": 1777913506.5007708,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00211.npz",
+      "host_time_mid": 1777913511.5029583,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00212.npz",
+      "host_time_mid": 1777913516.5065432,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00213.npz",
+      "host_time_mid": 1777913521.5099902,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00214.npz",
+      "host_time_mid": 1777913526.5137339,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00215.npz",
+      "host_time_mid": 1777913531.5172482,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00216.npz",
+      "host_time_mid": 1777913536.5192955,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00217.npz",
+      "host_time_mid": 1777913541.520865,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00218.npz",
+      "host_time_mid": 1777913546.523438,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00219.npz",
+      "host_time_mid": 1777913551.5259638,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00220.npz",
+      "host_time_mid": 1777913556.5289774,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00221.npz",
+      "host_time_mid": 1777913561.53282,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00222.npz",
+      "host_time_mid": 1777913566.5363424,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00223.npz",
+      "host_time_mid": 1777913571.5390327,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00224.npz",
+      "host_time_mid": 1777913576.5417314,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00225.npz",
+      "host_time_mid": 1777913581.5448365,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00226.npz",
+      "host_time_mid": 1777913586.5473895,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00227.npz",
+      "host_time_mid": 1777913591.54941,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00228.npz",
+      "host_time_mid": 1777913596.5519462,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00229.npz",
+      "host_time_mid": 1777913601.5544643,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00230.npz",
+      "host_time_mid": 1777913606.5572999,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00231.npz",
+      "host_time_mid": 1777913611.5617738,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00232.npz",
+      "host_time_mid": 1777913616.5659957,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00233.npz",
+      "host_time_mid": 1777913621.5696723,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00234.npz",
+      "host_time_mid": 1777913626.5733147,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00235.npz",
+      "host_time_mid": 1777913631.5759633,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00236.npz",
+      "host_time_mid": 1777913636.5785193,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00237.npz",
+      "host_time_mid": 1777913641.580962,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00238.npz",
+      "host_time_mid": 1777913646.5834527,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00239.npz",
+      "host_time_mid": 1777913651.58736,
+      "lambda_val": 2.072952920428861e-12,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00240.npz",
+      "host_time_mid": 1777913656.5905762,
+      "lambda_val": 0.0019052235253350092,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00241.npz",
+      "host_time_mid": 1777913661.5919156,
+      "lambda_val": 0.007603278736125485,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00242.npz",
+      "host_time_mid": 1777913666.5932734,
+      "lambda_val": 0.017050818567277914,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00243.npz",
+      "host_time_mid": 1777913671.596161,
+      "lambda_val": 0.030180455987232735,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00244.npz",
+      "host_time_mid": 1777913676.6001277,
+      "lambda_val": 0.046893814626536745,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00245.npz",
+      "host_time_mid": 1777913681.6029902,
+      "lambda_val": 0.06705623425730761,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00246.npz",
+      "host_time_mid": 1777913686.6053128,
+      "lambda_val": 0.09051468566718956,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00247.npz",
+      "host_time_mid": 1777913691.6087043,
+      "lambda_val": 0.11709845987816625,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00248.npz",
+      "host_time_mid": 1777913696.6129653,
+      "lambda_val": 0.1466056659760691,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00249.npz",
+      "host_time_mid": 1777913701.6158428,
+      "lambda_val": 0.17879774649977148,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00250.npz",
+      "host_time_mid": 1777913706.6182091,
+      "lambda_val": 0.21343352731953436,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00251.npz",
+      "host_time_mid": 1777913711.620975,
+      "lambda_val": 0.2502553364357456,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00252.npz",
+      "host_time_mid": 1777913716.6234808,
+      "lambda_val": 0.288977897485708,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00253.npz",
+      "host_time_mid": 1777913721.6251945,
+      "lambda_val": 0.3293015767637321,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00254.npz",
+      "host_time_mid": 1777913726.627421,
+      "lambda_val": 0.3709295859086184,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00255.npz",
+      "host_time_mid": 1777913731.6299138,
+      "lambda_val": 0.41354306432596716,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00256.npz",
+      "host_time_mid": 1777913736.6324437,
+      "lambda_val": 0.4568155093836183,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00257.npz",
+      "host_time_mid": 1777913741.6358182,
+      "lambda_val": 0.5004243184927185,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00258.npz",
+      "host_time_mid": 1777913746.639718,
+      "lambda_val": 0.5440344596659853,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00259.npz",
+      "host_time_mid": 1777913751.6429744,
+      "lambda_val": 0.5873034201102353,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00260.npz",
+      "host_time_mid": 1777913756.6451726,
+      "lambda_val": 0.629898167035519,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00261.npz",
+      "host_time_mid": 1777913761.6476083,
+      "lambda_val": 0.6715053881213299,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00262.npz",
+      "host_time_mid": 1777913766.6498718,
+      "lambda_val": 0.7118047177144768,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00263.npz",
+      "host_time_mid": 1777913771.6519966,
+      "lambda_val": 0.7504895786225656,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00264.npz",
+      "host_time_mid": 1777913776.654213,
+      "lambda_val": 0.7872670969393478,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00265.npz",
+      "host_time_mid": 1777913781.6570525,
+      "lambda_val": 0.821860563801907,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00266.npz",
+      "host_time_mid": 1777913786.6602933,
+      "lambda_val": 0.854004169022675,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00267.npz",
+      "host_time_mid": 1777913791.6625893,
+      "lambda_val": 0.8834448056295754,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00268.npz",
+      "host_time_mid": 1777913796.6644032,
+      "lambda_val": 0.9099621083854313,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00269.npz",
+      "host_time_mid": 1777913801.6673362,
+      "lambda_val": 0.9333619606093775,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00270.npz",
+      "host_time_mid": 1777913806.6716728,
+      "lambda_val": 0.9534649587341926,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00271.npz",
+      "host_time_mid": 1777913811.6748126,
+      "lambda_val": 0.9701072722992448,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00272.npz",
+      "host_time_mid": 1777913816.6784842,
+      "lambda_val": 0.9831684880358829,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00273.npz",
+      "host_time_mid": 1777913821.6818852,
+      "lambda_val": 0.9925466945116295,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00274.npz",
+      "host_time_mid": 1777913826.6843271,
+      "lambda_val": 0.9981705098083703,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00275.npz",
+      "host_time_mid": 1777913831.6880786,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00276.npz",
+      "host_time_mid": 1777913836.6918917,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00277.npz",
+      "host_time_mid": 1777913841.6950436,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00278.npz",
+      "host_time_mid": 1777913846.6983151,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00279.npz",
+      "host_time_mid": 1777913851.7010355,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00280.npz",
+      "host_time_mid": 1777913856.7046185,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00281.npz",
+      "host_time_mid": 1777913861.70906,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00282.npz",
+      "host_time_mid": 1777913866.7132363,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00283.npz",
+      "host_time_mid": 1777913871.7162771,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00284.npz",
+      "host_time_mid": 1777913876.7181213,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00285.npz",
+      "host_time_mid": 1777913881.7197514,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00286.npz",
+      "host_time_mid": 1777913886.7218575,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00287.npz",
+      "host_time_mid": 1777913891.7244368,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00288.npz",
+      "host_time_mid": 1777913896.7274742,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00289.npz",
+      "host_time_mid": 1777913901.7305849,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00290.npz",
+      "host_time_mid": 1777913906.733905,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00291.npz",
+      "host_time_mid": 1777913911.7374854,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00292.npz",
+      "host_time_mid": 1777913916.7410479,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00293.npz",
+      "host_time_mid": 1777913921.7452364,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00294.npz",
+      "host_time_mid": 1777913926.7484245,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00295.npz",
+      "host_time_mid": 1777913931.7499118,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00296.npz",
+      "host_time_mid": 1777913936.7519865,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00297.npz",
+      "host_time_mid": 1777913941.755663,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00298.npz",
+      "host_time_mid": 1777913946.7602434,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00299.npz",
+      "host_time_mid": 1777913951.7645047,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00300.npz",
+      "host_time_mid": 1777913956.7688031,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00301.npz",
+      "host_time_mid": 1777913961.773686,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00302.npz",
+      "host_time_mid": 1777913966.7769697,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00303.npz",
+      "host_time_mid": 1777913971.7787027,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00304.npz",
+      "host_time_mid": 1777913976.7820203,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00305.npz",
+      "host_time_mid": 1777913981.7855089,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00306.npz",
+      "host_time_mid": 1777913986.7871308,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00307.npz",
+      "host_time_mid": 1777913991.7901669,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00308.npz",
+      "host_time_mid": 1777913996.7937932,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00309.npz",
+      "host_time_mid": 1777914001.7963305,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00310.npz",
+      "host_time_mid": 1777914006.7983067,
+      "lambda_val": 1.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00311.npz",
+      "host_time_mid": 1777914011.8007107,
+      "lambda_val": 0.9999687541317526,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00312.npz",
+      "host_time_mid": 1777914016.8034954,
+      "lambda_val": 0.981466347614705,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00313.npz",
+      "host_time_mid": 1777914021.8052998,
+      "lambda_val": 0.9301295428882157,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00314.npz",
+      "host_time_mid": 1777914026.8078818,
+      "lambda_val": 0.8494445194963794,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00315.npz",
+      "host_time_mid": 1777914031.8101444,
+      "lambda_val": 0.744928259979012,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00316.npz",
+      "host_time_mid": 1777914036.8120642,
+      "lambda_val": 0.6237142175992327,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00317.npz",
+      "host_time_mid": 1777914041.8158643,
+      "lambda_val": 0.49401359200950923,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00318.npz",
+      "host_time_mid": 1777914046.819295,
+      "lambda_val": 0.364730861004402,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00319.npz",
+      "host_time_mid": 1777914051.8216789,
+      "lambda_val": 0.24470263994985225,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00320.npz",
+      "host_time_mid": 1777914056.824667,
+      "lambda_val": 0.1420779671784319,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00321.npz",
+      "host_time_mid": 1777914061.826964,
+      "lambda_val": 0.06388293499429587,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00322.npz",
+      "host_time_mid": 1777914066.8289394,
+      "lambda_val": 0.015437791039415227,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00323.npz",
+      "host_time_mid": 1777914071.831997,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00324.npz",
+      "host_time_mid": 1777914076.8346882,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00325.npz",
+      "host_time_mid": 1777914081.8368368,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00326.npz",
+      "host_time_mid": 1777914086.8400245,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00327.npz",
+      "host_time_mid": 1777914091.843699,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00328.npz",
+      "host_time_mid": 1777914096.8467572,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00329.npz",
+      "host_time_mid": 1777914101.849991,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00330.npz",
+      "host_time_mid": 1777914106.8539295,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00331.npz",
+      "host_time_mid": 1777914111.8569522,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00332.npz",
+      "host_time_mid": 1777914116.8596253,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00333.npz",
+      "host_time_mid": 1777914121.8632064,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00334.npz",
+      "host_time_mid": 1777914126.8665037,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00335.npz",
+      "host_time_mid": 1777914131.870153,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00336.npz",
+      "host_time_mid": 1777914136.8743749,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00337.npz",
+      "host_time_mid": 1777914141.8773065,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00338.npz",
+      "host_time_mid": 1777914146.8786535,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00339.npz",
+      "host_time_mid": 1777914151.8802323,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00340.npz",
+      "host_time_mid": 1777914156.8834188,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00341.npz",
+      "host_time_mid": 1777914161.886917,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00342.npz",
+      "host_time_mid": 1777914166.8895311,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00343.npz",
+      "host_time_mid": 1777914171.8931055,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00344.npz",
+      "host_time_mid": 1777914176.8964112,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00345.npz",
+      "host_time_mid": 1777914181.8987198,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00346.npz",
+      "host_time_mid": 1777914186.9020925,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00347.npz",
+      "host_time_mid": 1777914191.9059424,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00348.npz",
+      "host_time_mid": 1777914196.9089203,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00349.npz",
+      "host_time_mid": 1777914201.912013,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00350.npz",
+      "host_time_mid": 1777914206.9164476,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00351.npz",
+      "host_time_mid": 1777914211.9207432,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00352.npz",
+      "host_time_mid": 1777914216.9240837,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00353.npz",
+      "host_time_mid": 1777914221.9262714,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00354.npz",
+      "host_time_mid": 1777914226.9292397,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00355.npz",
+      "host_time_mid": 1777914231.9323997,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00356.npz",
+      "host_time_mid": 1777914236.9347239,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00357.npz",
+      "host_time_mid": 1777914241.9378328,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    },
+    {
+      "chunk": "chunk_00358.npz",
+      "host_time_mid": 1777914246.9416869,
+      "lambda_val": 0.0,
+      "n_packets": 32
+    }
+  ]
+}

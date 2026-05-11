@@ -1,0 +1,797 @@
+{
+  "experiment": "OAT-MoQE v3",
+  "reports": {
+    "oat": {
+      "source": "oat",
+      "probe_results": {
+        "hamiltonian": {
+          "fit": 0.32782851888162684,
+          "eom_ratio": 1.1401695893392725,
+          "norm_variance": 0.5542688369750977,
+          "gamma_mean": 0.6521896123886108,
+          "eom_fit": 0.7555274391936212,
+          "name": "hamiltonian"
+        },
+        "syk": {
+          "fit": 0.17709291685883127,
+          "decay_late": 0.3388514518737793,
+          "gamma_vs_lyapunov": -0.6044474840164185,
+          "name": "syk"
+        },
+        "mbl": {
+          "fit": 0.19228260922094773,
+          "level_spacing_r": 0.45255497097969055,
+          "freq_disorder": 0.0047901528887450695,
+          "sustain": 0.3388514518737793,
+          "name": "mbl"
+        },
+        "lindblad": {
+          "fit": 0.6628402648873588,
+          "N_BLP": 0.0,
+          "markov_fit": 1.0,
+          "gamma_uniformity": 0.9603966474533081,
+          "gamma_mean": 0.6521896123886108,
+          "decay": 0.3388514518737793,
+          "name": "lindblad"
+        },
+        "oat": {
+          "fit": 0.8399025066822744,
+          "raw_mean": 0.6920562386512756,
+          "raw_min": 0.6485074162483215,
+          "raw_osc": 0.013329684734344482,
+          "margin_above_threshold": 0.025389571984609005,
+          "name": "oat"
+        },
+        "penrose_or": {
+          "fit": 0.3333333333333333,
+          "null_surface_residual": 1.7466363627421055e-34,
+          "spinor_winding": 6.794480739499401,
+          "or_threshold_crossings": 0,
+          "E_G_phenom": 0.01,
+          "collapse_spike": 1.0269909476915579e-25,
+          "z_backflow": 1.167151131858177e-34,
+          "bi_twistor_norm_mean": 1.7466363627421055e-34,
+          "note": "E_G is phenomenological, not gravitational. Null surface = topological probe.",
+          "name": "penrose_or"
+        },
+        "novel": {
+          "fit": 0.01244885867116663,
+          "effective_dim": 1.0126057863235474,
+          "level_spacing_r": 0.45255497097969055,
+          "lyapunov_proxy": -0.03450492264763002,
+          "time_reversal_symmetry": 0.5605678558349609,
+          "topological_winding": 0.0,
+          "name": "novel"
+        }
+      },
+      "ranked_formalisms": [
+        [
+          "oat",
+          0.8399025066822744
+        ],
+        [
+          "lindblad",
+          0.6628402648873588
+        ],
+        [
+          "penrose_or",
+          0.3333333333333333
+        ],
+        [
+          "hamiltonian",
+          0.32782851888162684
+        ],
+        [
+          "mbl",
+          0.19228260922094773
+        ],
+        [
+          "syk",
+          0.17709291685883127
+        ],
+        [
+          "novel",
+          0.01244885867116663
+        ]
+      ],
+      "dominant": "oat",
+      "dominant_score": 0.8399025066822744,
+      "secondary": "lindblad",
+      "secondary_score": 0.6628402648873588,
+      "penrose_bitwistor": {
+        "fit": 0.3333333333333333,
+        "null_surface_residual": 1.7466363627421055e-34,
+        "spinor_winding": 6.794480739499401,
+        "or_threshold_crossings": 0,
+        "E_G_phenom": 0.01,
+        "collapse_spike": 1.0269909476915579e-25,
+        "z_backflow": 1.167151131858177e-34,
+        "bi_twistor_norm_mean": 1.7466363627421055e-34,
+        "note": "E_G is phenomenological, not gravitational. Null surface = topological probe."
+      },
+      "oat_analysis": {
+        "fit": 0.8399025066822744,
+        "raw_mean": 0.6920562386512756,
+        "raw_min": 0.6485074162483215,
+        "raw_osc": 0.013329684734344482,
+        "margin_above_threshold": 0.025389571984609005
+      },
+      "novel_geometry": {
+        "fit": 0.01244885867116663,
+        "effective_dim": 1.0126057863235474,
+        "level_spacing_r": 0.45255497097969055,
+        "lyapunov_proxy": -0.03450492264763002,
+        "time_reversal_symmetry": 0.5605678558349609,
+        "topological_winding": 0.0
+      },
+      "ssm_params": {
+        "omega_mean": 0.8637803196907043,
+        "omega_std": 0.0047901528887450695,
+        "gamma_mean": 0.6521896123886108,
+        "gamma_std": 0.004040887113660574
+      },
+      "emergence_narrative": "Source: oat | Dominant formalism: oat (0.84) | Secondary: lindblad (0.66) | OAT signal: raw_mean=0.6921 (threshold 2/3=0.6667), quantum advantage=YES | Penrose bi-twistor: null_residual=0.0000, winding=6.794, OR_crossings=0 | MBL level spacing r=0.4526 (Poisson=0.386, GOE=0.53) | BLP N_BLP=0.00 | EOM_fit=0.756 | Effective Hilbert dim (SVD)=1.01 | Lyapunov=-0.03450 | Learned SSM: omega_mean=0.8638 gamma_mean=0.6522",
+      "novel_narrative": null
+    },
+    "heisenberg": {
+      "source": "heisenberg",
+      "probe_results": {
+        "hamiltonian": {
+          "fit": 0.3884981468106637,
+          "eom_ratio": 1.137705143854679,
+          "norm_variance": 0.33410006761550903,
+          "gamma_mean": 0.6478173136711121,
+          "eom_fit": 0.7592605440413639,
+          "name": "hamiltonian"
+        },
+        "syk": {
+          "fit": 0.17461620119630947,
+          "decay_late": 0.34317341446876526,
+          "gamma_vs_lyapunov": -0.6088197827339172,
+          "name": "syk"
+        },
+        "mbl": {
+          "fit": 0.3232835904589686,
+          "level_spacing_r": 0.3960161805152893,
+          "freq_disorder": 0.006754226051270962,
+          "sustain": 0.34317341446876526,
+          "name": "mbl"
+        },
+        "lindblad": {
+          "fit": 0.6574022876839333,
+          "N_BLP": 0.0,
+          "markov_fit": 1.0,
+          "gamma_uniformity": 0.9469699263572693,
+          "gamma_mean": 0.6478173136711121,
+          "decay": 0.34317341446876526,
+          "name": "lindblad"
+        },
+        "oat": {
+          "fit": 0.0006155982616494341,
+          "raw_mean": 0.47542479634284973,
+          "raw_min": -1.0103676319122314,
+          "raw_osc": 0.4193553924560547,
+          "margin_above_threshold": 0.0,
+          "name": "oat"
+        },
+        "penrose_or": {
+          "fit": 0.3333333333333333,
+          "null_surface_residual": 1.2064740252866198e-35,
+          "spinor_winding": 6.413198312816715,
+          "or_threshold_crossings": 0,
+          "E_G_phenom": 0.01,
+          "collapse_spike": 1.0963992977957768e-26,
+          "z_backflow": 9.29576156729774e-36,
+          "bi_twistor_norm_mean": 1.2064740252866198e-35,
+          "note": "E_G is phenomenological, not gravitational. Null surface = topological probe.",
+          "name": "penrose_or"
+        },
+        "novel": {
+          "fit": 0.018231964860214167,
+          "effective_dim": 1.0185705423355103,
+          "level_spacing_r": 0.3960161805152893,
+          "lyapunov_proxy": -0.034054877563540836,
+          "time_reversal_symmetry": 0.5636228322982788,
+          "topological_winding": 0.0,
+          "name": "novel"
+        }
+      },
+      "ranked_formalisms": [
+        [
+          "lindblad",
+          0.6574022876839333
+        ],
+        [
+          "hamiltonian",
+          0.3884981468106637
+        ],
+        [
+          "penrose_or",
+          0.3333333333333333
+        ],
+        [
+          "mbl",
+          0.3232835904589686
+        ],
+        [
+          "syk",
+          0.17461620119630947
+        ],
+        [
+          "novel",
+          0.018231964860214167
+        ],
+        [
+          "oat",
+          0.0006155982616494341
+        ]
+      ],
+      "dominant": "lindblad",
+      "dominant_score": 0.6574022876839333,
+      "secondary": "hamiltonian",
+      "secondary_score": 0.3884981468106637,
+      "penrose_bitwistor": {
+        "fit": 0.3333333333333333,
+        "null_surface_residual": 1.2064740252866198e-35,
+        "spinor_winding": 6.413198312816715,
+        "or_threshold_crossings": 0,
+        "E_G_phenom": 0.01,
+        "collapse_spike": 1.0963992977957768e-26,
+        "z_backflow": 9.29576156729774e-36,
+        "bi_twistor_norm_mean": 1.2064740252866198e-35,
+        "note": "E_G is phenomenological, not gravitational. Null surface = topological probe."
+      },
+      "oat_analysis": {
+        "fit": 0.0006155982616494341,
+        "raw_mean": 0.47542479634284973,
+        "raw_min": -1.0103676319122314,
+        "raw_osc": 0.4193553924560547,
+        "margin_above_threshold": 0.0
+      },
+      "novel_geometry": {
+        "fit": 0.018231964860214167,
+        "effective_dim": 1.0185705423355103,
+        "level_spacing_r": 0.3960161805152893,
+        "lyapunov_proxy": -0.034054877563540836,
+        "time_reversal_symmetry": 0.5636228322982788,
+        "topological_winding": 0.0
+      },
+      "ssm_params": {
+        "omega_mean": 0.8570563793182373,
+        "omega_std": 0.006754226051270962,
+        "gamma_mean": 0.6478173136711121,
+        "gamma_std": 0.005448793992400169
+      },
+      "emergence_narrative": "Source: heisenberg | Dominant formalism: lindblad (0.66) | Secondary: hamiltonian (0.39) | OAT signal: raw_mean=0.4754 (threshold 2/3=0.6667), quantum advantage=NO | Penrose bi-twistor: null_residual=0.0000, winding=6.413, OR_crossings=0 | MBL level spacing r=0.3960 (Poisson=0.386, GOE=0.53) | BLP N_BLP=0.00 | EOM_fit=0.759 | Effective Hilbert dim (SVD)=1.02 | Lyapunov=-0.03405 | Learned SSM: omega_mean=0.8571 gamma_mean=0.6478",
+      "novel_narrative": null
+    },
+    "syk": {
+      "source": "syk",
+      "probe_results": {
+        "hamiltonian": {
+          "fit": 0.37385517501841087,
+          "eom_ratio": 1.2469094011001736,
+          "norm_variance": 0.2330542355775833,
+          "gamma_mean": 0.8498785495758057,
+          "eom_fit": 0.6102913565234951,
+          "name": "hamiltonian"
+        },
+        "syk": {
+          "fit": 0.33619316507531877,
+          "decay_late": 0.1973639875650406,
+          "gamma_vs_lyapunov": -0.40675854682922363,
+          "name": "syk"
+        },
+        "mbl": {
+          "fit": 0.2645085224295028,
+          "level_spacing_r": 0.3563539385795593,
+          "freq_disorder": 0.04055733606219292,
+          "sustain": 0.1973639875650406,
+          "name": "mbl"
+        },
+        "lindblad": {
+          "fit": 0.5470431309864424,
+          "N_BLP": 0.0,
+          "markov_fit": 1.0,
+          "gamma_uniformity": 0.6650397777557373,
+          "gamma_mean": 0.8498785495758057,
+          "decay": 0.1973639875650406,
+          "name": "lindblad"
+        },
+        "oat": {
+          "fit": 0.006991607913015692,
+          "raw_mean": 0.08675993233919144,
+          "raw_min": -0.3995319902896881,
+          "raw_osc": 0.2573639750480652,
+          "margin_above_threshold": 0.0,
+          "name": "oat"
+        },
+        "penrose_or": {
+          "fit": 0.3333333333333333,
+          "null_surface_residual": 1.706569196396522e-36,
+          "spinor_winding": 6.1080808693354,
+          "or_threshold_crossings": 0,
+          "E_G_phenom": 0.01,
+          "collapse_spike": 1.3528354874068686e-27,
+          "z_backflow": 1.3079636909011025e-36,
+          "bi_twistor_norm_mean": 1.706569196396522e-36,
+          "note": "E_G is phenomenological, not gravitational. Null surface = topological probe.",
+          "name": "penrose_or"
+        },
+        "novel": {
+          "fit": 0.1222198317898302,
+          "effective_dim": 1.139237403869629,
+          "level_spacing_r": 0.3563539385795593,
+          "lyapunov_proxy": -0.05152717630359782,
+          "time_reversal_symmetry": 0.4561210572719574,
+          "topological_winding": 0.0,
+          "name": "novel"
+        }
+      },
+      "ranked_formalisms": [
+        [
+          "lindblad",
+          0.5470431309864424
+        ],
+        [
+          "hamiltonian",
+          0.37385517501841087
+        ],
+        [
+          "syk",
+          0.33619316507531877
+        ],
+        [
+          "penrose_or",
+          0.3333333333333333
+        ],
+        [
+          "mbl",
+          0.2645085224295028
+        ],
+        [
+          "novel",
+          0.1222198317898302
+        ],
+        [
+          "oat",
+          0.006991607913015692
+        ]
+      ],
+      "dominant": "lindblad",
+      "dominant_score": 0.5470431309864424,
+      "secondary": "hamiltonian",
+      "secondary_score": 0.37385517501841087,
+      "penrose_bitwistor": {
+        "fit": 0.3333333333333333,
+        "null_surface_residual": 1.706569196396522e-36,
+        "spinor_winding": 6.1080808693354,
+        "or_threshold_crossings": 0,
+        "E_G_phenom": 0.01,
+        "collapse_spike": 1.3528354874068686e-27,
+        "z_backflow": 1.3079636909011025e-36,
+        "bi_twistor_norm_mean": 1.706569196396522e-36,
+        "note": "E_G is phenomenological, not gravitational. Null surface = topological probe."
+      },
+      "oat_analysis": {
+        "fit": 0.006991607913015692,
+        "raw_mean": 0.08675993233919144,
+        "raw_min": -0.3995319902896881,
+        "raw_osc": 0.2573639750480652,
+        "margin_above_threshold": 0.0
+      },
+      "novel_geometry": {
+        "fit": 0.1222198317898302,
+        "effective_dim": 1.139237403869629,
+        "level_spacing_r": 0.3563539385795593,
+        "lyapunov_proxy": -0.05152717630359782,
+        "time_reversal_symmetry": 0.4561210572719574,
+        "topological_winding": 0.0
+      },
+      "ssm_params": {
+        "omega_mean": 1.1032092571258545,
+        "omega_std": 0.04055733606219292,
+        "gamma_mean": 0.8498785495758057,
+        "gamma_std": 0.04079084098339081
+      },
+      "emergence_narrative": "Source: syk | Dominant formalism: lindblad (0.55) | Secondary: hamiltonian (0.37) | OAT signal: raw_mean=0.0868 (threshold 2/3=0.6667), quantum advantage=NO | Penrose bi-twistor: null_residual=0.0000, winding=6.108, OR_crossings=0 | MBL level spacing r=0.3564 (Poisson=0.386, GOE=0.53) | BLP N_BLP=0.00 | EOM_fit=0.610 | Effective Hilbert dim (SVD)=1.14 | Lyapunov=-0.05153 | Learned SSM: omega_mean=1.1032 gamma_mean=0.8499",
+      "novel_narrative": null
+    },
+    "mbl": {
+      "source": "mbl",
+      "probe_results": {
+        "hamiltonian": {
+          "fit": 0.4854350550988145,
+          "eom_ratio": 1.1438216169401805,
+          "norm_variance": 0.1330404281616211,
+          "gamma_mean": 0.6683968305587769,
+          "eom_fit": 0.7500291294942353,
+          "name": "hamiltonian"
+        },
+        "syk": {
+          "fit": 0.18513592293620784,
+          "decay_late": 0.32820776104927063,
+          "gamma_vs_lyapunov": -0.5882402658462524,
+          "name": "syk"
+        },
+        "mbl": {
+          "fit": 0.33455289564366586,
+          "level_spacing_r": 0.3936932682991028,
+          "freq_disorder": 0.04075644165277481,
+          "sustain": 0.32820776104927063,
+          "name": "mbl"
+        },
+        "lindblad": {
+          "fit": 0.6626712297009567,
+          "N_BLP": 0.0,
+          "markov_fit": 1.0,
+          "gamma_uniformity": 0.7542970180511475,
+          "gamma_mean": 0.6683968305587769,
+          "decay": 0.32820776104927063,
+          "name": "lindblad"
+        },
+        "oat": {
+          "fit": 3.66969435430867e-05,
+          "raw_mean": 0.05607044696807861,
+          "raw_min": -0.9997140765190125,
+          "raw_osc": 0.6073487997055054,
+          "margin_above_threshold": 0.0,
+          "name": "oat"
+        },
+        "penrose_or": {
+          "fit": 0.3333333333333333,
+          "null_surface_residual": 1.8693973126308657e-36,
+          "spinor_winding": 6.294037192237275,
+          "or_threshold_crossings": 0,
+          "E_G_phenom": 0.01,
+          "collapse_spike": 1.8801616106365903e-27,
+          "z_backflow": 1.2089460101936936e-36,
+          "bi_twistor_norm_mean": 1.8693973126308657e-36,
+          "note": "E_G is phenomenological, not gravitational. Null surface = topological probe.",
+          "name": "penrose_or"
+        },
+        "novel": {
+          "fit": 0.06255054713554964,
+          "effective_dim": 1.066724181175232,
+          "level_spacing_r": 0.3936932682991028,
+          "lyapunov_proxy": -0.03540174719055464,
+          "time_reversal_symmetry": 0.5510141253471375,
+          "topological_winding": 0.0,
+          "name": "novel"
+        }
+      },
+      "ranked_formalisms": [
+        [
+          "lindblad",
+          0.6626712297009567
+        ],
+        [
+          "hamiltonian",
+          0.4854350550988145
+        ],
+        [
+          "mbl",
+          0.33455289564366586
+        ],
+        [
+          "penrose_or",
+          0.3333333333333333
+        ],
+        [
+          "syk",
+          0.18513592293620784
+        ],
+        [
+          "novel",
+          0.06255054713554964
+        ],
+        [
+          "oat",
+          3.66969435430867e-05
+        ]
+      ],
+      "dominant": "lindblad",
+      "dominant_score": 0.6626712297009567,
+      "secondary": "hamiltonian",
+      "secondary_score": 0.4854350550988145,
+      "penrose_bitwistor": {
+        "fit": 0.3333333333333333,
+        "null_surface_residual": 1.8693973126308657e-36,
+        "spinor_winding": 6.294037192237275,
+        "or_threshold_crossings": 0,
+        "E_G_phenom": 0.01,
+        "collapse_spike": 1.8801616106365903e-27,
+        "z_backflow": 1.2089460101936936e-36,
+        "bi_twistor_norm_mean": 1.8693973126308657e-36,
+        "note": "E_G is phenomenological, not gravitational. Null surface = topological probe."
+      },
+      "oat_analysis": {
+        "fit": 3.66969435430867e-05,
+        "raw_mean": 0.05607044696807861,
+        "raw_min": -0.9997140765190125,
+        "raw_osc": 0.6073487997055054,
+        "margin_above_threshold": 0.0
+      },
+      "novel_geometry": {
+        "fit": 0.06255054713554964,
+        "effective_dim": 1.066724181175232,
+        "level_spacing_r": 0.3936932682991028,
+        "lyapunov_proxy": -0.03540174719055464,
+        "time_reversal_symmetry": 0.5510141253471375,
+        "topological_winding": 0.0
+      },
+      "ssm_params": {
+        "omega_mean": 0.886613130569458,
+        "omega_std": 0.04075644165277481,
+        "gamma_mean": 0.6683968305587769,
+        "gamma_std": 0.028196904808282852
+      },
+      "emergence_narrative": "Source: mbl | Dominant formalism: lindblad (0.66) | Secondary: hamiltonian (0.49) | OAT signal: raw_mean=0.0561 (threshold 2/3=0.6667), quantum advantage=NO | Penrose bi-twistor: null_residual=0.0000, winding=6.294, OR_crossings=0 | MBL level spacing r=0.3937 (Poisson=0.386, GOE=0.53) | BLP N_BLP=0.00 | EOM_fit=0.750 | Effective Hilbert dim (SVD)=1.07 | Lyapunov=-0.03540 | Learned SSM: omega_mean=0.8866 gamma_mean=0.6684",
+      "novel_narrative": null
+    },
+    "lindblad": {
+      "source": "lindblad",
+      "probe_results": {
+        "hamiltonian": {
+          "fit": 0.3520958394197527,
+          "eom_ratio": 1.2207302300789498,
+          "norm_variance": 0.3085891604423523,
+          "gamma_mean": 0.8153347969055176,
+          "eom_fit": 0.6430965180624336,
+          "name": "hamiltonian"
+        },
+        "syk": {
+          "fit": 0.3074832820377694,
+          "decay_late": 0.21031449735164642,
+          "gamma_vs_lyapunov": -0.4413022994995117,
+          "name": "syk"
+        },
+        "mbl": {
+          "fit": 0.24551611331883935,
+          "level_spacing_r": 0.3471536934375763,
+          "freq_disorder": 0.05330895632505417,
+          "sustain": 0.21031449735164642,
+          "name": "mbl"
+        },
+        "lindblad": {
+          "fit": 0.556924770339566,
+          "N_BLP": 0.0,
+          "markov_fit": 1.0,
+          "gamma_uniformity": 0.4227832555770874,
+          "gamma_mean": 0.8153347969055176,
+          "decay": 0.21031449735164642,
+          "name": "lindblad"
+        },
+        "oat": {
+          "fit": 0.0007971107894648515,
+          "raw_mean": 0.08089517802000046,
+          "raw_min": -0.7759028077125549,
+          "raw_osc": 0.40212878584861755,
+          "margin_above_threshold": 0.0,
+          "name": "oat"
+        },
+        "penrose_or": {
+          "fit": 0.3333333333333333,
+          "null_surface_residual": 4.172158079099997e-36,
+          "spinor_winding": 6.111673830101204,
+          "or_threshold_crossings": 0,
+          "E_G_phenom": 0.01,
+          "collapse_spike": 2.3891132860739597e-27,
+          "z_backflow": 2.914164691395486e-36,
+          "bi_twistor_norm_mean": 4.172158079099997e-36,
+          "note": "E_G is phenomenological, not gravitational. Null surface = topological probe.",
+          "name": "penrose_or"
+        },
+        "novel": {
+          "fit": 0.15667878978706273,
+          "effective_dim": 1.1857877969741821,
+          "level_spacing_r": 0.3471536934375763,
+          "lyapunov_proxy": -0.04886661880701523,
+          "time_reversal_symmetry": 0.46493613719940186,
+          "topological_winding": 0.0,
+          "name": "novel"
+        }
+      },
+      "ranked_formalisms": [
+        [
+          "lindblad",
+          0.556924770339566
+        ],
+        [
+          "hamiltonian",
+          0.3520958394197527
+        ],
+        [
+          "penrose_or",
+          0.3333333333333333
+        ],
+        [
+          "syk",
+          0.3074832820377694
+        ],
+        [
+          "mbl",
+          0.24551611331883935
+        ],
+        [
+          "novel",
+          0.15667878978706273
+        ],
+        [
+          "oat",
+          0.0007971107894648515
+        ]
+      ],
+      "dominant": "lindblad",
+      "dominant_score": 0.556924770339566,
+      "secondary": "hamiltonian",
+      "secondary_score": 0.3520958394197527,
+      "penrose_bitwistor": {
+        "fit": 0.3333333333333333,
+        "null_surface_residual": 4.172158079099997e-36,
+        "spinor_winding": 6.111673830101204,
+        "or_threshold_crossings": 0,
+        "E_G_phenom": 0.01,
+        "collapse_spike": 2.3891132860739597e-27,
+        "z_backflow": 2.914164691395486e-36,
+        "bi_twistor_norm_mean": 4.172158079099997e-36,
+        "note": "E_G is phenomenological, not gravitational. Null surface = topological probe."
+      },
+      "oat_analysis": {
+        "fit": 0.0007971107894648515,
+        "raw_mean": 0.08089517802000046,
+        "raw_min": -0.7759028077125549,
+        "raw_osc": 0.40212878584861755,
+        "margin_above_threshold": 0.0
+      },
+      "novel_geometry": {
+        "fit": 0.15667878978706273,
+        "effective_dim": 1.1857877969741821,
+        "level_spacing_r": 0.3471536934375763,
+        "lyapunov_proxy": -0.04886661880701523,
+        "time_reversal_symmetry": 0.46493613719940186,
+        "topological_winding": 0.0
+      },
+      "ssm_params": {
+        "omega_mean": 1.0943114757537842,
+        "omega_std": 0.05330895632505417,
+        "gamma_mean": 0.8153347969055176,
+        "gamma_std": 0.08608956634998322
+      },
+      "emergence_narrative": "Source: lindblad | Dominant formalism: lindblad (0.56) | Secondary: hamiltonian (0.35) | OAT signal: raw_mean=0.0809 (threshold 2/3=0.6667), quantum advantage=NO | Penrose bi-twistor: null_residual=0.0000, winding=6.112, OR_crossings=0 | MBL level spacing r=0.3472 (Poisson=0.386, GOE=0.53) | BLP N_BLP=0.00 | EOM_fit=0.643 | Effective Hilbert dim (SVD)=1.19 | Lyapunov=-0.04887 | Learned SSM: omega_mean=1.0943 gamma_mean=0.8153",
+      "novel_narrative": null
+    },
+    "penrose_or": {
+      "source": "penrose_or",
+      "probe_results": {
+        "hamiltonian": {
+          "fit": 0.36609951143061953,
+          "eom_ratio": 1.2048110711121818,
+          "norm_variance": 0.2947290241718292,
+          "gamma_mean": 0.7693626880645752,
+          "eom_fit": 0.6639010629264338,
+          "name": "hamiltonian"
+        },
+        "syk": {
+          "fit": 0.27301873208438865,
+          "decay_late": 0.2279781997203827,
+          "gamma_vs_lyapunov": -0.4872744083404541,
+          "name": "syk"
+        },
+        "mbl": {
+          "fit": 0.2844069626648703,
+          "level_spacing_r": 0.36101439595222473,
+          "freq_disorder": 0.07915301620960236,
+          "sustain": 0.2279781997203827,
+          "name": "mbl"
+        },
+        "lindblad": {
+          "fit": 0.5809969680879553,
+          "N_BLP": 0.0,
+          "markov_fit": 1.0,
+          "gamma_uniformity": 0.4744323492050171,
+          "gamma_mean": 0.7693626880645752,
+          "decay": 0.2279781997203827,
+          "name": "lindblad"
+        },
+        "oat": {
+          "fit": 0.0003290292923524012,
+          "raw_mean": 0.09242299944162369,
+          "raw_min": -1.0260511636734009,
+          "raw_osc": 0.46111857891082764,
+          "margin_above_threshold": 0.0,
+          "name": "oat"
+        },
+        "penrose_or": {
+          "fit": 0.3333333333333333,
+          "null_surface_residual": 5.239821015104431e-36,
+          "spinor_winding": 6.459874830415774,
+          "or_threshold_crossings": 0,
+          "E_G_phenom": 0.01,
+          "collapse_spike": 4.306303628179457e-27,
+          "z_backflow": 3.64899900316188e-36,
+          "bi_twistor_norm_mean": 5.239821015104431e-36,
+          "note": "E_G is phenomenological, not gravitational. Null surface = topological probe.",
+          "name": "penrose_or"
+        },
+        "novel": {
+          "fit": 0.1706159085062262,
+          "effective_dim": 1.2057139873504639,
+          "level_spacing_r": 0.36101439595222473,
+          "lyapunov_proxy": -0.045049174178031164,
+          "time_reversal_symmetry": 0.47595757246017456,
+          "topological_winding": 0.0,
+          "name": "novel"
+        }
+      },
+      "ranked_formalisms": [
+        [
+          "lindblad",
+          0.5809969680879553
+        ],
+        [
+          "hamiltonian",
+          0.36609951143061953
+        ],
+        [
+          "penrose_or",
+          0.3333333333333333
+        ],
+        [
+          "mbl",
+          0.2844069626648703
+        ],
+        [
+          "syk",
+          0.27301873208438865
+        ],
+        [
+          "novel",
+          0.1706159085062262
+        ],
+        [
+          "oat",
+          0.0003290292923524012
+        ]
+      ],
+      "dominant": "lindblad",
+      "dominant_score": 0.5809969680879553,
+      "secondary": "hamiltonian",
+      "secondary_score": 0.36609951143061953,
+      "penrose_bitwistor": {
+        "fit": 0.3333333333333333,
+        "null_surface_residual": 5.239821015104431e-36,
+        "spinor_winding": 6.459874830415774,
+        "or_threshold_crossings": 0,
+        "E_G_phenom": 0.01,
+        "collapse_spike": 4.306303628179457e-27,
+        "z_backflow": 3.64899900316188e-36,
+        "bi_twistor_norm_mean": 5.239821015104431e-36,
+        "note": "E_G is phenomenological, not gravitational. Null surface = topological probe."
+      },
+      "oat_analysis": {
+        "fit": 0.0003290292923524012,
+        "raw_mean": 0.09242299944162369,
+        "raw_min": -1.0260511636734009,
+        "raw_osc": 0.46111857891082764,
+        "margin_above_threshold": 0.0
+      },
+      "novel_geometry": {
+        "fit": 0.1706159085062262,
+        "effective_dim": 1.2057139873504639,
+        "level_spacing_r": 0.36101439595222473,
+        "lyapunov_proxy": -0.045049174178031164,
+        "time_reversal_symmetry": 0.47595757246017456,
+        "topological_winding": 0.0
+      },
+      "ssm_params": {
+        "omega_mean": 1.065887451171875,
+        "omega_std": 0.07915301620960236,
+        "gamma_mean": 0.7693626880645752,
+        "gamma_std": 0.07456362247467041
+      },
+      "emergence_narrative": "Source: penrose_or | Dominant formalism: lindblad (0.58) | Secondary: hamiltonian (0.37) | OAT signal: raw_mean=0.0924 (threshold 2/3=0.6667), quantum advantage=NO | Penrose bi-twistor: null_residual=0.0000, winding=6.460, OR_crossings=0 | MBL level spacing r=0.3610 (Poisson=0.386, GOE=0.53) | BLP N_BLP=0.00 | EOM_fit=0.664 | Effective Hilbert dim (SVD)=1.21 | Lyapunov=-0.04505 | Learned SSM: omega_mean=1.0659 gamma_mean=0.7694",
+      "novel_narrative": null
+    }
+  }
+}

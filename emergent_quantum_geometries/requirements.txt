@@ -1,0 +1,17 @@
+# Core Machine Learning & Auto-Diff
+jax>=0.4.13
+jaxlib>=0.4.13
+flax>=0.7.0
+optax>=0.1.7
+
+# Quantum Physics & Many-Body Simulations
+netket>=3.9.0
+qutip>=4.7.2
+
+# Scientific Computing & Data Processing
+numpy>=1.24.3
+scipy>=1.10.1
+pandas>=2.0.3
+
+# Hardware Profiling
+tensorboard>=2.13.0
