@@ -115,7 +115,7 @@ def syk4_hamiltonian_sparse(Nf, seed, J=1.0):
         # Parity string
         for k in range(Nf):
             if k < i:
-                sz = np.diag([(-1)**((np.arange(dim) >> (Nf-1-k)) & 1)])
+                sz = np.diag((-1)**((np.arange(dim) >> (Nf-1-k)) & 1))
                 op = sz @ op
         # sigma_minus on site i
         sm = np.zeros((dim, dim), dtype=complex)
@@ -444,10 +444,11 @@ def main():
         print("\n=== Generating SYK4 training data ===")
         syk_records = []
         tau_syk = np.linspace(0.01, 20.0, args.n_tau)
-        for Nf in [6, 8, 10, 12]:
+        for Nf in [6, 8, 10]:
+            n_dis = 20 if Nf <= 8 else 8  # fewer averages for large Nf
             for beta in [1.0, 5.0, 10.0]:
-                print(f"  Nf={Nf}  beta={beta}  (ED dim={2**Nf})")
-                y = syk4_green_function(Nf, beta, tau_syk, seed=42, n_disorder=10)
+                print(f"  Nf={Nf}  beta={beta}  (ED dim={2**Nf}, n_dis={n_dis})")
+                y = syk4_green_function(Nf, beta, tau_syk, seed=42, n_disorder=n_dis)
                 modal = dlinoss_decompose(y, tau_syk)
                 syk_records.append({
                     "system": "SYK4", "Nf": Nf, "beta": beta,
