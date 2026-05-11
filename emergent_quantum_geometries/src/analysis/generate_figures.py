@@ -13,7 +13,7 @@ import matplotlib.cm as cm
 from pathlib import Path
 
 # ── Load results ──────────────────────────────────────────────────────────────
-with open("jila_oat_exact_results.json") as f:
+with open("results/simulation/jila_oat_exact_results.json") as f:
     data = json.load(f)
 
 results = data["results"]
