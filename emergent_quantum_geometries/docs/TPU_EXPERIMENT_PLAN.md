@@ -2,7 +2,7 @@
 ## Hypothesis, Methodology, and Results
 
 **Date:** 2026-05-11  
-**Hardware:** `chronos-alice` — v4-8 on-demand, `us-central2-b`  
+**Hardware:** `chronos-eve` — v6e-8 spot, `europe-west4-a`  
 **Commit:** `tpu_dlinoss_training_gen.py` @ `6bebc98`
 
 ---
@@ -113,7 +113,7 @@ K_eff=1 and γ_dom=4Γ to 4 decimal places for every (N,Γ) pair. **H1 confirmed
 | 10 | 5.0 | 6 | 0.1691 |
 | 10 | 10.0 | 6 | 0.6702 |
 
-K_eff=6 (maximum) for ALL Nf and β — saturated multi-mode scrambling. **H2 confirmed.** The singular value spectrum is flat (flatness ≈ 1). γ_dom does not follow the simple 1/β Lyapunov prediction, indicating finite-N effects dominate at these system sizes.
+K_eff=6 (maximum, **saturation ceiling**) for ALL Nf and β. The singular value spectrum is approximately flat. γ_dom does not follow the simple 1/β Lyapunov prediction — finite-N effects dominate. **Interpretation:** SYK trajectories exhibit robust multi-mode structure distinct from Lindblad-like dynamics. Lyapunov scaling, conformal structure, and maximal chaos are NOT confirmed. The K_eff=6 saturation is a technical concern: it is indistinguishable from a truncation artifact without threshold sensitivity analysis (see §5.6).
 
 ### 4.3 XXZ/MBL — 12 records
 
@@ -142,9 +142,9 @@ K_eff=1 and γ_dom≈0 for ALL N and g/g_c including at the phase transition. **
 
 The OAT Lindblad witness signal is a perfect single-mode decaying exponential: K_eff=1, γ_dom=4Γ, across all N∈{2,...,64} and all Γ∈{0.001,...,0.1}. This is the strongest result: the D-LinOSS fingerprint of Lindblad dephasing is unique and clean.
 
-### 5.2 H2 (SYK4 Scrambling) — ✅ Confirmed (K_eff), ⚠️ Partial (Lyapunov scaling)
+### 5.2 H2 (SYK4 Multi-mode Structure) — ⚠️ Partial
 
-K_eff=6 (saturated maximum) for all SYK4 runs confirms the multi-mode scrambling hypothesis. The singular value flatness ≈ 1 confirms non-trivial mode competition. The Lyapunov scaling γ_dom ~ J/N_f^{1.5} is NOT confirmed at these system sizes — finite-N effects dominate and γ_dom is non-monotone in β. Larger N_f (N_f ≥ 16) would be needed to see the 1/β Lyapunov scaling.
+SYK4 trajectories exhibit robust multi-mode structure distinct from Lindblad-like dynamics (K_eff=6 vs K_eff=1 for OAT). However **H2 is not confirmed** in the strong sense: Lyapunov scaling, conformal structure, and maximal chaos diagnostics were NOT recovered. K_eff saturates at the truncation ceiling (6) for ALL complex systems — SYK, ergodic XXZ, and MBL XXZ alike. This saturation is the primary open technical question (§5.6).
 
 ### 5.3 H3 (MBL Imbalance) — ✅ Confirmed via (γ_dom, I_inf), ❌ Not via K_eff
 
@@ -165,9 +165,28 @@ The central hypothesis that Dicke would fall between OAT and SYK is wrong. At N�
 
 The (K_eff, γ_dom) pair cleanly separates all four universality classes. The K_eff axis separates "simple" (1) from "complex" (6); the γ_dom axis separates decaying from oscillatory within each class.
 
-### 5.5 Next Steps
+### 5.5 H4 Falsification — The Primary Scientific Result
 
-1. **Analytical:** Prove that Dicke γ_dom→finite as N→∞ (large-N thermalization). Rerun Dicke at N=20–50 to test.
-2. **TPU Run 2:** SYK4 at N_f∈{16,20} to verify Lyapunov scaling γ_dom~1/β. Requires v4 (higher memory).
-3. **Paper:** Add D-LinOSS Appendix A with the 2D fingerprint table as the primary result.
-4. **Classifier:** Train a simple logistic regression on (K_eff, γ_dom, I_inf) to classify unknown time series — 89-record library is sufficient for 3-class classification (OAT/SYK/XXZ).
+The falsification of H4 is the most scientifically mature outcome. A prediction was made, signatures were defined, a held-out system was tested, the prediction failed, and the embedding geometry was updated. The revised 2D fingerprint (K_eff, γ_dom) is a stronger, more falsifiable claim than the original 1D complexity axis. The framework was not forced to fit the data post-hoc; the embedding hypothesis was revised.
+
+### 5.6 K_eff Saturation — Critical Open Problem
+
+K_eff=6 for SYK4, ergodic XXZ, and MBL XXZ. This may be:
+- A **physical signature** (all complex quantum dynamics require ≥6 modes)
+- A **truncation artifact** (the rank threshold 10^{-3} × σ_1 always admits 6 modes)
+
+**Required analysis before any publication claim about K_eff:**
+1. Threshold sweep: rerun with cutoffs {10^{-2}, 10^{-3}, 10^{-4}} and plot K_eff vs. cutoff
+2. Rank scaling: allow K_max ∈ {4, 8, 12, 16} and check if K_eff saturates at K_max
+3. Information criterion: add MDL/BIC penalty and recompute effective rank
+4. Noise injection: add 1% Gaussian noise to y(τ) and test K_eff stability
+
+Until this analysis is done, **all K_eff claims beyond K=1 should be stated as preliminary**.
+
+### 5.7 Next Experiments
+
+1. **K_eff threshold sensitivity** (local, CPU): run `threshold_sweep.py` with 4 cutoff values on the 89-record library
+2. **Dicke large-N**: rerun Dicke at N=20–50 on v4 TPU to test whether γ_dom→finite at large N
+3. **SYK4 large-Nf**: N_f∈{16,20} on v4 to test Lyapunov scaling — requires ~16GB memory
+4. **Classifier**: logistic regression on (K_eff, γ_dom, I_inf) with leave-one-out CV on 89 records
+5. **Teleportation proof**: close-form F_naive derivation + JILA experimental protocol (Sec. III of paper)
