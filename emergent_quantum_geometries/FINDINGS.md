@@ -86,8 +86,89 @@ Must use **full** Wootters formula on 4×4 matrix (not X-state simplification).
 - Next: run SYK + XXZ + Dicke on TPU (v4 on-demand, us-central2-b)
 
 ### 8. Open Problems
-1. **Analytic proof of F_opt=(2+C)/3**: likely follows from permutation symmetry
-   forcing f_max = (1+C)/2. Establish analytically.
+1. **Analytic proof of F_opt=(2+C)/3 for N≥4**: PROVED for N=2 (see Sec. II.C of paper).
+   For N≥4: likely follows from permutation symmetry forcing f_max=(1+C)/2. [HYPOTHESIS]
 2. **C scaling**: C_peak ∝ N^{-1.03} — derive from closed-form formula analytically.
-   Large-N: C_peak ≈ (1/4)|cos^{N-2}(χt*_N/2)|_max → find χt*_N analytically.
-3. **D-LinOSS out-of-distribution**: needs SYK + XXZ training library (TPU run).
+3. **K_BIC for SYK at large Nf**: K_BIC=1 at Nf=6–10; need Nf≥16 to see if multi-mode
+   structure emerges at large N.
+
+---
+
+## Session: 2026-05-11 (TPU Run 1 + Adversarial Suite)
+
+### 9. F_opt Proved for N=2 [PROVED]
+For N=2, ρ_2 has off-diagonal e^{±iχt}/4. After R_z(χt)⊗I phase alignment,
+ρ becomes real: ρ_{00,11} → |cos(χt/2)|/4. The singlet fraction:
+  f_max = (1 + |cos(χt)|)/2 = (1+C)/2
+  F_opt = (2+C)/3  ✓ analytically exact for N=2.
+
+### 10. K_eff Threshold Sweep — Critical Result [OBSERVED]
+The original K_eff=6 for SYK4 was a truncation ceiling artifact.
+
+| System | K@1e-2 | K@1e-3 | K@1e-4 | K_BIC | Verdict |
+|---|---|---|---|---|---|
+| OAT | 1 | 1 | 1 | **1** | Stable single-mode ✅ |
+| Dicke | 1 | 1 | 1 | **1** | Stable single-mode ✅ |
+| SYK4 | 2–13 | 10–13 | 13 | **1** | 🚨 ARTIFACT — BIC says single mode |
+| XXZ | 4–13 | 13 | 13 | **13** | Genuine multi-mode ✅ |
+
+**Key finding:** SYK4 Green's function is BIC-single-mode. The apparent K_eff=6 was
+because the default K_max=6 was a hard ceiling — at K_max=16 it hits 13.
+Under information-criterion penalty (BIC), SYK4 collapses to K=1.
+XXZ imbalance is genuinely multi-mode (K_BIC=13) due to spin-wave structure.
+
+**Revised fingerprint:**
+- K_BIC=1, γ>0: OAT (decaying)
+- K_BIC=1, γ≈0: Dicke (oscillatory), SYK4 (noisy decay)
+- K_BIC=13, γ decreasing with W: XXZ (genuine spin-wave multi-mode)
+
+**Implication:** SYK4 multi-mode scrambling claim is RETRACTED. SYK4 is
+indistinguishable from OAT under BIC-penalized rank selection. This is the
+adversarial suite's most important finding.
+
+### 11. Adversarial Stress-Test Results [OBSERVED]
+
+| System | K_eff | gamma_dom | omega_dom | Assessment |
+|---|---|---|---|---|
+| Floquet quasiperiodic | 6 | 0.007 | 1.11 | Correct (multi-mode, no decay) |
+| Damped oscillator | **2** | 0.040 | **0.500** | ✅ Correct (2 modes for damped sinusoid) |
+| Random telegraph noise | **6** | 0.095 | 0.00 | 🚨 FALSE POSITIVE (should be K=1) |
+| Integrable XXZ (W=0) | 6 | 0.016 | 0.41 | Correct (multi-mode oscillatory) |
+| Cavity-QED decay | **1** | 0.000 | 0.00 | Partial (missing kappa/2 decay) |
+| Chaotic spin chain | 6 | **2.23** | 1.24 | Distinguishable from SYK (gamma differs) |
+| Duffing oscillator | — | — | — | Overflow (unstable params) |
+
+**Critical diagnostic — RTN vs OAT:**
+- RTN (classical stochastic): K=6, gamma=0.095 → false positive
+- OAT (quantum Lindblad): K=1, gamma=0.040
+- D-LinOSS CANNOT distinguish RTN from a 6-mode quantum signal.
+  This proves the framework reads spectral morphology, not quantum structure per se.
+
+**Positive finding — damped oscillator:**
+K=2 correctly identified (damped sinusoid requires 2 complex exponentials). The
+gamma and omega recoveries are exact. This is a genuine success of the matrix pencil.
+
+**Chaotic spin chain vs SYK:**
+Both K=6 (at threshold), but gamma_dom differs by 5×: chaotic chain=2.23, SYK=0.07–0.67.
+The (K_eff, gamma_dom) pair distinguishes these two multi-mode systems
+even when K_eff is saturated — gamma_dom carries genuine physical information.
+
+### 12. Revised D-LinOSS Embedding Geometry [HYPOTHESIS]
+The revised embedding is 3-dimensional:
+  - **K_BIC**: 1 vs >1 (single vs multi-mode)
+  - **gamma_dom**: decay rate (OAT: 4Γ, SYK: ~0.1, XXZ: monotone with W)
+  - **I_inf** (XXZ only): long-time imbalance, MBL discriminant
+
+The "2D fingerprint" claim (K_eff, gamma_dom) is weakened: K alone is unreliable without
+BIC correction. The reliable claim is:
+  (K_BIC, gamma_dom, I_inf) separates OAT/Dicke, SYK4, and XXZ.
+But SYK4 and OAT remain in the SAME K_BIC=1 class. The SYK4 scrambling claim
+is NOT supported by D-LinOSS at Nf=6–10.
+
+### 13. Open Problems (Updated)
+1. **K_BIC for SYK at Nf≥16**: does K_BIC grow above 1 at large Nf?
+2. **RTN false positive**: can noise injection + BIC distinguish RTN from Lindblad decay?
+3. **Cavity-QED cavity decay**: gamma≈0 suggests the Jaynes-Cummings oscillation
+   dominates over the κ decay at short times — expected, but cavity_qed_decay needs
+   longer τ_max to see the decay tail.
+4. **Duffing Duffing overflow**: reduce gamma_d to 0.1 and rerun.

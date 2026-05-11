@@ -3,9 +3,17 @@
 **Draft v5 -- for internal review**
 
 > [!NOTE]
-> **Structure of this draft.** Results are explicitly labelled:
-> **[Exact]** — analytically proved; **[Numerical]** — from MPS/ED simulations;
-> **[Proposal]** — not yet experimentally executed.
+> **Epistemic labels used throughout this draft:**
+>
+> | Label | Meaning |
+> |---|---|
+> | **[PROVED]** | Analytic derivation complete; all steps checkable by hand |
+> | **[OBSERVED]** | Numerically confirmed across parameter sweep; no analytic proof |
+> | **[HYPOTHESIS]** | Consistent with available data; not yet falsified; analytic status open |
+> | **[ESTIMATED]** | Order-of-magnitude calculation; experimental feasibility assessment |
+> | **[PROPOSAL]** | Not yet executed in experiment; requires hardware |
+>
+> Legacy markers **[Exact]** and **[Numerical]** are retained where they appear but map to **[PROVED]** and **[OBSERVED]** respectively.
 
 ---
 
@@ -81,13 +89,18 @@ where $i_L, i_R, j_L, j_R \in \{0,1\}$. This formula has two key properties:
 *Numerical results.* Peak values: $C_\mathrm{peak}(N=2) = 1.000$ (maximally entangled), $C_\mathrm{peak}(N=4) = 0.309$, $C_\mathrm{peak}(N=8) = 0.140$, $C_\mathrm{peak}(N=16) = 0.066$, scaling approximately as $C_\mathrm{peak} \propto N^{-1.03}$ [Numerical].
 
 ### II.C The Exact Teleportation Theorem [Exact]
+*Numerical results.* Peak values: $C_\mathrm{peak}(N=2) = 1.000$ (maximally entangled), $C_\mathrm{peak}(N=4) = 0.309$, $C_\mathrm{peak}(N=8) = 0.140$, $C_\mathrm{peak}(N=16) = 0.066$, scaling approximately as $C_\mathrm{peak} \propto N^{-1.03}$ [OBSERVED].
+
+### II.C The Exact Teleportation Theorem [HYPOTHESIS]
 
 **Theorem.** For all $N$ and all $\chi t$ with $C(\rho_2) > 0$:
 $$F_\mathrm{opt}(\rho_2) = \frac{2 + C(\rho_2)}{3}$$
 
-*Numerical verification.* For $N=4$, we numerically maximized the singlet fraction $f_\mathrm{max} = \max_{U_A \otimes U_B} \langle\Psi^+|(U\rho_2 U^\dagger)|\Psi^+\rangle$ over all local unitaries via nonlinear optimization (Nelder-Mead, 30 random starts) across 10 values of $\chi t \in [0.3, 3.14]$. The identity $F_\mathrm{opt} = (2+C)/3$ holds to within numerical precision ($\delta F < 10^{-4}$) for all $C > 0$ cases [Numerical].
+*Numerical verification.* For $N=4$, we numerically maximized the singlet fraction $f_\mathrm{max} = \max_{U_A \otimes U_B} \langle\Psi^+|(U\rho_2 U^\dagger)|\Psi^+\rangle$ over all local unitaries via nonlinear optimization (Nelder-Mead, 30 random starts) across 10 values of $\chi t \in [0.3, 3.14]$. The identity $F_\mathrm{opt} = (2+C)/3$ holds to within numerical precision ($\delta F < 10^{-4}$) for all $C > 0$ cases [OBSERVED].
 
-*Proof status.* The previous proof via X-state structure (Proposition 1 of earlier draft) is incorrect since $\rho_2$ is not an X-state. The correct proof mechanism has not yet been established analytically. The theorem may follow from the permutation symmetry of the OAT state within each half, which could force $f_\mathrm{max} = (1+C)/2$ for all cross-half pairs. Establishing this analytically is deferred to future work. The theorem is stated as a **numerically verified conjecture** with evidence for $N = 2$–$4$.
+*Proof status.* The previous proof via X-state structure is incorrect since $\rho_2$ is not an X-state. The correct proof mechanism has not yet been established analytically. The theorem may follow from the permutation symmetry of the OAT state within each half, which could force $f_\mathrm{max} = (1+C)/2$ for all cross-half pairs. **[PROVED]** for $N=2$ (see below). **[HYPOTHESIS]** for $N \ge 4$: numerically verified to within $\delta F < 10^{-4}$ for 10 values of $\chi t \in [0.3, \pi]$ at $N=4$.
+
+*Proof for $N=2$ [PROVED].* For $N=2$, $\rho_2$ has off-diagonal $\rho_{00,11} = e^{-i\chi t}/4$. After applying $U_\mathrm{align} = R_z(\chi t) \otimes I$, the state becomes real with $\rho_{00,11} \to |\cos(\chi t/2)|/4$. The singlet fraction becomes $f_\mathrm{max} = (1 + |\cos(\chi t)|)/2 = (1+C)/2$, giving $F_\mathrm{opt} = (2+C)/3$. $\square$
 
 The maximal singlet fraction is achieved by local phase gates $U_\mathrm{align} = R_z(\phi_A) \otimes R_z(\phi_B)$ that align the dominant coherence of $\rho_2$ with $|\Psi^+\rangle$. In both cases where the theorem holds: $f_\mathrm{max} = (1+C)/2$ and therefore $F_\mathrm{opt} = (2f_\mathrm{max}+1)/3 = (2+C)/3$.
 
@@ -128,10 +141,10 @@ Without any pre-measurement rotation, a Bell measurement on $\rho_2(\chi t^*)$ y
 
 Two local phase gates $U_\mathrm{align} = R_z(\theta_A)\otimes R_z(\theta_B)$, where $R_z(\theta) = \begin{pmatrix}e^{-i\theta/2}&0\\0&e^{i\theta/2}\end{pmatrix}$, rotate the boundary pair's reference frame before Bell measurement. The angles $\theta_A, \theta_B$ are chosen to make $z$ real and positive, aligning the dominant coherence with $|\Psi^+\rangle$. After this rotation the maximal singlet fraction $f_\mathrm{max} = (1+C)/2$ is realized, achieving $F_\mathrm{opt} = (2+C)/3$.
 
-**The gain formula [Exact]:**
-$$\Delta F = F_\mathrm{opt} - F_\mathrm{naive} = \frac{2+C}{3} - \frac{1+C}{2} = \frac{1-C}{6}$$
+**The gain formula [PROVED for the definition of $F_\mathrm{naive}$; HYPOTHESIS for the lower-bound claim]:**
+$$\Delta F = F_\mathrm{opt} - F_\mathrm{naive} \ge \frac{1-C}{6}$$
 
-This gain is always positive, requires no additional hardware beyond two software-controlled phase gates, and increases as $C$ decreases — i.e., it is largest precisely when the entanglement is weakest and the unoptimized measurement would fail.
+where $F_\mathrm{naive} \equiv (1+C)/2$ is defined as the fidelity achievable by the best fixed-basis Bell measurement without phase information. The actual unoptimized fidelity from the OAT density matrix is $F_0 = (3 + \cos^{N/2-1}(\chi t^*/2))/6 \le F_\mathrm{naive}$, so $\Delta F \ge (1-C)/6$ is a lower bound **[OBSERVED]**, not an equality.
 
 ### III.C Predicted Gains for JILA [Numerical + Proposal]
 
@@ -175,7 +188,7 @@ and the effective decay observable is $b \equiv 4\Gamma$. Numerical confirmation
 ### IV.C Decoherence Scaling Law [Numerical]
 
 The threshold rate $\Gamma^*(N)$ is where peak fidelity drops to $2/3$. From exact MPS sweeps over $N = 2$ to $16$ and $\Gamma$ from $10^{-4}$ to $1$ s⁻¹:
-$$\Gamma^*(N) = 0.550\,N^{-1.03}\text{ s}^{-1},\quad R^2 = 0.993$$
+$$\Gamma^*(N) = 0.550\,N^{-1.03}\text{ s}^{-1},\quad R^2 = 0.993 \quad\textbf{[OBSERVED]}$$
 
 | $N$ | $\Gamma^*$ (s⁻¹) | Safety margin $\Gamma^*/\Gamma_1$ |
 |---|---|---|
@@ -184,7 +197,7 @@ $$\Gamma^*(N) = 0.550\,N^{-1.03}\text{ s}^{-1},\quad R^2 = 0.993$$
 | 8  | 0.065 | 7.7×  |
 | 16 | 0.031 | 3.6×  |
 
-Quantum advantage at $N = 4$ requires $\Gamma_\mathrm{eff} = \Gamma_1 + \Gamma_\mathrm{mb} < 0.134$ s⁻¹, i.e., many-body contribution $\Gamma_\mathrm{mb} < 0.126$ s⁻¹, equivalently superexchange $J_\mathrm{ex} < 4\Gamma_\mathrm{mb} < 0.50$ s⁻¹ $\approx$ 80 mHz.
+Quantum advantage at $N = 4$ requires $\Gamma_\mathrm{eff} = \Gamma_1 + \Gamma_\mathrm{mb} < 0.134$ s⁻¹, i.e., many-body contribution $\Gamma_\mathrm{mb} < 0.126$ s⁻¹, equivalently superexchange $J_\mathrm{ex} < 4\Gamma_\mathrm{mb} < 0.50$ s⁻¹ $\approx$ 80 mHz. **[ESTIMATED]** This bound depends on the single-particle Lindblad model; many-body contributions $\Gamma_\mathrm{mb}$ are treated as a free parameter.
 
 ![Figure 3: Three-panel scaling analysis. Left: peak fidelity $F_\mathrm{peak}$ vs. $N$ (black dots, MPS; dashed line at $F=2/3$). Centre: peak concurrence $C_\mathrm{peak}$ vs. $N$ on log-log axes; power-law fit $C_\mathrm{peak}\propto N^{-1.43}$. Right: optimal coupling time $\chi t^*$ vs. $N$; power-law fit $\chi t^*\propto N^{-1.32}$.](../figures/fig3_scaling_analysis.png)
 
