@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 """
 tpu_dlinoss_training_gen.py
 ----------------------------
@@ -37,62 +37,60 @@ print(f"Devices: {jax.devices()}")
 # 1.  OAT WITNESS TIME SERIES  (analytic + exact MPS)
 # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
-def oat_boundary_coherences(N: int, chi_t_vals):
+
+# ═══════════════════════════════════════════════════════════════
+# 1.  OAT BOUNDARY DENSITY MATRIX  (exact closed-form, all N)
+# ═══════════════════════════════════════════════════════════════
+
+def oat_rho2_exact(N, chi_t):
     """
-    Returns |z(chi_t)|, |w(chi_t)| for OAT boundary pair.
-    Uses the exact MPS automaton formula.
-    z = rho_{00,11},  w = rho_{01,10}
+    Exact 4x4 boundary-pair density matrix for OAT state.
+    Pair = one atom from left half + one from right half (all equivalent).
+    Formula: rho_{(iL,iR),(jL,jR)} = (1/4)
+      * exp(-i*chi_t*[(iL-1/2)(iR-1/2)-(jL-1/2)(jR-1/2)])
+      * cos^{N/2-1}((iR-jR)*chi_t/2) * cos^{N/2-1}((iL-jL)*chi_t/2)
+    NOT an X-state. Diagonal = 1/4. O(1) compute, valid for all N.
     """
-    # Build all 2^N bitstrings; split into left/right halves
-    half = N // 2
-    idx = np.arange(2**N, dtype=np.int32)
-    left  = (idx >> half) & ((1 << half) - 1)   # upper half bits
-    right = idx & ((1 << half) - 1)              # lower half bits
+    k = N // 2 - 1
+    rho = np.zeros((4, 4), dtype=complex)
+    states = [(0,0),(0,1),(1,0),(1,1)]
+    for ri, (iL,iR) in enumerate(states):
+        for ci, (jL,jR) in enumerate(states):
+            ph = np.exp(-1j*chi_t*((iL-0.5)*(iR-0.5)-(jL-0.5)*(jR-0.5)))
+            fL = np.cos((iR-jR)*chi_t/2)**k
+            fR = np.cos((iL-jL)*chi_t/2)**k
+            rho[ri,ci] = 0.25 * ph * fL * fR
+    return rho
 
-    # Magnetization of each half  (count 1-bits minus count 0-bits) / 2
-    def mag(x, n):
-        bits = ((x[:, None] >> np.arange(n)[None, :]) & 1)
-        return bits.sum(1) - (n - bits.sum(1))   # 2*(n_ones) - n
 
-    mA = mag(left,  half).astype(np.float32) / 2
-    mB = mag(right, half).astype(np.float32) / 2
+def wootters_concurrence(rho):
+    """Wootters concurrence for general 2-qubit mixed state."""
+    sy = np.array([[0,-1j],[1j,0]])
+    sysy = np.kron(sy,sy)
+    R = rho @ sysy @ rho.conj() @ sysy
+    ev = np.sqrt(np.maximum(np.sort(np.real(np.linalg.eigvals(R)))[::-1],0))
+    return float(max(0.0, ev[0]-ev[1]-ev[2]-ev[3]))
 
-    results = []
-    for chi_t in chi_t_vals:
-        phases = np.exp(-1j * chi_t * mA * mB) / (2**N)
 
-        # z = rho_{00,11}: both boundary spins (s[0]=0,s[N-1]=0) vs (1,1)
-        # boundary = (bit 0 of right, bit half-1 of left)
-        left_msb  = (left  >> (half - 1)) & 1   # leftmost atom
-        right_lsb = right & 1                    # rightmost atom
-
-        mask_00 = (left_msb == 0) & (right_lsb == 0)
-        mask_11 = (left_msb == 1) & (right_lsb == 1)
-        mask_01 = (left_msb == 0) & (right_lsb == 1)
-        mask_10 = (left_msb == 1) & (right_lsb == 0)
-
-        phi_00 = phases[mask_00]
-        phi_11 = phases[mask_11]
-        phi_01 = phases[mask_01]
-        phi_10 = phases[mask_10]
-
-        z = np.sum(np.conj(phi_00)) * np.sum(phi_11) * 2**N
-        w = np.sum(np.conj(phi_01)) * np.sum(phi_10) * 2**N
-
-        results.append((abs(z), abs(w)))
-    return np.array(results)   # shape (len(chi_t_vals), 2)
-
+def oat_peak_concurrence(N, chi_t_grid):
+    """Find peak Wootters concurrence and optimal chi_t."""
+    C_vals = np.array([wootters_concurrence(oat_rho2_exact(N,ct)) for ct in chi_t_grid])
+    idx = int(np.argmax(C_vals))
+    return float(C_vals[idx]), float(chi_t_grid[idx])
 
 def oat_witness_series(N, chi_t_star, Gamma, tau_vals):
     """
-    Lindblad-decayed witness at optimal OAT coupling time.
-    y(tau) = Tr[W rho2(tau)] = (1/4 - r) * exp(-4*Gamma*tau)
-    where r = max(|z|,|w|) at chi_t_star.
+    Lindblad-decayed entanglement witness time series.
+    y(tau) = (1/4 - f_singlet) * exp(-4*Gamma*tau)
+    where f_singlet = <Psi+|rho2(chi_t_star)|Psi+>.
+    Decoherence exponent: -2*Gamma*d_H*tau with d_H=2 for boundary coherences.
     """
-    coh = oat_boundary_coherences(N, [chi_t_star])
-    r = float(np.max(coh[0]))
-    y0 = 0.25 - r                    # initial witness value (negative = entangled)
-    return y0 * np.exp(-4 * Gamma * tau_vals)
+    rho0 = oat_rho2_exact(N, chi_t_star)
+    psi_p = np.array([0, 1, 1, 0]) / np.sqrt(2)
+    f_singlet = float(np.real(psi_p @ rho0 @ psi_p))
+    y0 = 0.25 - f_singlet
+    return y0 * np.exp(-4.0 * Gamma * tau_vals)
+
 
 
 # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
@@ -417,30 +415,28 @@ def main():
     tau_vals = np.linspace(0.01, args.tau_max, args.n_tau)
     results  = {}
 
-    # â”€â”€ OAT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    # ── OAT ─────────────────────────────────────────────────────
     if "oat" in args.systems:
         print("\n=== Generating OAT training data ===")
         oat_records = []
-        for N in [2, 4, 6, 8, 12, 16, 24, 32]:
-            # Find optimal chi_t
-            chi_t_grid = np.linspace(0.1, 6.0, 60)
-            coh = oat_boundary_coherences(N, chi_t_grid)
-            r_vals = np.max(coh, axis=1)
-            chi_t_star = chi_t_grid[np.argmax(r_vals)]
-            C_peak = 2 * max(0, float(np.max(r_vals)) - 0.25)
-
-            for Gamma in [0.001, 0.005, 0.01, 0.05]:
+        chi_t_grid = np.linspace(0.05, 6.0, 120)
+        for N in [2, 4, 6, 8, 12, 16, 24, 32, 48, 64]:
+            C_peak, chi_t_star = oat_peak_concurrence(N, chi_t_grid)
+            for Gamma in [0.001, 0.005, 0.01, 0.05, 0.10]:
                 y = oat_witness_series(N, chi_t_star, Gamma, tau_vals)
                 modal = dlinoss_decompose(y, tau_vals)
-                record = {
+                gdom = float(modal["gamma_k"][0]) if len(modal["gamma_k"]) else 0
+                oat_records.append({
                     "system": "OAT", "N": N, "chi_t_star": chi_t_star,
-                    "Gamma": Gamma, "C_peak": C_peak,
-                    "y": y, **{k: modal[k] for k in ["K_eff","gamma_k","omega_k","A_k"]}
-                }
-                oat_records.append(record)
-                print(f"  N={N:2d}  chi_t*={chi_t_star:.3f}  C={C_peak:.4f}"
-                      f"  Gamma={Gamma:.3f}  K_eff={modal['K_eff']}"
-                      f"  gamma_dom={modal['gamma_k'][0]:.4f}  (expect {4*Gamma:.4f})")
+                    "Gamma": Gamma, "C_peak": C_peak, "y": y.tolist(),
+                    "K_eff": int(modal["K_eff"]),
+                    "gamma_k": modal["gamma_k"].tolist(),
+                    "omega_k": modal["omega_k"].tolist(),
+                    "A_k": modal["A_k"].tolist(),
+                })
+                Ke = modal["K_eff"]
+                print(f"  N={N:2d} chi_t*={chi_t_star:.3f} C={C_peak:.4f}"
+                      f" Gamma={Gamma:.3f} K_eff={Ke} gdom={gdom:.4f} exp={4*Gamma:.4f}")
         results["OAT"] = oat_records
 
     # â”€â”€ SYK â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
