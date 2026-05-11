@@ -265,15 +265,34 @@ OAT: Kitagawa & Ueda [PRA **47**, 5138 (1993)]. Spin-squeezing teleportation: Bo
 
 ---
 
-## Appendix A: Dynamical Model-Selection Framework (Preliminary) [Numerical]
+## Appendix A: Dynamical Model-Selection Framework — Proof of Concept [Numerical]
 
-The D-LinOSS framework decomposes the witness time series $\{\mathrm{Tr}[W\rho_2(\tau_j)]\}$ into exponentially damped modes $y(\tau) \approx \sum_k A_k e^{-\gamma_k\tau}\cos(\omega_k\tau+\phi_k)$ via the matrix pencil method, and classifies the resulting mode structure as:
+### A.1 Framework and Current Implementation
 
-- **Lindblad-like:** $K_\mathrm{eff} = 1$, $\gamma_{k,\mathrm{dom}} \approx 4\Gamma_1$. Calibrated: $b = 4.000\pm0.001$.
-- **Scrambling-like:** $K_\mathrm{eff} \ge 2$, flat amplitude spectrum. Calibrated on SYK$_4$ retarded Green's function $G_R(t)$ (averaged OTOC insufficient; gives $K_\mathrm{eff}=1$).
-- **Localization-like:** $K_\mathrm{eff} = 1$--$2$, $\gamma_{k,\mathrm{dom}} \ll 4\Gamma_1$. Calibrated on disordered XXZ ($L=12$, $W/J=5$): $\mathcal{I}(\infty) = 0.613$.
+The D-LinOSS framework decomposes the witness time series $\{\mathrm{Tr}[W\rho_2(\tau_j)]\}$ into exponentially damped modes via the matrix pencil method [Hua & Sarkar, 1990]:
+$$y(\tau) \approx \sum_k A_k\, e^{-\gamma_k\tau}\cos(\omega_k\tau + \phi_k)$$
+where $A_k > 0$ are mode amplitudes, $\gamma_k \ge 0$ are decay rates, and $\omega_k$ are oscillation frequencies. The effective mode count $K_\mathrm{eff}$ is the number of singular values of the Hankel data matrix above a noise threshold. The current implementation compares the extracted mode structure $(\omega_k, \gamma_k, A_k)$ against three calibrated reference signatures:
 
-**Important caveats:** (i) many physically distinct systems can produce similar mode structures; (ii) the three calibration systems are not sufficient for out-of-distribution claims; (iii) finite-size effects dominate at $N \le 16$; (iv) no Bayesian model comparison or cross-validation has been performed. D-LinOSS should be interpreted as a *coarse-grained dynamical classifier*, not a physics oracle. Full validation is deferred to future work.
+| Class | $K_\mathrm{eff}$ | $\gamma_{k,\mathrm{dom}}$ | Calibration result |
+|---|---|---|---|
+| Lindblad-like | 1 | $\approx 4\Gamma_1$ | $b = 4.000 \pm 0.001$ |
+| Scrambling-like | $\ge 2$ | $\sim \lambda_L$; flat amplitude spectrum | SYK$_4$ retarded Green's function $G_R(t)$ |
+| Localization-like | 1--2 | $\ll 4\Gamma_1$ | disordered XXZ ($L=12$, $W/J=5$): $\mathcal{I}(\infty) = 0.613$ |
+
+Note: averaged OTOCs are insufficient for scrambling discrimination — they yield $K_\mathrm{eff}=1$ identical to Lindblad. The retarded Green's function $G_R(t) = -i\theta(t)\langle\{\chi_i(t),\chi_j(0)\}\rangle_\beta$ is required.
+
+### A.2 Architectural Limitation and Research Program
+
+The current implementation is **template matching**: it compares observed modal signatures against three pre-specified reference states, using residuals in $\gamma_k$ space as the comparison metric. The template vocabulary is closed — the classifier cannot identify a system outside its three reference classes, and there is no principled distance metric that respects the underlying quantum geometry.
+
+This is the correct proof-of-concept to establish that spectral decomposition of the witness time series *can* distinguish the three calibration regimes. The present calibration establishes:
+
+> The spectral decomposition of the witness time series can distinguish Lindblad ($b = 4.000$, $\gamma_{k,\mathrm{dom}} \approx 4\Gamma$), SYK-like scrambling ($K_\mathrm{eff} \ge 2$, uniform $\gamma_k$), and MBL-like localization ($\gamma_{k,\mathrm{dom}} \ll 4\Gamma_1$, $\mathcal{I}(\infty) \gg 0$) in controlled calibration experiments.
+
+The broader program — training D-LinOSS on a library of quantum time series large enough that the geometry of the learned representation space organically encodes dynamical symmetry classes, without pre-specified templates — constitutes a quantum analog of semantic embedding in natural language processing. In that program, proximity in learned $(\omega_k, \gamma_k)$ space corresponds to dynamical similarity, novel frameworks appear as isolated points rather than requiring human specification, and the distance from known clusters quantifies how exotic the dynamics are. The appropriate geometric structure on representation space should respect the Bures metric $d_B(\rho, \sigma) = \sqrt{2(1 - \sqrt{F(\rho,\sigma)})}$ or the quantum Fisher information metric on the manifold of dynamical maps.
+
+This direction — including validation on the Dicke model [Bullock *et al.*, 2026] as a held-out test of whether the geometry correctly places intermediate-coupling systems between Lindblad and scrambling clusters — is the subject of the companion paper.
 
 ---
 *Repository: `quantum-teleportation-results` branch, IllI/resonance.*
+
