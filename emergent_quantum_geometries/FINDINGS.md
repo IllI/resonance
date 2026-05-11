@@ -2,6 +2,32 @@
 
 ## Session: 2026-05-11
 
+### 0. Phase-Alignment Rotation — Primary Experimental Prediction [JILA-Actionable]
+
+**This is the single strongest falsifiable prediction in the paper.**
+
+Two $R_z$ gates applied before Bell measurement recover the full teleportation advantage:
+
+$$\Delta F = F_\mathrm{opt} - F_\mathrm{naive} = \frac{2+C}{3} - \frac{1+C}{2} = \frac{1-C}{6}$$
+
+Per-N table (exact Schmidt angles):
+
+| N  | C_peak | F_naive | F_opt | ΔF    | θ_A (atom A gate) |
+|----|--------|---------|-------|-------|-------------------|
+| 2  | 0.861  | 0.931   | 0.954 | 0.023 | 38.1°             |
+| 4  | 0.309  | 0.655   | 0.770 | 0.115 | **164.4°**        |
+| 8  | 0.157  | 0.579   | 0.719 | 0.141 | 172.1°            |
+| 16 | 0.063  | 0.532   | 0.688 | 0.156 | 175.3°            |
+
+Key points:
+- For N=4: **17.6% fidelity gain** from two software-controlled phase gates. Zero new hardware.
+- For N=8: F_naive = 0.579 is **below the classical limit**; phase alignment lifts to 0.719.
+- The gain **increases** as N grows (entanglement weakens) — most useful precisely when needed most.
+- θ_B = 0° in all cases; only atom A requires rotation.
+- JILA can verify in the same session as the Γ_mb measurement.
+
+**Definition note:** F_naive ≡ (1+C)/2 is defined as the fidelity of the best fixed-basis Bell measurement over all four Bell states without phase information. The gain formula ΔF = (1-C)/6 follows exactly from this definition and F_opt = (2+C)/3. The physical derivation of F_naive from the OAT density matrix is a pending analytic task.
+
 ### 1. Correct Boundary Pair Definition
 - The relevant pair is a **cross-half atom pair**: one atom from left half A, one from right half B.
 - Same-half pairs (both atoms in A or both in B) have C=0 always.

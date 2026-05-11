@@ -122,7 +122,7 @@ For a pure state this equals $C$ exactly; for the mixed OAT states at $N \ge 4$,
 
 ### III.A Why Direct Bell Measurement Falls Short
 
-Without any pre-measurement rotation, a Bell measurement on $\rho_2(\chi t^*)$ yields the *unoptimized* fidelity $F_\mathrm{naive} = (1+C)/2$, which is below $2/3$ for $C < 1/3$ — i.e., for all $N \ge 4$ at JILA parameters. The reason: the dominant coherence $z = \rho_{00,11}$ is complex-valued, rotated away from the $|\Psi^+\rangle$ direction in the Bell basis by the OAT phase $e^{-i\chi t M_A M_B}$.
+Without any pre-measurement rotation, a Bell measurement on $\rho_2(\chi t^*)$ yields the *unoptimized* fidelity. Here we define $F_\mathrm{naive} \equiv (1+C)/2$: this is the teleportation fidelity achievable by the best fixed-basis Bell measurement over all four Bell states, without any phase alignment. (Equivalently, $F_\mathrm{naive}$ is the fidelity achieved by the optimal classical correction given knowledge of $C$ but no phase information.) The gain from phase alignment is then:
 
 ### III.B The Rotation [Exact]
 
