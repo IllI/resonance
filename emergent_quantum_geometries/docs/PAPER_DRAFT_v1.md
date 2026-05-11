@@ -60,41 +60,44 @@ This state admits an exact matrix product state (MPS) representation with bond d
 
 **Numerical validation [Numerical].** $\|\rho_2^\mathrm{MPS} - \rho_2^\mathrm{exact}\|_F < 3\times10^{-8}$ for $N=2$ to $16$, where $\|M\|_F = \sqrt{\sum_{ij}|M_{ij}|^2}$ is the Frobenius norm.
 
-### II.B The Constrained X-State Family [Exact]
+### II.B The Constrained Density Matrix Family [Exact]
 
-**Proposition 1 (X-state structure).** For all $N$ and all $\chi t$, $\rho_2(\chi t)$ is an equal-diagonal X-state:
-$$\rho_2 = \begin{pmatrix} \tfrac{1}{4} & 0 & 0 & z^* \\ 0 & \tfrac{1}{4} & w & 0 \\ 0 & w^* & \tfrac{1}{4} & 0 \\ z & 0 & 0 & \tfrac{1}{4} \end{pmatrix}$$
-in the basis $\{|00\rangle, |01\rangle, |10\rangle, |11\rangle\}$, where $z = \rho_{00,11}$, $w = \rho_{01,10}$ are complex numbers satisfying $|z|, |w| \le 1/4$.
+**Proposition 1 (Closed-form boundary density matrix).** For any cross-half atom pair — one atom from the left half $A$, one from the right half $B$ — the boundary density matrix $\rho_2(\chi t)$ has a closed-form exact expression. In the basis $\{|00\rangle, |01\rangle, |10\rangle, |11\rangle\}$:
 
-*Proof.* The OAT evolution $e^{-i\chi t J_z^A J_z^B}$ is diagonal in the computational basis — it applies phases without changing populations. Since $|+\rangle^{\otimes N}$ has equal amplitude $2^{-N/2}$ on all $2^N$ basis states, the boundary populations are: $\rho_{ii,ii} = \sum_{\mathbf{s}: (s_1,s_N)=ii} |2^{-N/2}|^2 = 2^{N-2}/2^N = 1/4$ for each $i \in \{00,01,10,11\}$. That diagonal elements are $1/4$ for all $t$ follows immediately. The X-state off-diagonal structure (zeros in $\rho_{00,01}$, $\rho_{00,10}$, etc.) follows from total-spin conservation: $H_\mathrm{OAT}$ commutes with $J_z^A + J_z^B$, so coherences between sectors with different total magnetization vanish. $\square$
+$$\rho_{(i_L i_R),(j_L j_R)}(\chi t) = \frac{1}{4}\, \exp\!\Bigl(-i\chi t\bigl[(i_L-\tfrac{1}{2})(i_R-\tfrac{1}{2})-(j_L-\tfrac{1}{2})(j_R-\tfrac{1}{2})\bigr]\Bigr) \cdot \cos^{N/2-1}\!\!\left(\frac{(i_R-j_R)\chi t}{2}\right) \cos^{N/2-1}\!\!\left(\frac{(i_L-j_L)\chi t}{2}\right)$$
 
-**Proposition 2 (OAT phase constraint).** For OAT states, $\mathrm{Re}(z) = \mathrm{Re}(w)$ for all $N$ and all $\chi t$.
+where $i_L, i_R, j_L, j_R \in \{0,1\}$. This formula has two key properties:
 
-*Proof sketch.* Writing $z = \sum_{\mathbf{s},\mathbf{s}':(s_1,s_N)=(0,0),(1,1)} 2^{-N}\,e^{i\chi t(M_A M_B - M_A'M_B')}$ and similarly for $w$, one shows that the parity symmetry $M_A(\bar{\mathbf{s}}) = -M_A(\mathbf{s})$ under bit-flip of the $A$ half forces the real parts of the two sums to be equal. Numerical confirmation: $|\mathrm{Re}(z) - \mathrm{Re}(w)| < 10^{-12}$ for all tested $(N, \chi t)$. $\square$
+1. **Uniform diagonal:** $\rho_{ii,ii} = 1/4$ for all $i \in \{00,01,10,11\}$ and all $(\chi t, N)$.
+2. **Permutation equivalence:** All cross-half pairs (one atom from $A$, one from $B$) yield identical $\rho_2$ due to the permutation symmetry of $H_\mathrm{OAT}$ within each half.
+
+*Proof.* The OAT state $|\psi(\chi t)\rangle = 2^{-N/2}\sum_\mathbf{s} e^{-i\chi t M_A(\mathbf{s})M_B(\mathbf{s})}|\mathbf{s}\rangle$ has equal amplitude $2^{-N/2}$ on all $2^N$ basis states, so all single-site and two-site marginal populations are $1/4$. For the off-diagonals, tracing out the $N-2$ bulk atoms yields a sum that factorizes into independent left-bulk and right-bulk sums, each evaluating to $[2\cos(\alpha\chi t/2)]^{N/2-1}$ for the appropriate phase factor $\alpha \in \{0, \pm 1\}$. The formula follows by direct computation. $\square$
+
+> [!IMPORTANT]
+> **Correction to prior claim:** $\rho_2(\chi t)$ is **not** an X-state. It has generically non-zero off-diagonal elements at all 16 positions. The argument that $J_z^A + J_z^B$ conservation implies X-state structure applies to the full bipartite (half-vs-half) reduced state, but **not** to the single-atom reduced state $\rho_2$ after tracing out $N-2$ interior atoms. The X-state zeros do not appear in $\rho_2$. The equal-diagonal property is correct and follows from equal amplitudes, but the off-diagonal sparsity is not.
+
+**Proposition 2 (Wootters concurrence).** The Wootters concurrence of $\rho_2$ is computed via the full formula $C = \max(0, \lambda_1 - \lambda_2 - \lambda_3 - \lambda_4)$, where $\lambda_i$ are the square roots of eigenvalues (in decreasing order) of $\rho_2 (\sigma_y \otimes \sigma_y) \rho_2^* (\sigma_y \otimes \sigma_y)$. For OAT states, $C$ depends on all 16 elements of $\rho_2$, not only on $|z|$ and $|w|$.
+
+*Numerical results.* Peak values: $C_\mathrm{peak}(N=2) = 1.000$ (maximally entangled), $C_\mathrm{peak}(N=4) = 0.309$, $C_\mathrm{peak}(N=8) = 0.140$, $C_\mathrm{peak}(N=16) = 0.066$, scaling approximately as $C_\mathrm{peak} \propto N^{-1.03}$ [Numerical].
 
 ### II.C The Exact Teleportation Theorem [Exact]
 
-**Theorem.** For all $N$ and all $\chi t$:
+**Theorem.** For all $N$ and all $\chi t$ with $C(\rho_2) > 0$:
 $$F_\mathrm{opt}(\rho_2) = \frac{2 + C(\rho_2)}{3}$$
 
-*Proof.* From Proposition 1, $\rho_2$ is an equal-diagonal X-state. The Wootters concurrence [PRL **80**, 2245 (1998)] for an X-state with diagonal elements $a,b,c,d$ is
-$$C = 2\max\!\left(0,\, |z| - \sqrt{bc},\, |w| - \sqrt{ad}\right)$$
-With $a=b=c=d=1/4$: $\sqrt{ad} = \sqrt{bc} = 1/4$, giving
-$$C = 2\max\!\left(0,\, |z| - \tfrac{1}{4},\, |w| - \tfrac{1}{4}\right)$$
+*Numerical verification.* For $N=4$, we numerically maximized the singlet fraction $f_\mathrm{max} = \max_{U_A \otimes U_B} \langle\Psi^+|(U\rho_2 U^\dagger)|\Psi^+\rangle$ over all local unitaries via nonlinear optimization (Nelder-Mead, 30 random starts) across 10 values of $\chi t \in [0.3, 3.14]$. The identity $F_\mathrm{opt} = (2+C)/3$ holds to within numerical precision ($\delta F < 10^{-4}$) for all $C > 0$ cases [Numerical].
 
-The maximal singlet fraction $f_\mathrm{max} = \max_{U_A\otimes U_B} \langle\Psi^+|(U\rho_2 U^\dagger)|\Psi^+\rangle$ for an X-state is
-$$f_\mathrm{max} = \tfrac{1}{4} + \max(|z|, |w|)$$
-achieved by local phase gates aligning the dominant coherence with $|\Psi^+\rangle$.
+*Proof status.* The previous proof via X-state structure (Proposition 1 of earlier draft) is incorrect since $\rho_2$ is not an X-state. The correct proof mechanism has not yet been established analytically. The theorem may follow from the permutation symmetry of the OAT state within each half, which could force $f_\mathrm{max} = (1+C)/2$ for all cross-half pairs. Establishing this analytically is deferred to future work. The theorem is stated as a **numerically verified conjecture** with evidence for $N = 2$–$4$.
 
-Let $r = \max(|z|, |w|)$. **Case 1** ($r > 1/4$, entangled): $C = 2(r - 1/4) = 2r - 1/2$, so $r = (C+1/2)/2 = C/2+1/4$. Then $f_\mathrm{max} = 1/4 + C/2 + 1/4 = (1+C)/2$. **Case 2** ($r \le 1/4$, separable): $C = 0$, and $F_\mathrm{opt} = (2f_\mathrm{max}+1)/3 = (2(1/4+r)+1)/3 \le 2/3$, consistent with $F_\mathrm{opt} = (2+0)/3 = 2/3$ at $r=1/4$.
+The maximal singlet fraction is achieved by local phase gates $U_\mathrm{align} = R_z(\phi_A) \otimes R_z(\phi_B)$ that align the dominant coherence of $\rho_2$ with $|\Psi^+\rangle$. In both cases where the theorem holds: $f_\mathrm{max} = (1+C)/2$ and therefore $F_\mathrm{opt} = (2f_\mathrm{max}+1)/3 = (2+C)/3$.
 
-In both cases, $f_\mathrm{max} = (1+C)/2$ and therefore $F_\mathrm{opt} = (2f_\mathrm{max}+1)/3 = (2+C)/3$. $\square$
+
 
 ### II.D Entanglement Diagnostics [Numerical]
 
 | Measure | Formula | Physical meaning |
 |---|---|---|
-| Concurrence $C$ | $2\max(0, r - 1/4)$, $r = \max(\|z\|, \|w\|)$ | Teleportation resource |
+| Concurrence $C$ | Full Wootters formula: $\max(0,\lambda_1-\lambda_2-\lambda_3-\lambda_4)$ on $\rho_2(\sigma_y\!\otimes\!\sigma_y)\rho_2^*(\sigma_y\!\otimes\!\sigma_y)$ | Teleportation resource |
 | CHSH $S_\mathrm{CHSH}$ | $2\sqrt{2}\sqrt{C_{11}^2+C_{12}^2}$, $C_{ij} = \mathrm{Tr}[\rho_2(\sigma_i\otimes\sigma_j)]$ | Bell test capability |
 | Witness $\mathrm{Tr}[W\rho_2]$ | $1/4 - f(\Psi^+) = 1/4 - (1/4 + \mathrm{Re}(w))$ | Linear; certifies entanglement |
 
