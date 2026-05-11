@@ -16,7 +16,7 @@ is an *exact* identity for this Hamiltonian family, not a numerical approximatio
 
 Open-system analysis under single-particle Lindblad dephasing -- anchored to the measured coherence time $T_2 = 118(9)$ s reported by Kim et al. (arXiv:2505.06444) -- shows that quantum advantage ($F > 2/3$) survives with safety margins of $4\times$ to $29\times$ over the single-particle dephasing rate for $N = 2$ to $16$. The threshold rate scales as $\Gamma^*(N) = 0.550 N^{-1.03}$ s$^{-1}$ ($R^2 = 0.993$), establishing a concrete decoherence budget for the experiment.
 
-![Figure 1: Fidelity vs chi*t](file:///c:/Users/cityz/IllI/newer_all/emergent_quantum_geometries/figures/fig1_fidelity_vs_chi_t.png)
+![Figure 1: Fidelity vs chi*t](../figures/fig1_fidelity_vs_chi_t.png)
 
 A quantum-classical hybrid loop controller converts raw $^{87}\text{Sr}$ bitstrings -- shots of the entanglement witness $W = I/4 - |\Psi^+\rangle\langle\Psi^+|$ -- into Schmidt correction angles, extracted many-body dephasing rate $\Gamma_{\text{mb}}$, framework identification (Lindblad / MBL / SYK), and updated fidelity prediction in under one second on TPU. Synthetic validation at $N = 4$ gives $F_{\text{predicted}} = 0.7687$, within 0.1% of the ideal 0.7696. Framework probes are calibrated on three physically distinct systems: Lindblad ($b = 4.000$), SYK ($K_{\text{eff}} = 2$), and MBL ($\alpha = 0.591$).
 
@@ -52,7 +52,7 @@ $$\max |\rho_2^{\text{MPS}} - \rho_2^{\text{exact}}|_F < 3 \times 10^{-8}$$
 
 confirming that the MPS construction is numerically exact to machine precision on TPU hardware. The computational advantage is substantial: for $N = 64$, the MPS requires bond dimension 33 and $O(N \times 33^2)$ operations, compared to $2^{64} \approx 10^{19}$ amplitudes for the full statevector.
 
-![Figure 2: Concurrence vs chi*t](file:///c:/Users/cityz/IllI/newer_all/emergent_quantum_geometries/figures/fig2_concurrence_vs_chi_t.png)
+![Figure 2: Concurrence vs chi*t](../figures/fig2_concurrence_vs_chi_t.png)
 
 ### II.B The U(1) Symmetry Theorem
 
@@ -91,7 +91,7 @@ With JILA's measured $T_2 = 118$ s ($\Gamma_1 \approx 0.0085$ s$^{-1}$), the saf
 | 8 | 0.065 | 7.7x |
 | 16 | 0.031 | 3.6x |
 
-![Figure 3: Scaling Analysis](file:///c:/Users/cityz/IllI/newer_all/emergent_quantum_geometries/figures/fig3_scaling_analysis.png)
+![Figure 3: Scaling Analysis](../figures/fig3_scaling_analysis.png)
 
 Quantum advantage is remarkably robust at the small system sizes $(N=4)$ targeted for the first experimental demonstration.
 
@@ -104,14 +104,36 @@ Quantum advantage is remarkably robust at the small system sizes $(N=4)$ targete
 The TPU digital twin operates as the classical intelligence in a quantum-classical hybrid loop. The $^{87}\text{Sr}$ apparatus at JILA provides the quantum hardware; the TPU processes and feeds back in real time.
 
 ```mermaid
-graph LR
-    A[JILA Sr-87] -- "shots" --> B[TPU Controller]
-    B -- "1. Reconstruct W" --> C[Witness Series]
-    C -- "2. D-LinOSS Fit" --> D[Spectral Modes]
-    D -- "3. Framework ID" --> E[Winner: Lindblad]
-    E -- "4. Extract Rate" --> F[Gamma_mb]
-    F -- "5. Compute Feedback" --> G[Angles theta_A, theta_B]
-    G -- "Feedback" --> A
+graph TD
+    subgraph Quantum_Hardware ["Quantum Hardware (JILA)"]
+        JILA["Sr-87 Optical Lattice"]
+    end
+
+    subgraph Classical_Intelligence ["Classical Intelligence (TPU)"]
+        TPU["TPU Digital Twin Controller"]
+        
+        subgraph Pipeline ["Processing Pipeline"]
+            W["1. Witness Reconstruction<br/>(Linear Trace)"]
+            Fit["2. D-LinOSS Fit<br/>(Spectral Decomposition)"]
+            ID["3. Framework ID<br/>(Lindblad/MBL/SYK)"]
+            Rate["4. Rate Extraction<br/>(Gamma_mb)"]
+            Angles["5. Feedback Logic<br/>(Optimal theta_A, theta_B)"]
+        end
+    end
+
+    JILA -- "Raw Bitstrings (Shots)" --> TPU
+    TPU --> W
+    W --> Fit
+    Fit --> ID
+    ID --> Rate
+    Rate --> Angles
+    Angles -- "Schmidt Rotation Control" --> JILA
+
+    %% Styling
+    style Quantum_Hardware fill:#161b22,stroke:#30363d,color:#e6edf3
+    style Classical_Intelligence fill:#0d1117,stroke:#30363d,color:#e6edf3
+    style JILA fill:#1f6feb,stroke:#58a6ff,color:#ffffff
+    style TPU fill:#238636,stroke:#3fb950,color:#ffffff
 ```
 
 The controller implements five steps:

@@ -38,13 +38,35 @@ Forget the equations for a moment. Here is what the code does in plain English:
 
 ```mermaid
 graph TD
-    A[JILA Sr-87 Apparatus] -- "raw bitstrings (shots)" --> B[TPU Controller]
-    B -- "Step 1: Invert shots" --> C[Witness Tr[Wρ]]
-    C -- "Step 2: D-LinOSS Fit" --> D[Spectral Modes (ω_k, γ_k)]
-    D -- "Step 3: Framework ID" --> E[Lindblad / SYK / MBL]
-    E -- "Step 4: Rate Extract" --> F[Gamma_mb]
-    F -- "Step 5: Compute Feedback" --> G[Angles θ_A, θ_B]
-    G -- "Feedback stream" --> A
+    subgraph Quantum_Hardware ["Quantum Hardware (JILA)"]
+        JILA["Sr-87 Optical Lattice"]
+    end
+
+    subgraph Classical_Intelligence ["Classical Intelligence (TPU)"]
+        TPU["TPU Digital Twin Controller"]
+        
+        subgraph Pipeline ["Processing Pipeline"]
+            W["1. Witness Reconstruction<br/>(Linear Trace)"]
+            Fit["2. D-LinOSS Fit<br/>(Spectral Decomposition)"]
+            ID["3. Framework ID<br/>(Lindblad/MBL/SYK)"]
+            Rate["4. Rate Extraction<br/>(Gamma_mb)"]
+            Angles["5. Feedback Logic<br/>(Optimal theta_A, theta_B)"]
+        end
+    end
+
+    JILA -- "Raw Bitstrings (Shots)" --> TPU
+    TPU --> W
+    W --> Fit
+    Fit --> ID
+    ID --> Rate
+    Rate --> Angles
+    Angles -- "Schmidt Rotation Control" --> JILA
+
+    %% Styling
+    style Quantum_Hardware fill:#161b22,stroke:#30363d,color:#e6edf3
+    style Classical_Intelligence fill:#0d1117,stroke:#30363d,color:#e6edf3
+    style JILA fill:#1f6feb,stroke:#58a6ff,color:#ffffff
+    style TPU fill:#238636,stroke:#3fb950,color:#ffffff
 ```
 
 ---
