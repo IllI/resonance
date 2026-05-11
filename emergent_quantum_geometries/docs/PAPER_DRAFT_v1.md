@@ -38,7 +38,7 @@ At JILA, $T_2 = 118(9)$ s has been demonstrated [Kim *et al.*, arXiv:2505.06444,
 
 A physically important observation motivates the choice of entanglement witness over Bell inequality: for $N \ge 4$, OAT boundary states occupy the *teleportation-useful but Bell-invisible* regime. The CHSH parameter -- defined as $S_\mathrm{CHSH} = \max_{\hat{a},\hat{a}',\hat{b},\hat{b}'} |\langle\hat{a}\otimes\hat{b}\rangle - \langle\hat{a}\otimes\hat{b}'\rangle + \langle\hat{a}'\otimes\hat{b}\rangle + \langle\hat{a}'\otimes\hat{b}'\rangle|$, where $\hat{a},\hat{a}',\hat{b},\hat{b}'$ are unit-vector measurement directions and $S > 2$ certifies entanglement via Bell inequality -- satisfies $S_\mathrm{CHSH} < 2$ for OAT boundary states with $N \ge 4$, despite $C > 0$.
 
-Accordingly, the entanglement witness $W = \frac{1}{4}\mathbb{I} - |\Psi^+\rangle\langle\Psi^+|$, whose expectation value $\mathrm{Tr}[W\rho_2] < 0$ is both necessary and sufficient to certify entanglement here, is the appropriate diagnostic. Unlike a Bell test, the witness is linear in $\rho_2$ and does not require the loophole-free measurement settings that would otherwise be needed to distinguish $C > 0$ from $S_\mathrm{CHSH} > 2$. Our controller is designed around this witness.
+The entanglement witness $W = \frac{1}{4}\mathbb{I} - |\Psi^+\rangle\langle\Psi^+|$, whose expectation value $\mathrm{Tr}[W\rho_2] < 0$ certifies entanglement, is the appropriate diagnostic for this regime: unlike a Bell test, it is linear in $\rho_2$ and does not depend on the choice of measurement settings. Our controller is designed around this witness.
 
 ### I.D Connection to the Dicke Model Experiment
 
