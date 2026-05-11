@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """
 tpu_dlinoss_training_gen.py
 ----------------------------
@@ -24,7 +24,7 @@ import scipy.linalg as la
 import scipy.sparse as sp
 import scipy.sparse.linalg as spla
 
-# â”€â”€ JAX â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# Ã¢â€â‚¬Ã¢â€â‚¬ JAX Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 import jax
 import jax.numpy as jnp
 from jax import jit, vmap
@@ -33,14 +33,14 @@ from functools import partial
 print(f"JAX backend: {jax.default_backend()}")
 print(f"Devices: {jax.devices()}")
 
-# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
 # 1.  OAT WITNESS TIME SERIES  (analytic + exact MPS)
+# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+
+
 # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-
-
-# ═══════════════════════════════════════════════════════════════
 # 1.  OAT BOUNDARY DENSITY MATRIX  (exact closed-form, all N)
-# ═══════════════════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 def oat_rho2_exact(N, chi_t):
     """
@@ -93,9 +93,9 @@ def oat_witness_series(N, chi_t_star, Gamma, tau_vals):
 
 
 
-# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
 # 2.  SYK4 RETARDED GREEN'S FUNCTION
-# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
 
 def syk4_hamiltonian_sparse(Nf, seed, J=1.0):
     """
@@ -186,9 +186,9 @@ def syk4_green_function(Nf, beta, t_vals, seed=0, n_disorder=20):
     return GR_avg.real
 
 
-# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-# 3.  DISORDERED XXZ â€” MBL IMBALANCE
-# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+# 3.  DISORDERED XXZ Ã¢â‚¬â€ MBL IMBALANCE
+# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
 
 def xxz_hamiltonian(L, W, J=1.0, Delta=1.0, seed=0):
     """
@@ -258,9 +258,9 @@ def xxz_imbalance(L, W, t_vals, seed=0, n_disorder=30):
     return I_avg / n_disorder
 
 
-# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
 # 4.  DICKE MODEL  (held-out validation)
-# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
 
 def dicke_hamiltonian(N_spins, omega0, omegam, g, n_phonons=20):
     """
@@ -340,40 +340,48 @@ def dicke_jz_series(N_spins, omega0, omegam, g, t_vals, n_phonons=20):
     return y
 
 
-# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
 # 5.  D-LinOSS: MATRIX PENCIL DECOMPOSITION
-# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
 
-def dlinoss_decompose(y, t, K_max=6, noise_threshold=1e-3):
+def dlinoss_decompose(y, t, K_max=16, noise_threshold=1e-3):
     """
     Matrix pencil method to extract damped sinusoid modes from y(t).
-    Returns dict with gamma_k, omega_k, A_k, K_eff.
+    Returns dict with gamma_k, omega_k, A_k, K_eff (threshold), K_bic (BIC-penalized).
     Reference: Hua & Sarkar (1990).
+    K_max=16: increased from 6 to reveal saturation artifacts.
     """
     M = len(y)
     L_pencil = M // 3   # pencil parameter
 
     # Build Hankel matrix
     Y = np.array([[y[i+j] for j in range(L_pencil+1)] for i in range(M - L_pencil)])
-
-    # Split Hankel into Y1 (drop last col) and Y2 (drop first col)
     Y1 = Y[:, :-1]
     Y2 = Y[:, 1:]
 
-    # SVD of Y1 for K_eff detection and pseudoinverse
+    # SVD of Y1
     U1, s1, Vh1 = la.svd(Y1, full_matrices=False)
 
-    # K_eff: number of singular values above threshold
+    # Threshold-based K_eff
     s_norm = s1 / (s1[0] + 1e-30)
     K_eff = max(1, int(np.sum(s_norm > noise_threshold)))
     K_eff = min(K_eff, K_max, len(s1))
 
-    # Truncate to K_eff modes
-    U1_k  = U1[:, :K_eff]       # (rows, K)
-    s1_k  = s1[:K_eff]          # (K,)
-    Vh1_k = Vh1[:K_eff, :]      # (K, cols)
+    # BIC-penalized rank selection (Bayesian Information Criterion)
+    # BIC(K) = M*log(RSS/(M*L)) + K*log(M)  -- penalises each extra mode
+    bic_scores = []
+    for k in range(1, min(K_eff, K_max) + 1):
+        Y1_k = U1[:, :k] @ np.diag(s1[:k]) @ Vh1[:k, :]
+        rss = np.sum((Y1 - Y1_k)**2)
+        bic = M * np.log(rss / (M * L_pencil) + 1e-30) + k * np.log(M)
+        bic_scores.append((k, bic))
+    K_bic = min(bic_scores, key=lambda x: x[1])[0] if bic_scores else 1
 
-    # Compact pencil matrix (K x K): Z = diag(1/s) @ U^H @ Y2 @ V^H
+    # Truncate to K_eff modes for mode extraction
+    U1_k  = U1[:, :K_eff]
+    s1_k  = s1[:K_eff]
+    Vh1_k = Vh1[:K_eff, :]
+
     Z_mat = np.diag(1.0/s1_k) @ (U1_k.conj().T @ Y2) @ Vh1_k.conj().T
     poles, _ = la.eig(Z_mat)
 
@@ -381,41 +389,54 @@ def dlinoss_decompose(y, t, K_max=6, noise_threshold=1e-3):
     gamma_k  = -np.log(np.abs(poles) + 1e-30) / dt
     omega_k  =  np.angle(poles) / dt
 
-    # Amplitudes via least squares: Vandermonde system
-    # Z_cols shape: (M, K_eff)
-    # Vandermonde matrix: shape (M, K_eff)
-    Z_cols_c = np.array([poles**n for n in range(M)])  # (M, K)
+    Z_cols_c = np.array([poles**n for n in range(M)])
     A_complex, _, _, _ = np.linalg.lstsq(Z_cols_c, y.astype(complex), rcond=None)
     A_k = np.abs(A_complex)
 
+    # Sigma ratio: s1/s2 (1 = single dominant mode; <5 = multi-mode)
+    sigma_ratio = float(s1[0] / s1[1]) if len(s1) > 1 and s1[1] > 1e-15 else 1e6
+
     return {
-        "K_eff":   K_eff,
-        "gamma_k": gamma_k.real,
-        "omega_k": omega_k.real,
-        "A_k":     A_k,
-        "s_vals":  s1,
+        "K_eff":        K_eff,
+        "K_bic":        K_bic,
+        "gamma_k":      gamma_k.real,
+        "omega_k":      omega_k.real,
+        "A_k":          A_k,
+        "s_vals":        s1[:min(K_max+4, len(s1))],
+        "sigma_ratio":  sigma_ratio,
     }
 
 
-# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
 # 6.  MAIN
-# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+# Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--systems", nargs="+",
-                        default=["oat", "syk", "xxz", "dicke"],
-                        choices=["oat", "syk", "xxz", "dicke"])
+                        default=["oat", "syk", "xxz", "dicke", "adversarial"],
+                        choices=["oat", "syk", "xxz", "dicke", "adversarial"])
     parser.add_argument("--out", default="dlinoss_training/")
     parser.add_argument("--n_tau", type=int, default=40)
     parser.add_argument("--tau_max", type=float, default=500.0)
+    parser.add_argument("--rank_cutoff", type=float, default=1e-3,
+                        help="SVD threshold for K_eff (default 1e-3). Also runs BIC.")
+    parser.add_argument("--k_max", type=int, default=16,
+                        help="Maximum allowed K_eff (default 16, was 6 in Run 1).")
     args = parser.parse_args()
 
     os.makedirs(args.out, exist_ok=True)
     tau_vals = np.linspace(0.01, args.tau_max, args.n_tau)
+    rank_cutoff = args.rank_cutoff
+    k_max = args.k_max
     results  = {}
 
-    # ── OAT ─────────────────────────────────────────────────────
+    def decompose(y, tau):
+        return dlinoss_decompose(y, tau,
+                                  K_max=k_max,
+                                  noise_threshold=rank_cutoff)
+
+    # â”€â”€ OAT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     if "oat" in args.systems:
         print("\n=== Generating OAT training data ===")
         oat_records = []
@@ -424,40 +445,41 @@ def main():
             C_peak, chi_t_star = oat_peak_concurrence(N, chi_t_grid)
             for Gamma in [0.001, 0.005, 0.01, 0.05, 0.10]:
                 y = oat_witness_series(N, chi_t_star, Gamma, tau_vals)
-                modal = dlinoss_decompose(y, tau_vals)
+                modal = decompose(y, tau_vals)
                 gdom = float(modal["gamma_k"][0]) if len(modal["gamma_k"]) else 0
                 oat_records.append({
                     "system": "OAT", "N": N, "chi_t_star": chi_t_star,
                     "Gamma": Gamma, "C_peak": C_peak, "y": y.tolist(),
                     "K_eff": int(modal["K_eff"]),
+                    "K_bic": int(modal["K_bic"]),
                     "gamma_k": modal["gamma_k"].tolist(),
                     "omega_k": modal["omega_k"].tolist(),
                     "A_k": modal["A_k"].tolist(),
+                    "sigma_ratio": float(modal["sigma_ratio"]),
                 })
-                Ke = modal["K_eff"]
-                print(f"  N={N:2d} chi_t*={chi_t_star:.3f} C={C_peak:.4f}"
-                      f" Gamma={Gamma:.3f} K_eff={Ke} gdom={gdom:.4f} exp={4*Gamma:.4f}")
+                Ke = modal["K_eff"]; Kb = modal["K_bic"]
+                print(f"  N={N:2d} G={Gamma:.3f} K_eff={Ke} K_bic={Kb} gdom={gdom:.4f} exp={4*Gamma:.4f}")
         results["OAT"] = oat_records
 
-    # â”€â”€ SYK â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    # Ã¢â€â‚¬Ã¢â€â‚¬ SYK Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
     if "syk" in args.systems:
         print("\n=== Generating SYK4 training data ===")
         syk_records = []
         tau_syk = np.linspace(0.01, 20.0, args.n_tau)
         for Nf in [6, 8, 10]:
-            n_dis = 20 if Nf <= 8 else 8  # fewer averages for large Nf
+            n_dis = 20 if Nf <= 8 else 8
             for beta in [1.0, 5.0, 10.0]:
                 print(f"  Nf={Nf}  beta={beta}  (ED dim={2**Nf}, n_dis={n_dis})")
                 y = syk4_green_function(Nf, beta, tau_syk, seed=42, n_disorder=n_dis)
-                modal = dlinoss_decompose(y, tau_syk)
+                modal = decompose(y, tau_syk)
                 syk_records.append({
-                    "system": "SYK4", "Nf": Nf, "beta": beta,
-                    "y": y, **{k: modal[k] for k in ["K_eff","gamma_k","omega_k","A_k"]}
+                    "system": "SYK4", "Nf": Nf, "beta": beta, "y": y,
+                    **{k: modal[k] for k in ["K_eff","K_bic","gamma_k","omega_k","A_k","sigma_ratio"]}
                 })
-                print(f"    K_eff={modal['K_eff']}  gamma_dom={modal['gamma_k'][0]:.4f}")
+                print(f"    K_eff={modal['K_eff']}  K_bic={modal['K_bic']}  gamma_dom={modal['gamma_k'][0]:.4f}")
         results["SYK4"] = syk_records
 
-    # â”€â”€ XXZ (MBL) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    # Ã¢â€â‚¬Ã¢â€â‚¬ XXZ (MBL) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
     if "xxz" in args.systems:
         print("\n=== Generating XXZ/MBL training data ===")
         xxz_records = []
@@ -466,36 +488,78 @@ def main():
             for W in [0.5, 2.0, 5.0, 10.0]:
                 print(f"  L={L}  W={W}  (dim={2**L})")
                 y = xxz_imbalance(L, W, tau_xxz, seed=0, n_disorder=15)
-                modal = dlinoss_decompose(y, tau_xxz)
+                modal = decompose(y, tau_xxz)
                 xxz_records.append({
-                    "system": "XXZ", "L": L, "W": W,
-                    "y": y, **{k: modal[k] for k in ["K_eff","gamma_k","omega_k","A_k"]}
+                    "system": "XXZ", "L": L, "W": W, "y": y,
+                    **{k: modal[k] for k in ["K_eff","K_bic","gamma_k","omega_k","A_k","sigma_ratio"]}
                 })
-                print(f"    K_eff={modal['K_eff']}  I_inf={float(y[-1]):.4f}")
+                print(f"    K_eff={modal['K_eff']}  K_bic={modal['K_bic']}  I_inf={float(y[-1]):.4f}")
         results["XXZ"] = xxz_records
 
-    # â”€â”€ DICKE  (held-out) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    # Ã¢â€â‚¬Ã¢â€â‚¬ DICKE  (held-out) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
     if "dicke" in args.systems:
         print("\n=== Generating Dicke model data (HELD-OUT) ===")
         dicke_records = []
+        # Run 2: expanded N_spins=[2,4,6,8,10,12] to test large-N thermalization
         tau_dicke = np.linspace(0.01, 50.0, args.n_tau)
         omega0 = 1.0; omegam = 1.0
-        g_crit = np.sqrt(omega0 * omegam) / 2   # superradiant QPT
-        for N_spins in [2, 4, 6]:
+        g_crit = np.sqrt(omega0 * omegam) / 2
+        for N_spins in [2, 4, 6, 8, 10, 12]:   # expanded from [2,4,6]
             for g_ratio in [0.2, 0.6, 0.9, 1.1, 1.5, 2.0]:
                 g = g_ratio * g_crit
                 print(f"  N={N_spins}  g/g_c={g_ratio}  g={g:.4f}")
                 y = dicke_jz_series(N_spins, omega0, omegam, g, tau_dicke)
-                modal = dlinoss_decompose(y, tau_dicke)
+                modal = decompose(y, tau_dicke)
                 dicke_records.append({
                     "system": "Dicke", "N_spins": N_spins,
-                    "g_ratio": g_ratio, "g": g,
-                    "y": y, **{k: modal[k] for k in ["K_eff","gamma_k","omega_k","A_k"]}
+                    "g_ratio": g_ratio, "g": g, "y": y,
+                    **{k: modal[k] for k in ["K_eff","K_bic","gamma_k","omega_k","A_k","sigma_ratio"]}
                 })
-                print(f"    K_eff={modal['K_eff']}")
+                print(f"    K_eff={modal['K_eff']}  K_bic={modal['K_bic']}  gdom={float(np.max(np.abs(modal['gamma_k']))):.4f}")
         results["Dicke"] = dicke_records
 
-    # â”€â”€ Save â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    # -- ADVERSARIAL BASELINES  (classical/stochastic classifiers)
+    if "adversarial" in args.systems:
+        print("\n=== Generating adversarial baseline data ===")
+        adv_records = []
+        tau_adv = np.linspace(0.01, 200.0, args.n_tau)
+        rng_adv = np.random.default_rng(999)
+
+        # RTN: Poisson-rate switching, C(t)=exp(-2*lambda*t) in expectation
+        for lam in [0.02, 0.05, 0.10]:
+            corr = np.zeros(args.n_tau)
+            n_real = 500
+            dt_adv = tau_adv[1] - tau_adv[0]
+            for _ in range(n_real):
+                state = rng_adv.choice([-1.0, 1.0])
+                traj = np.zeros(args.n_tau)
+                traj[0] = state
+                for i in range(1, args.n_tau):
+                    if rng_adv.random() < lam * dt_adv:
+                        state = -state
+                    traj[i] = state
+                corr += traj[0] * traj
+            corr /= n_real
+            modal = decompose(corr, tau_adv)
+            adv_records.append({
+                "system": "RTN", "lambda": lam, "y": corr,
+                **{k: modal[k] for k in ["K_eff","K_bic","gamma_k","omega_k","A_k","sigma_ratio"]}
+            })
+            print(f"  RTN lam={lam:.2f}  K_eff={modal['K_eff']}  K_bic={modal['K_bic']}  gdom={float(np.max(np.abs(modal['gamma_k']))):.4f}  expected_gamma={2*lam:.4f}")
+
+        # Damped oscillator (classical)
+        for gamma_d, omega_d in [(0.02,0.3), (0.04,0.5), (0.10,1.0)]:
+            y_damp = np.exp(-gamma_d * tau_adv) * np.cos(omega_d * tau_adv)
+            modal = decompose(y_damp, tau_adv)
+            adv_records.append({
+                "system": "DampedOsc", "gamma": gamma_d, "omega": omega_d, "y": y_damp,
+                **{k: modal[k] for k in ["K_eff","K_bic","gamma_k","omega_k","A_k","sigma_ratio"]}
+            })
+            print(f"  DampedOsc g={gamma_d:.2f} w={omega_d:.2f}  K_eff={modal['K_eff']}  K_bic={modal['K_bic']}  (expected K=2)")
+
+        results["Adversarial"] = adv_records
+
+    # Ã¢â€â‚¬Ã¢â€â‚¬ Save Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
     out_path = os.path.join(args.out, "training_library.npz")
     np.savez(out_path, **{
         k: np.array([
@@ -506,7 +570,7 @@ def main():
     print(f"\nSaved to {out_path}")
 
     # Summary table
-    print("\nâ”€â”€ D-LinOSS Signature Summary â”€â”€")
+    print("\nÃ¢â€â‚¬Ã¢â€â‚¬ D-LinOSS Signature Summary Ã¢â€â‚¬Ã¢â€â‚¬")
     print(f"{'System':<10} {'Params':<25} {'K_eff':<6} {'gamma_dom':<12}")
     print("-" * 55)
     for sys_name, recs in results.items():
@@ -517,10 +581,11 @@ def main():
                 params = f"Nf={r['Nf']} b={r['beta']}"
             elif sys_name == "XXZ":
                 params = f"L={r['L']} W={r['W']}"
-            else:
-                params = f"N={r['N_spins']} g/gc={r['g_ratio']}"
-            gdom = float(np.max(r['gamma_k'])) if len(r['gamma_k']) else 0
-            print(f"{sys_name:<10} {params:<25} {r['K_eff']:<6} {gdom:<12.4f}")
+            elif sys_name == "Dicke": params = f"N={r['N_spins']} g/gc={r['g_ratio']}"
+            else: params = str(r.get("system","?"))[:20]
+            gdom = float(np.max(np.abs(r['gamma_k']))) if len(r['gamma_k']) else 0
+            kb = r.get("K_bic","?")
+            print(f"{sys_name:<10} {params:<25} K={r['K_eff']:<3} Kb={kb:<3} {gdom:<12.4f}")
 
 
 if __name__ == "__main__":
