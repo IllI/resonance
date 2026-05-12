@@ -171,4 +171,92 @@ is NOT supported by D-LinOSS at Nf=6–10.
 3. **Cavity-QED cavity decay**: gamma≈0 suggests the Jaynes-Cummings oscillation
    dominates over the κ decay at short times — expected, but cavity_qed_decay needs
    longer τ_max to see the decay tail.
-4. **Duffing Duffing overflow**: reduce gamma_d to 0.1 and rerun.
+4. **Duffing overflow**: reduce gamma_d to 0.1 and rerun.
+
+---
+
+## Session: 2026-05-12 (TPU Run 2 — chronos-bob2, v6e-8, europe-west4-a, 1157s)
+
+### 14. Run 2 Complete Results — BIC Fingerprint Confirmed [OBSERVED]
+
+**OAT (50 records, N=2–64, Γ=0.001–0.10):**
+K_eff=1, K_bic=1, gdom=4Γ exact for ALL records. Calibration anchor stable.
+
+**SYK4 — K_BIC=1 universally [OBSERVED]:**
+
+| Nf | β | K_eff | K_bic | gdom | sigma_ratio |
+|---|---|---|---|---|---|
+| 6 | 1.0 | 13 | **1** | 0.742 | ∞ |
+| 6 | 5.0 | 13 | **1** | 0.656 | ∞ |
+| 6 | 10.0 | 13 | **1** | 0.513 | ∞ |
+| 8 | 1.0 | 13 | **1** | 0.356 | ∞ |
+| 8 | 5.0 | 13 | **1** | 1.040 | ∞ |
+| 8 | 10.0 | 13 | **1** | 0.928 | ∞ |
+| 10 | 1.0 | 13 | **1** | 0.822 | ∞ |
+| 10 | 5.0 | 13 | **1** | 1.931 | 2.9 |
+| 10 | 10.0 | 10 | **1** | 0.132 | 3.5 |
+
+**K_BIC=1 for every SYK4 record across all Nf and β.** Even at Nf=10 where
+sigma_ratio drops to 2.9-3.5 (weakly multi-modal), BIC still selects 1 mode.
+SYK Green's function is dominated by a single decaying exponential.
+
+**XXZ — K_BIC=13 universally [OBSERVED]:**
+
+| L | W | K_bic | gdom | I_inf |
+|---|---|---|---|---|
+| 8 | 0.5 | **13** | 0.240 | 0.153 |
+| 8 | 2.0 | **13** | 0.261 | 0.379 |
+| 8 | 5.0 | **13** | 0.486 | 0.650 |
+| 8 | 10.0 | **13** | 0.343 | 0.708 |
+| 10 | 0.5 | **13** | 0.854 | 0.155 |
+| 10 | 2.0 | **13** | 0.467 | 0.379 |
+| 10 | 5.0 | **13** | 2.935 | 0.674 |
+| 10 | 10.0 | **13** | 0.603 | 0.761 |
+| 12 | 0.5 | **13** | 0.828 | 0.191 |
+| 12 | 2.0 | **13** | 0.496 | 0.288 |
+| 12 | 5.0 | **13** | 2.890 | 0.606 |
+| 12 | 10.0 | **13** | 0.747 | 0.702 |
+
+I_inf increases monotonically with W at fixed L. Genuine multi-mode spin-wave
+structure confirmed — K_BIC=13 is not an artifact.
+
+**Dicke — K_BIC=1 at ALL N and ALL g/g_c [OBSERVED]:**
+K_eff=1, K_bic=1, gdom=0.000 for all 36 records (N=2,4,6,8,10,12 × g/g_c=0.2–2.0).
+The superradiant QPT does NOT create multi-mode structure in ⟨Jz⟩ under BIC.
+H4 falsification confirmed robustly across large-N and both phases.
+
+**Adversarial baselines:**
+| System | K_bic | gdom | Assessment |
+|---|---|---|---|
+| RTN λ=0.02 | **13** | 0.042 | False positive |
+| RTN λ=0.05 | **13** | 0.318 | False positive |
+| RTN λ=0.10 | **13** | 0.092 | False positive |
+| DampedOsc g=0.02 ω=0.30 | **2** | 0.020 | ✅ Exact |
+| DampedOsc g=0.04 ω=0.50 | **2** | 0.040 | ✅ Exact |
+| DampedOsc g=0.10 ω=1.00 | **2** | 0.100 | ✅ Exact |
+
+### 15. Definitive BIC Fingerprint Table [OBSERVED]
+
+| System | K_BIC | I_inf | Classification |
+|---|---|---|---|
+| OAT (Lindblad) | 1 | 0 | Decaying single-mode |
+| SYK4 (scrambling) | **1** | 0 | Decaying single-mode — SAME CLASS as OAT |
+| Dicke (all N, all g) | **1** | 0 | Oscillatory single-mode |
+| XXZ (disordered) | **13** | >0 | Genuine multi-mode |
+| RTN (classical noise) | 13 | 0 | Classical multi-mode — false positive |
+| DampedOsc (classical) | 2 | 0 | Classical oscillatory — exact |
+
+**The discriminant between XXZ and RTN is I_inf:**
+- XXZ: I_inf ∈ [0.15, 0.76] (non-zero → localization)
+- RTN: I_inf = 0 (classical noise decays to zero)
+
+**Revised 3D embedding:** (K_BIC, I_inf, γ_dom) separates all 6 system classes.
+SYK4 and OAT cannot be distinguished by D-LinOSS — they share K_BIC=1, I_inf=0.
+
+### 16. TPU Run 2 Metadata
+- Node: chronos-bob2-node (v6e-8, europe-west4-a, spot)
+- Runtime: 1157s (~19 min)
+- Commit: pending
+- Result: dlinoss_training/training_library_run2.npz (62KB)
+- DELETE RITUAL: completed — all zones verified empty
+
