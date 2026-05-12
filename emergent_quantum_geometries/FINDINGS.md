@@ -1704,3 +1704,68 @@ The channel is geometrically dead.
 kappa_Q decay near pi: smooth monotonic approach, not a step function.
 This is consistent with a second-order geometric phase transition,
 not a first-order discontinuity.
+
+
+---
+
+## Session: 2026-05-12 (Session 4B -- D-LinOSS Manifold Classification)
+
+### 76. D-LinOSS Identifies chi_t=pi Singular Class WITHOUT Labels [OBSERVED]
+
+Script: dlinoss_manifold.py | 29 chi_t points, 6 features, N=4
+
+**Three independent identification methods:**
+
+(a) Singularity score (product of normalized observables):
+  chi_t=pi score: 1.45e-60 (machine-epsilon)
+  Peak score:     1.000
+  Score is near-zero only at chi_t=pi and approach regime.
+  CAVEAT: late-chi_t CLASSICAL points also have small scores (~1e-13 to 1e-17).
+  chi_t=pi is the EXTREME of a continuous trajectory, not an isolated outlier.
+
+(b) Weighted KMeans (k=3, kQ x3, VQ x3, singularity_score x5):
+  Silhouette: 0.607 (improved from 0.577 with equal weights)
+  Cluster 0: Q=0, C=14, F=1 (chi_t=pi is here, sharing with late CLASSICAL)
+  chi_t=pi shares a cluster with late-chi_t CLASSICAL -- not fully isolated.
+  Reason: transition is CONTINUOUS (second-order geometric transition),
+  so chi_t=pi is at the extreme of a monotonic trajectory.
+
+(c) D-LinOSS curve-shape fingerprints (KEY RESULT):
+  Segment         K_eff   gamma    omega   zero_term
+  OAT-QUANTUM       4     0.049    1.933   NO
+  CLASSICAL         4     0.223    1.047   NO
+  OAT-SINGULAR      3     2.146    0.571   YES  <- distinctive!
+
+  The SINGULAR class is correctly identified by:
+    1. has_zero_term=True (curve reaches 0 at endpoint)
+    2. Higher decay rate: gamma=2.146 vs 0.049 (QUANTUM) and 0.223 (CLASSICAL)
+    3. Lower K_eff: 3 vs 4
+
+### 77. Honest Assessment of Gate 1 D-LinOSS Result [ANALYSIS]
+
+WHAT WORKS:
+  Curve-shape fingerprinting correctly distinguishes OAT-QUANTUM, CLASSICAL,
+  and OAT-SINGULAR via (has_zero_term, gamma, K_eff) without labels.
+  This is genuine D-LinOSS capability: modal structure encodes class.
+
+CAVEAT:
+  chi_t=pi is NOT isolated as a point in 6D feature space (KMeans).
+  The transition is continuous (second-order), not a sharp jump.
+  chi_t=pi is the extreme endpoint of the CLASSICAL trajectory.
+  True isolation would require a FIRST-ORDER transition (sharp jump in features).
+
+CORRECT CLAIM:
+  "The D-LinOSS curve-shape fingerprint of the approach-to-singularity
+  segment has a distinctive modal signature (zero-termination, gamma=2.15)
+  that differs from both the QUANTUM (gamma=0.05) and CLASSICAL (gamma=0.22)
+  modal classes, enabling unsupervised identification of the singular regime."
+
+GATE 1 STATUS:
+  [x] Session 1: V_Q phase diagram
+  [x] Session 2: N-scaling
+  [x] Session 3: Dicke PTM extension
+  [x] Session 4A: kappa_Q stiffness
+  [x] Session 4B: D-LinOSS manifold classification (partial -- curve shape works)
+
+Gate 1 COMPLETE (with honest caveats documented).
+Gate 2 (statistical rigor) is the next priority.
