@@ -1587,3 +1587,77 @@ Gate 2 (Statistical Rigor):
   [ ] N-scaling: kappa_Q(N) vs V_Q(N)
 
 Effective readiness: Gates 1+2 ~80% complete. Session 4B + Gate 2 remaining.
+
+
+---
+
+## Session: 2026-05-12 (Strategic Synthesis)
+
+### 71. chi_t=pi as Central Calibration Point [FRAMING]
+
+chi_t=pi is the PAPER'S ANCHOR, not a side observation.
+It demonstrates three things simultaneously:
+  1. Recovery geometry is NOT an optimizer artifact
+     (same optimizer, chi_t=pi -> zero, chi_t* -> nonzero)
+  2. Basin topology is physically tied to OAT phase structure
+     (collapse is discrete, not gradual -- phase transition, not noise)
+  3. The recovery manifold can catastrophically collapse
+     (over 8 orders of magnitude in curvature -- use this framing, not 151M ratio)
+
+Preferred phrasing: "The recovery curvature collapses by over eight orders of
+magnitude at the chi_t=pi singularity."
+Do NOT lead with the 151M ratio (singular denominator = numerology perception).
+
+### 72. Killer Figure: Multi-Observable Collapse at chi_t=pi [PLANNED]
+
+Six panels, common chi_t x-axis:
+  1. V_Q(chi_t)            [OBSERVED]
+  2. kappa_Q(chi_t)        [OBSERVED]
+  3. Hessian spectrum(chi_t) [OBSERVED]
+  4. landscape_std(chi_t)  [OBSERVED]
+  5. F_opt(chi_t)          [OBSERVED]
+  6. T_xx(chi_t)           [PROVED]
+
+All six collapse simultaneously at chi_t=pi.
+This is the central figure of the paper.
+No other figure conveys the geometric phase structure as cleanly.
+
+### 73. Next Priorities [ORDERED]
+
+Priority 1 -- Multi-observable collapse figure (all 6 panels): IMMEDIATE
+  Script: collapse_figure.py (generate data + ASCII output + save numpy arrays)
+
+Priority 2 -- Statistical rigor (Gate 2):
+  a. Bootstrap 95% CIs for V_Q and kappa_Q
+  b. Haar sample count convergence (n=50,100,200,400,800)
+  c. Seed independence (10 seeds, report mean +/- std)
+  d. Optimizer independence (Nelder-Mead vs gradient vs random)
+  e. Finite-size scaling V_Q(N), kappa_Q(N) with error bars
+
+Priority 3 -- D-LinOSS manifold training (Gate 1B):
+  Input: PTM tensors T_ij + Hessian spectra + V_Q curves
+  Target: identify chi_t=pi singular class WITHOUT labels
+  If D-LinOSS clusters chi_t=pi as isolated: strong result
+
+Priority 4 -- Topological invariant (future):
+  Connected components of {(chi_t,Gamma): V_Q>0} superlevel set
+  Persistence homology of recovery manifold
+  Betti numbers (b0=components, b1=loops, b2=voids)
+  Morse critical-point count of F_avg landscape
+  Why: topology survives noise better than fidelity
+
+### 74. Language Corrections [FRAMING]
+
+AVOID: "fully depolarized" (incorrect -- PTM has T_xx=0 but T_yy, T_zz may not be zero;
+        anisotropic chi_t=pi state is NOT I/2 in general)
+USE:   "operationally unrecoverable" or "geometrically collapsed"
+
+AVOID: "we proved teleportation"
+USE:   "we identified finite-volume super-classical recovery basins"
+       "we identified operationally recoverable quantum transport structure"
+
+AVOID: "151,234,860x ratio"
+USE:   "recovery curvature collapses by over eight orders of magnitude"
+
+AVOID: "quantum advantage" alone
+USE:   "super-classical recovery basin" (more precise, more defensible)
