@@ -1197,3 +1197,54 @@ Negative evidence (would refute the conjecture):
 This conjecture is logged for future investigation. It does NOT appear in the
 current quantum teleportation paper. It constitutes a potential companion project
 connecting the D-LinOSS framework to cognitive neuroscience.
+
+
+---
+
+## Session: 2026-05-12 (Session 2 -- N-Scaling)
+
+### 56. N-Scaling of V_Q with Concurrence-Based chi_t*(N) [OBSERVED]
+
+chi_t*(N) from concurrence peak (corrects Session 1 Panel D, which found chi_t=2pi):
+
+| N  | chi_t* | C_peak  | V_Q(chi_t*) | Gamma_t* | V_Q(pi) | Signal/ctrl |
+|----|--------|---------|-------------|----------|---------|-------------|
+| 2  | 3.134  | 1.000   | 0.165       | Gamma>0.5| 0.255   | 0.6x (N=2 exception) |
+| 4  | 0.355  | 0.222   | 0.038       | ~0.08    | 0.000   | inf (control exact) |
+| 6  | 0.183  | 0.159   | 0.020       | ~0.05    | 0.000   | inf |
+| 8  | 6.163  | 0.130   | 0.013       | ~0.02    | 0.000   | inf |
+| 12 | 0.073  | 0.101   | 0.003       | <0.02    | 0.000   | inf |
+| 16 | 6.226  | 0.085   | 0.003       | N/A      | 0.000   | inf |
+
+V_Q(chi_t=pi) = 0 exactly for N>=4 in ALL cases (internal control perfect).
+Signal/control ratio = infinity for N>=4 (control is exact zero).
+
+N=2 exception: chi_t*~pi (N=2 Bell pair), V_Q(pi) NOT zero (cos^0=1 always).
+
+### 57. Phase Boundary Scaling Gamma_t*(N) [OBSERVED]
+
+Phase boundary (Gamma_t where V_Q drops below threshold):
+  N=4:  Gamma_t* ~ 0.08   (= 9.4 * Gamma_1, well above JILA dephasing rate)
+  N=6:  Gamma_t* ~ 0.05   (= 5.9 * Gamma_1)
+  N=8:  Gamma_t* ~ 0.02   (= 2.4 * Gamma_1)
+  N=12: Gamma_t* < 0.02   (approaching JILA limit)
+  N=16: not detectable     (V_Q<threshold at Gamma=0)
+
+JILA operating point: Gamma_1 * t_exp ~ 0.001-0.01 (T2=118s, t_exp~0.1-1s).
+Safety margins: N=4 has 9x safety; N=8 has 2x safety.
+PRACTICAL TARGET: N=4-6 is the robust JILA platform.
+
+### 58. D-LinOSS Training Set Ready [OBSERVED]
+
+V_Q(chi_t, Gamma_t, N) grid for classification:
+  QUANTUM:   V_Q>0.01, chi_t=chi_t*(N), Gamma_t=0
+  CLASSICAL: V_Q=0, F_max in (0.51,0.67], chi_t=chi_t*(N), Gamma_t>Gamma_t*
+  FLAT:      V_Q=0, F_max~0.5, chi_t=pi (ANY N>=4, ANY Gamma_t)
+
+Signal/control feature for D-LinOSS:
+  delta_VQ = V_Q(chi_t*) - V_Q(pi)  <- this is the observable
+  QUANTUM: delta_VQ > 0
+  CLASSICAL/FLAT: delta_VQ = 0
+
+Prediction for Session 4: V_Q(tau) decay ~ exp(-4*Gamma*tau) under Lindblad.
+D-LinOSS should recover b=4*Gamma from V_Q time series (same as witness).
