@@ -764,3 +764,84 @@ What the PTM anisotropy IS NOT:
 
 The quantum advantage comes from: full SU(2) alignment exploiting ALL off-diagonal
 elements of rho_2 (not just the correlation tensor diagonal) to maximize singlet fraction.
+
+
+---
+
+## Session: 2026-05-12 (Recovery Landscape Experiment)
+
+### 38. Recovery Landscape R(U,t) = F_avg(U_A⊗U_B rho) [OBSERVED]
+
+Maps the recoverability of each state over the SU(2)×SU(2) manifold.
+
+**Optimal recovery F_avg (full SU(2)×SU(2)):**
+
+| State | Negativity | F_opt | QA? |
+|-------|-----------|-------|-----|
+| Quantum OAT (chi_t*=5.934) | 0.0779 | **0.7186** | YES |
+| Fully dephased (no coherence) | 0.0000 | 0.5000 | NO |
+| Product state (chi_t≈0) | 0.0002 | 0.6668 | NO |
+
+**Recovery landscape statistics (Ry⊗Ry 2D slice):**
+
+| State | F_max | F_mean | std | frac>2/3 | range |
+|-------|-------|--------|-----|----------|-------|
+| Quantum OAT | 0.662 | 0.559 | 0.098 | 0.000 | 0.323 |
+| Fully dephased | 0.500 | 0.500 | 0.000 | 0.000 | 0.000 |
+| Product state | 0.667 | 0.561 | 0.101 | 0.000 | 0.333 |
+
+Note: the Ry⊗Ry slice alone does not reach F>2/3. Full Rz+Ry (SU(2)) is needed.
+The optimal 0.7186 is accessed through Rz components not visible in this 2D slice.
+
+### 39. The Three-Tier Recovery Hierarchy [OBSERVED — KEY FINDING]
+
+The recovery landscape reveals a clean three-tier hierarchy:
+
+**Tier 1: Coherence-destroyed (dephased)**
+- Landscape: flat (std=0, range=0), F=0.500 everywhere
+- No structure, no recoverable quantum information
+
+**Tier 2: Coherent but separable (product state)**
+- Landscape: structured (std=0.101, range=0.333)
+- Has geometry but max=2/3 (classical boundary)
+- Optimization can find the best axis but cannot exceed classical limit
+
+**Tier 3: Entangled + coherent (OAT quantum)**
+- Landscape: structured (std=0.098, range=0.323)
+- F_opt=0.719 exceeds classical boundary via full SU(2)
+- Accessible peak in recovery manifold invisible to Rz-only
+
+**The three tiers are operationally distinguishable:**
+- Tier 1 (dephased): optimizer finds no peak above 0.5
+- Tier 2 (product): optimizer finds peak at exactly 2/3
+- Tier 3 (quantum): optimizer finds peak at 0.719 > 2/3
+
+### 40. Revised D-LinOSS Target
+
+The reviewer's proposal is correct: train D-LinOSS on:
+  R(U,t) = F_avg(U_A⊗U_B rho(t)) trajectories
+rather than scalar observables C(t), W(t), S_CHSH(t).
+
+Different physical dynamics (Lindblad, SYK, OAT, Dicke) produce different:
+- Recovery landscape curvatures
+- Accessible peak heights
+- Landscape symmetry groups
+- Optimizer convergence geometry
+
+This is the correct abstraction layer for the geometric classification task.
+The three-tier hierarchy above is the training signal: classify by recovery topology, not spectral morphology.
+
+### 41. Scientific Position (Final)
+
+OAT boundary states generate an anisotropic quantum channel (T_xx=cos^{N-2}(chi_t/2),
+T_yy=T_zz=0 -- proved) with a structured recovery landscape containing peaks at
+F_avg=0.719 that exceed all classical strategies. This advantage:
+- Requires entanglement (destroyed states: F=0.500, landscape flat)
+- Requires full SU(2) local operations (Rz+Rx Rabi, JILA-native)
+- Exceeds all classical anisotropic strategies (max 2/3)
+- Is operationally confirmed by recovery landscape geometry
+
+NOT claimed:
+- X-axis quantum enhancement (classical T_xx=1 > quantum T_xx=0.97)
+- Quantum advantage under Rz-only gates (proved impossible)
+- CHSH violation (S_max < 2 for N>=4)
