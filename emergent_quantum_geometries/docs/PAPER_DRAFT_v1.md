@@ -280,7 +280,7 @@ For $N=4$: $\Delta F = 0.719 - 2/3 \approx 0.052$. This gap is the *operationall
 > (2) $R_z + R_x$ achieves $F = 0.719$ — a 7.8% quantum excess.
 > (3) The difference is the measurable signature of OAT boundary entanglement at JILA.
 
-**$\chi t = \pi$ singularity [OBSERVED, PROVED in part].** At $\chi t = \pi$: $T_{xx} = \cos^{N-2}(\pi/2) = 0$ for all $N \ge 4$ (zero by the analytic formula), $V_Q = 0$ (confirmed by Haar-random sampling), $F_\mathrm{max} = 1/2$ (fully depolarized in X). This is a teleportation critical line — the manifold collapses identically at this OAT phase regardless of $N$, $\Gamma$, or measurement basis. *Experiment:* run identical protocol at $\chi t^*$ and $\chi t = \pi$ on same apparatus; the $V_Q$ difference is the within-experiment falsification.
+**$\chi t = \pi$ singularity [OBSERVED, PROVED in part].** At $\chi t = \pi$: $T_{xx} = \cos^{N-2}(\pi/2) = 0$ for all $N \ge 4$ (zero by the analytic formula), $V_Q = 0$ (confirmed by Haar-random sampling), $F_\mathrm{max} = 1/2$ (operationally unrecoverable (geometrically collapsed in X)). This is a teleportation critical line — the manifold collapses identically at this OAT phase regardless of $N$, $\Gamma$, or measurement basis. *Experiment:* run identical protocol at $\chi t^*$ and $\chi t = \pi$ on same apparatus; the $V_Q$ difference is the within-experiment falsification.
 
 **Note on $N=2$ exception.** For $N=2$: $\cos^{N-2}(\chi t/2) = \cos^0(\cdot) = 1$ identically, so the $\chi t=\pi$ singularity does not apply. The $N=2$ state is a pure Bell pair $|\Psi^+\rangle$ for all $\chi t$ — perfect teleportation. The internal control requires $N \ge 4$ (at least one bulk atom to trace out).
 

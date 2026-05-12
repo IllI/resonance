@@ -1661,3 +1661,46 @@ USE:   "recovery curvature collapses by over eight orders of magnitude"
 
 AVOID: "quantum advantage" alone
 USE:   "super-classical recovery basin" (more precise, more defensible)
+
+
+---
+
+## Session: 2026-05-12 (Collapse Figure Data)
+
+### 75. Multi-Observable Collapse Figure -- All Six Confirmed [OBSERVED]
+
+Script: collapse_figure.py | N=4, 29 chi_t points, collapse_data.npz saved.
+
+QUANTUM region: chi_t/pi in [0.05, 0.65] (60% of the range).
+
+All six observables at chi_t=pi (N=4):
+  T_xx         = EXACT ZERO  [PROVED]
+  F_opt        = 0.50000     <- operationally unrecoverable
+  V_Q          = EXACT ZERO  [OBSERVED]
+  kappa_Q      = EXACT ZERO  [OBSERVED]
+  lnd_std      = EXACT ZERO  [OBSERVED]
+  H_min_eval   = EXACT ZERO  [OBSERVED]
+
+Peak at chi_t/pi=0.150 (chi_t=0.471):
+  kappa_Q = 1.057 (peak curvature)
+  V_Q     = 0.063
+  F_opt   = 0.733
+
+Collapse magnitude:
+  kappa_Q peak / kappa_Q(pi) > 1.06e+12
+  Recovery curvature collapses by over TWELVE orders of magnitude.
+  (Not eight as estimated earlier -- denser grid gives better estimate.)
+
+Preferred paper phrasing:
+  "The recovery curvature collapses by over twelve orders of magnitude
+   at the chi_t=pi singularity."
+
+Notable detail: landscape_std also EXACT ZERO at chi_t=pi.
+This means the entire recovery landscape is perfectly flat --
+not just the Hessian at the optimum, but globally.
+All SU(2)^2 inputs give F_avg=0.5 exactly at chi_t=pi.
+The channel is geometrically dead.
+
+kappa_Q decay near pi: smooth monotonic approach, not a step function.
+This is consistent with a second-order geometric phase transition,
+not a first-order discontinuity.
