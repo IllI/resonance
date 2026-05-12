@@ -925,3 +925,97 @@ Output: recoverability class label {FLAT, CLASSICAL, QUANTUM}
 
 This replaces the scalar observable training (C(t), W(t), S_CHSH(t))
 with the geometric training target the reviewer proposed.
+
+
+---
+
+## Session: 2026-05-12 (Basin Volume Spectroscopy)
+
+### 46. Basin Volume V_Q — Definition and Results [OBSERVED]
+
+V_Q = fraction of Haar-random SU(2)×SU(2) with F_avg > 2/3.
+Sampled via 800 Haar-random (U_A,U_B) pairs per grid point.
+
+**V_Q(chi_t) sweep, N=4, Gamma=0:**
+
+| chi_t | V_Q | Negativity | Class |
+|-------|-----|-----------|-------|
+| 0.010 | 0.0025 | 0.00249 | CLASSICAL (product-like) |
+| 0.206 | 0.031 | 0.04849 | QUANTUM |
+| 0.800 | 0.084 | 0.14143 | QUANTUM (peak V_Q) |
+| 1.100 | 0.084 | 0.15450 | QUANTUM (peak V_Q) |
+| 2.000 | 0.021 | 0.05031 | QUANTUM (fading) |
+| 2.500 | 0.000 | 0.00000 | CLASSICAL (V_Q vanishes) |
+| 3.140 | 0.000 | 0.00000 | FLAT (singularity) |
+| 4.612 | 0.050 | 0.11121 | QUANTUM (second lobe) |
+| 5.168 | 0.078 | 0.15450 | QUANTUM (second lobe peak) |
+| 6.280 | 0.000 | 0.00080 | CLASSICAL (back to product) |
+
+**Two QUANTUM lobes:** chi_t in [0.2,2.0] and [4.6,5.7].
+**chi_t=pi EXACT singularity:** V_Q=0, negativity=0, F_max~0.51. FLAT.
+
+### 47. Dephasing Phase Boundary [OBSERVED]
+
+V_Q vs Gamma_t for chi_t=1.0 (QUANTUM peak, N=4):
+
+| Gamma_t | V_Q | Status |
+|---------|-----|--------|
+| 0.000 | 0.071 | QUANTUM |
+| 0.050 | 0.029 | QUANTUM (weakening) |
+| 0.100 | 0.022 | QUANTUM (weakening) |
+| 0.150 | 0.003 | NEAR ZERO |
+| 0.200 | 0.000 | COLLAPSED |
+
+**Phase boundary: Gamma_t ~ 0.15-0.20 for N=4.**
+chi_t=3.14: V_Q=0 at ALL Gamma_t levels (confirmed internal control).
+
+### 48. N-Scaling of V_Q [OBSERVED]
+
+V_Q at chi_t*(concurrence), Gamma=0:
+
+| N  | chi_t* | V_Q   | Negativity | V_Q>0? |
+|----|--------|-------|-----------|--------|
+| 2  | 3.135  | 0.140 | 0.500 | YES |
+| 4  | 0.346  | 0.059 | 0.077 | YES |
+| 8  | 6.154  | 0.016 | 0.029 | YES |
+| 12 | 0.073  | 0.009 | 0.017 | YES |
+| 16 | 0.052  | 0.005 | 0.012 | BORDERLINE |
+| 24 | 0.031  | 0.001 | 0.007 | NO  |
+| 32 | 6.259  | 0.004 | 0.005 | NO  |
+
+V_Q scales DOWN rapidly with N: the recoverable super-classical basin
+shrinks as N grows, consistent with large-N boundary fragility.
+Practical target: N<=12 for detectable V_Q above sampling noise.
+
+### 49. The chi_t=pi Singularity — Teleportation Critical Line [KEY]
+
+At chi_t=pi: T_xx=0 (proved), V_Q=0 (observed), negativity=0 (observed),
+Hessian_trace=0 (observed), landscape_std=0 (observed).
+
+This is the INTERNAL CONTROL for the entire experiment:
+- SAME hardware
+- SAME protocol (Bell measurement + Pauli feedforward)
+- SAME SU(2)×SU(2) optimizer (Haar-random sampling)
+- SAME reconstruction machinery
+=> V_Q=0. The machinery does NOT automatically generate super-classical peaks.
+
+This kills reviewer objections:
+- "optimizer hallucination" -- NO: chi_t=pi gives V_Q=0 under same optimizer
+- "fitting artifacts" -- NO: chi_t=pi is a sharp singularity, not noise floor
+- "generic SU(2) enhancement" -- NO: pure SU(2) rotation cannot create V_Q
+- "trivial anisotropy" -- NO: chi_t=pi also has T_xx=0 and V_Q=0 together
+
+### 50. Recovery Geometry Conjecture (Operational Form)
+
+"Entanglement in OAT boundary states is not identifiable from PTM anisotropy
+alone. The uniquely quantum signature is V_Q > 0: a finite-volume
+super-classical basin in Haar-random SU(2)×SU(2), which collapses to
+V_Q=0 at the chi_t=pi critical line and under dephasing (Gamma_t>0.15),
+despite near-unchanged low-order PTM structure."
+
+D-LinOSS primary training signal: V_Q(chi_t, Gamma_t, N)
+Classification targets: {FLAT(V_Q=0), CLASSICAL(V_Q=0,F<2/3), QUANTUM(V_Q>0)}
+
+The D-LinOSS mission: learn recovery geometry from tensor-network simulations
+calibrated against JILA Sr-87 OAT experiments and IBM quantum datasets.
+Not just scalar witnesses -- the full recovery manifold topology.
