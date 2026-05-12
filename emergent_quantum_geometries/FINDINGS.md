@@ -1340,3 +1340,65 @@ URL: https://www.ibm.com/quantum/blog/open-plan-updates
 Best use: N=4 OAT Trotterized circuit, 2-qubit process tomography on boundary pair
 Cost per run: ~50-100 shots for 2-qubit QPT (fits in 10 min at current queue times)
 Script ready: exp_ibm_trotterized_oat.py
+
+
+---
+
+## Session: 2026-05-12 (Session 3 -- Dicke PTM Extension)
+
+### 60. Dicke Model Boundary Entanglement -- Three Key Results [OBSERVED]
+
+Script: dicke_ptm.py | omega_0=0, omega_m=1, n_max=20 Fock states
+Initial state: |0>^N (z-polarized spins) x |0>_phonon (phonon vacuum)
+
+**Result 1: Dicke boundary pair has C>0 and V_Q>0**
+  V_Q at N=4, t=5.0 (g-dependence):
+    g=0.05 (g/g_c=0.10): V_Q=0.005, CLASSICAL
+    g=0.10 (g/g_c=0.20): V_Q=0.005, CLASSICAL
+    g=0.20 (g/g_c=0.40): V_Q=0.050, QUANTUM  <- threshold crossed
+    g=0.30 (g/g_c=0.60): V_Q=0.055, QUANTUM
+    g=0.40 (g/g_c=0.80): V_Q=0.075, QUANTUM  <- peak
+    g=0.50 (g/g_c=1.00): V_Q=0.060, QUANTUM  (g=g_c)
+    g=0.60 (g/g_c=1.20): V_Q=0.020, QUANTUM  (superradiant, declining)
+
+V_Q peaks near g~0.4 (g/g_c~0.8), just below the critical point.
+
+**Result 2: OAT approximation chi_eff=g^2/omega_m is a lower bound, not exact**
+  Fitted chi_eff / (g^2/omega_m) ratio:
+    g=0.05: ratio~10 (dispersive approx fails: g not << omega_m)
+    g=0.20: ratio~3 (improving)
+    g=0.40: ratio~1 (YES -- converges only near g_c)
+  
+  Interpretation: chi_eff=g^2/omega_m is the zeroth-order dispersive result.
+  Full Dicke dynamics give higher effective coupling (more entanglement than predicted).
+  This is a PREDICTION for Rey 2026: Dicke boundary states are MORE entangled
+  than the naive OAT approximation suggests.
+
+**Result 3: T_xx < 0 for all g>0 (x-axis OAT, not z-axis)**
+  T_xx ranges from -0.001 (g=0.05) to -0.121 (g=0.60).
+  Negative T_xx = anti-correlation in z-basis measurement.
+  This is expected: H_eff=-chi_eff*Jx^2 squeezes in z-direction, 
+  creating anti-correlations in z-basis.
+  PTM framework applies but in rotated basis (T_zz for Dicke = T_xx for OAT after 90deg rotation).
+
+### 61. Dicke-OAT PTM Framework Generalisation Status [OBSERVED]
+
+GENERALISES: V_Q>0 confirmed for Dicke boundary pair at moderate g (g/g_c~0.4-1.0).
+PARTIALLY: chi_eff=g^2/omega_m holds only near g~g_c, not at small g.
+DEPARTS: C(Dicke) tracks C(OAT) in shape but not magnitude (factor 1.5-3x).
+PREDICTION: Rey 2026 experiment -- Dicke boundary entanglement EXCEEDS OAT approximation.
+
+V_Q at Dicke critical point (g=g_c=0.5): V_Q=0.060 -- QUANTUM class.
+Compare to OAT at chi_t*=0.355: V_Q=0.038. Dicke near g_c is STRONGER than OAT!
+
+### 62. Session 3 Conclusion for Paper
+
+The PTM framework (V_Q, three-tier hierarchy) generalises beyond pure OAT:
+  - Dicke boundary pairs HAVE teleportation-capable recovery basins (V_Q>0)
+  - Peak V_Q near quantum phase transition (g~0.8*g_c)
+  - T_xx < 0 (OAT in x-basis): basis rotation needed, not a problem
+  - chi_eff=g^2/omega_m underestimates; correct chi_eff determined by fit
+
+For Rey 2026 connection: the two-mode squeezing at short times IS a boundary 
+entanglement resource. The collapses/revivals correspond to C(t) oscillations.
+The departure from OAT approximation near g_c is measurable experimentally.
