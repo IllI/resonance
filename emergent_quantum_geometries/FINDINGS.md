@@ -2630,3 +2630,69 @@ V_Q is therefore:
 COMPLETE BRIDGE:
   Exact PTM theorem (T_xx) -> PTM rank-4 island -> V_Q>0 -> Delta_F>0
   All four connected. chi_t=pi terminates all four simultaneously.
+
+
+---
+
+## Session: 2026-05-12 (Strategic Lock + P2 Plan)
+
+### 114. Central Claim Finalized [FRAMING]
+
+"Teleportation advantage emerges only inside a recoverable full-rank channel phase."
+
+Paper hierarchy (four layers, no more):
+  Layer 1 -- EXACT OPERATOR THEOREMS: PTM identities, rank collapse, chi_t=pi singularity
+  Layer 2 -- RECOVERY GEOMETRY: V_Q, kappa_Q, criticality, coordinate invariance
+  Layer 3 -- OPERATIONAL TELEPORTATION: F_avg>2/3, Goldilocks phase, dephasing collapse
+  Layer 4 -- D-LINOSS: unsupervised phase ID, manifold learning outlook (Paper 2)
+
+DO NOT add new conceptual structures. Project is converging. Protect it.
+
+### 115. IBM Protocol Locked -- Three-Point PTM Only [DECISION]
+
+IBM runtime target: THREE measurement points only.
+  Point 1: chi_t ~ 0      (rank-1 product control)
+  Point 2: chi_t ~ chi_t* (rank-4 recoverable phase)
+  Point 3: chi_t = pi     (singular null)
+
+Measure ONLY: PTM reconstruction -> T_xx, singular values, rank.
+Do NOT attempt: V_Q, kappa_Q, Hessians, exponent extraction, full teleportation.
+
+Observable robustness ranking:
+  T_xx:            VERY HIGH (low tomography cost, analytic anchor)
+  PTM rank:        HIGH (derived from T_xx reconstruction)
+  V_Q:             MEDIUM (needs Haar sampling, many shots)
+  kappa_Q:         LOW (needs Hessian, amplifies noise)
+  Hessian spectrum:VERY LOW
+  Critical exp.:   IMPOSSIBLE on IBM
+
+IBM goal: "Three-point PTM comparison against pre-registered analytic prediction."
+This turns IBM into falsification of a specific theorem, not exploration.
+
+### 116. P2 Hardware Noise Injection -- NEXT PRIORITY [PLAN]
+
+Before IBM: simulate the EXACT noise profile of IBM hardware.
+Then IBM becomes "comparison against pre-registered predictions" = maximum credibility.
+
+Noise parameters to inject (typical IBM values):
+  T1 amplitude damping: Kraus ops, p_AD = 1-exp(-t_gate/T1), T1~150µs, t_gate~200ns
+  T2 dephasing: p_PD = (1-exp(-t_gate/T2))/2, T2~80µs
+  Readout assignment error: confusion matrix [[1-e0, e0],[e1, 1-e1]], e0=e1~2%
+  CZ overrotation: systematic angle error delta_theta per CZ gate
+  SPAM error: state prep/measurement combined ~1-3%
+  Trotter steps: N_trotter=10-20 for chi_t* circuit
+
+Target outputs:
+  T_xx^noisy(chi_t) vs T_xx^analytic -- detect offset and broadening
+  PTM rank under noise -- does 1->4->1 survive?
+  SNR for T_xx at chi_t* (signal over noise floor)
+  Threshold noise levels before rank structure disappears
+
+### 117. SNR Priority Analysis [FRAMING]
+
+SNR_O = Delta_O / sigma_hardware for each observable.
+Key: T_xx has largest signal (monotonic from 1 to 0) and lowest tomography cost.
+One-point PTM requires 12 Pauli input preparations * 3 Pauli measurements = 36 circuits.
+For N=4 (2 physical qubits): feasible in < 2 min IBM time.
+All three points: < 6 min. Leaves 4 min for calibration runs.
+This fits the 10-min monthly quota comfortably.
