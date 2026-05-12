@@ -2340,3 +2340,68 @@ Gate 1: COMPLETE
 Gate 2: COMPLETE
 Gate 3 (IBM): PENDING -- next session
 Gate 4 (JILA 1-pager): PENDING -- unblocked
+
+
+---
+
+## Session: 2026-05-12 (Pre-IBM Experimental Roadmap)
+
+### 102. Five Pre-IBM Priorities [ORDERED]
+
+Priority 1 -- Coordinate/Gauge Invariance [MOST IMPORTANT -- do first]
+  Reviewer attack: "V_Q is an artifact of SU(2) Euler parameterization."
+  Test: run recovery analysis with Euler angles, quaternion, axis-angle, Clifford subset.
+  Show: V_Q, kappa_Q, chi_tc, beta, nu all invariant within CI.
+  Result: "Recovery phase is coordinate-independent property of the channel manifold."
+  This elevates from optimizer behavior to GEOMETRY.
+
+Priority 2 -- Hardware-Realistic Noise Injection
+  Do NOT let IBM discover whether signal survives. Simulate first.
+  Inject: amplitude damping, coherent over-rotation, readout assignment error,
+          CZ infidelity, spectator dephasing, T1/T2 asymmetry.
+  Produce: V_Q^hardware(epsilon) -- minimum observable signal above noise floor.
+  Target table: noise source -> threshold before singularity disappears.
+  Then IBM 10-min session becomes confirmation of a pre-specified prediction.
+
+Priority 3 -- Full Teleportation Monte Carlo
+  For sampled Bloch input states: prepare, OAT boundary, Bell measure,
+  classical correction, reconstruct, compute fidelity.
+  CRITICAL: correlate F_avg with V_Q: F_avg ~ V_Q or kappa_Q^alpha near boundary.
+  This bridges operational teleportation <-> recovery geometry <-> criticality.
+
+Priority 4 -- PTM Eigenvalue / Singular Value Flow [ANALYTIC BREAKTHROUGH CANDIDATE]
+  Track full PTM spectrum (singular values, eigenvalues, rank, condition number)
+  as function of chi_t.
+  Hypothesis: chi_t=pi is a RANK-COLLAPSE SINGULARITY.
+  At chi_t=pi: T_xx=0, T_yy=0, T_zz=0, diagonal=1/4 -> PTM rank collapses.
+  If confirmed: "Teleportation-capable phase terminates at a rank-deficient
+  channel singularity." Much cleaner framing than "geometric singularity."
+
+Priority 5 -- D-LinOSS Manifold Training
+  New training targets: {lambda_i(PTM), V_Q, kappa_Q, Hessian spectrum}.
+  NOT scalar witness traces.
+  D-LinOSS becomes a latent geometry learner over quantum channel manifolds.
+  Addresses Hilbert-space lock-in concern.
+
+### 103. Scope Lock for Paper 1 [UNCHANGED]
+  No twistor, no Klein bottle, no exotic manifold language.
+  No consciousness analogies or generalized detector rhetoric.
+  Keep grounded in: PTMs, recovery manifolds, SU(2) optimization,
+  singular channel structure, experimentally measurable observables.
+
+### 104. PTM Rank-Collapse Conjecture [HYPOTHESIS]
+  At chi_t=pi (N>=4):
+    T_xx = 0 [PROVED]
+    T_yy = 0 [PROVED]
+    T_zz = 0 [PROVED]
+    Diagonal = 1/4 (traced over Alice, no displacement)
+  Full PTM 4x4:
+    Row 0 = [1, 0, 0, 0]  (trace preserved)
+    Row 1 = [0, 0, 0, 0]
+    Row 2 = [0, 0, 0, 0]
+    Row 3 = [0, 0, 0, 0]
+  -> PTM has rank 1 at chi_t=pi.
+  -> All singular values except one are ZERO.
+  -> Channel is completely depolarizing in Bloch-vector space.
+  This is a much sharper statement than "flat landscape."
+  To verify: compute full PTM numerically and track rank vs chi_t.
