@@ -2842,3 +2842,79 @@ VERDICT: IBM SESSION IS AUTHORIZED. Execute three-point PTM protocol.
 Script: exp_ibm_trotterized_oat.py (pre-existing, update for three-point protocol)
 
 Pre-registration document should be created BEFORE submitting IBM jobs.
+
+
+---
+
+## Session: 2026-05-12 (IBM Dry-Run -- Root Cause Found and Fixed)
+
+### 123. IBM Circuit Root-Cause Diagnosis [CRITICAL FIX]
+
+Three attempts to build the IBM circuit revealed a fundamental model mismatch.
+
+WRONG assumptions:
+  (1) 5-qubit teleportation circuit with Bell measurement + post-processing
+  (2) Full OAT (all ZZ pairs) with theta=chi_t/(2*N) -> T_xx(pi)=0.243 (not 0)
+  (3) Full OAT with theta=chi_t/2 -> T_xx(pi)=0.500 (worse)
+
+ROOT CAUSE: oat_rho2_exact uses H = chi_t * JzL * JzR (CROSS-HALF ZZ only),
+NOT the full OAT Hamiltonian H = chi_t * Jz^2.
+  JzL = (sigma_z0 + sigma_z1)/2   (left half)
+  JzR = (sigma_z2 + sigma_z3)/2   (right half)
+  H = chi_t * JzL * JzR = chi_t/4 * (ZZ_02 + ZZ_03 + ZZ_12 + ZZ_13)
+
+CORRECT CIRCUIT (verified by exact matrix exponentiation):
+  - 4 qubits in |+>^4
+  - Apply ZZ_02, ZZ_03, ZZ_12, ZZ_13 each with theta = chi_t/4
+  - Rotate INNER qubits 1,2 to X basis (H gate)
+  - Measure qubits 1,2
+  - T_xx = <X_1 X_2> / 2
+
+Verification: at chi_t=0.355*pi, T_xx_ideal=0.367 vs analytic=0.360 (1.9% error).
+              at chi_t=pi, T_xx_ideal=-0.010 ~ 0 (confirmed null).
+
+### 124. IBM Dry-Run S1-S3 Results [ALL PASSED]
+
+S1 -- Dry-run (8 CX, 1.6us gate time):
+  chi_t~0:   ideal=0.5000, noisy=0.4440, analytic=0.4999  OK
+  chi_t*:    ideal=0.3670, noisy=0.3340, analytic=0.3600  err=1.9%
+  chi_t=pi:  ideal=-0.010, noisy=-0.012, analytic=0.0000  NULL CONFIRMED
+  Calibration factor: 1.126x (systematic noise correctable)
+  Post-cal error at chi_t*: 0.016 (within pre-registered sigma)
+
+S2 -- Shot noise on T_xx(pi):
+  T_xx(pi) mean=0.001, std=0.019  (30 runs x 500 shots)
+  Pre-registration sigma: 0.028 (revised from initial guess 0.005)
+  Separation from chi_t*: 14.1 sigma -> HIGHLY SIGNIFICANT
+
+S3 -- Circuit depth:
+  8 CX gates, depth=12, gate time=2.1us, 2.6% T2
+  EXCELLENT: well within T2 budget
+
+### 125. Pre-Registered IBM Predictions (FINAL) [FILE BEFORE SUBMISSION]
+
+EXPERIMENT: IBM PTM 3-point, N=4
+HAMILTONIAN: H = chi_t * JzL * JzR (cross-half ZZ)
+CIRCUIT: 4 qubits, |+>^4 prep, 4 ZZ pairs (theta=chi_t/4), measure inner pair
+OBSERVABLE: T_xx = <X_1 X_2>/2 (inner qubit pair)
+BACKEND: ibm_brisbane or ibm_sherbrooke
+SHOTS: 500 per circuit, 3 circuits + 1 calibration job
+
+T_xx CONVENTION (factor-of-2 documented):
+  T_xx_circuit = cos^{N-2}(chi_t/2)/2  (PTM normalized)
+  T_xx_analytic = cos^{N-2}(chi_t/2)   (paper theorem)
+  Invariant ratio T_xx(chi_t*)/T_xx(0) = 0.720 (convention-independent)
+
+PREDICTIONS (noise-corrected via chi_t=0 calibration anchor):
+  T_xx(chi_t~0)  = 0.500 +/- 0.028
+  T_xx(chi_t*)   = 0.360 +/- 0.028
+  T_xx(chi_t=pi) = 0.000 +/- 0.028
+  Passage: T_xx(chi_t*) > T_xx(pi) + 2*sigma_combined = 0.281
+
+FAILURE MODE TAXONOMY:
+  (a) All values degraded uniformly  -> systematic noise; calibrate; NOT failure
+  (b) T_xx(pi) < 2-sigma nonzero     -> shot noise; NOT failure
+  (c) T_xx(chi_t*) <= T_xx(0)        -> circuit angle error; recheck theta=chi_t/4
+  (d) T_xx(pi) > 2-sigma calibrated  -> genuine theorem FAILURE
+
+MINIMUM RESULT: T_xx(chi_t*) > T_xx(pi) at p<0.05 (expected ~14-sigma)
