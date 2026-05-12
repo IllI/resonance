@@ -1248,3 +1248,48 @@ Signal/control feature for D-LinOSS:
 
 Prediction for Session 4: V_Q(tau) decay ~ exp(-4*Gamma*tau) under Lindblad.
 D-LinOSS should recover b=4*Gamma from V_Q time series (same as witness).
+
+
+---
+
+## Session: 2026-05-12 (Dual-TPU Conjecture)
+
+### 59. Dual-TPU Entanglement Conjecture [HYPOTHESIS -- REJECTED as stated, REFRAMED]
+
+**Original conjecture:** Pre-entangle an OAT state, deploy to two TPUs simultaneously,
+demonstrate non-local quantum entanglement persistence in identical pre-entangled
+tensor networks.
+
+**Why this does NOT work as stated:**
+The MPS tensor network is CLASSICAL DATA (a file). Copying it to two TPUs:
+  - Does NOT create a quantum channel between TPUs
+  - Does NOT entangle the TPUs
+  - Produces deterministic, identical outputs (reproducibility, not quantum correlation)
+  - Cannot show collapse/Bell correlations (no quantum measurement taking place)
+
+This is analogous to emailing a density matrix to two computers.
+The entanglement is in the MATHEMATICAL STRUCTURE, not transferred physically.
+
+**What the dual-TPU experiment WOULD demonstrate (legitimate):**
+  1. Hardware-agnostic recovery geometry: same V_Q, F_avg, Hessian on both TPUs
+  2. D-LinOSS classification is objective: same input -> same label, both sides
+  3. Phase diagram scale-up: split (chi_t, Gamma, N) grid 2x faster
+  4. Reproducibility: scientific integrity check for paper figures
+
+**The genuine physics question (future research):**
+Can a PEPS/MPS tensor network encoding non-local correlations be PARTITIONED
+across distributed nodes such that local operations on each partition JOINTLY
+reconstruct properties that neither can compute alone?
+
+This is quantum state redistribution / holographic tensor networks (AdS/CFT).
+Requires quantum communication channel between partitions -- not available on
+classical TPUs. On classical hardware: you always need to communicate the full
+tensor, which destroys non-locality.
+
+**Reframed as a legitimate experiment:**
+TPU-A runs (chi_t, Gamma) sweep for N=4,6. TPU-B runs same for N=8,12.
+Both independently classify via D-LinOSS. Merge phase diagram.
+CLAIM: recovery geometry is hardware-agnostic (not: entanglement is non-local).
+This is a valid reproducibility and scale-up experiment.
+
+Status: Logged. Not in current paper. Could be a methods note.
