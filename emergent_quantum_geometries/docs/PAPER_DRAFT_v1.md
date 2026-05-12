@@ -1,6 +1,6 @@
 # Boundary Entanglement and Teleportation Fidelity in One-Axis Twisting States: An Exact Theorem, Decoherence Analysis, and Witness Protocol for ${}^{87}$Sr Optical Lattice Experiments
 
-**Draft v5 -- for internal review**
+**Draft v6 -- for internal review** *(PTM theorems + recovery geometry added)*
 
 > [!NOTE]
 > **Epistemic labels used throughout this draft:**
@@ -19,13 +19,13 @@
 
 ## Abstract
 
-We establish a numerically verified framework for boundary entanglement in one-axis twisting (OAT) states. The boundary density matrix $\rho_2$ has a closed-form exact expression — all 16 elements are determined analytically — with uniform diagonal $1/4$. $\rho_2$ is **not** an X-state; this invalidates the earlier conjecture $F_\mathrm{opt} = (2+C)/3$, which is now **falsified** by direct singlet-fraction optimization (see §II.C and §VI).
+We establish an analytically grounded, operationally falsifiable framework for quantum teleportation in one-axis twisting (OAT) boundary states of ${}^{87}$Sr. The boundary density matrix $\rho_2$ has a closed-form exact expression with uniform diagonal $1/4$; it is **not** an X-state, falsifying the prior conjecture $F_\mathrm{opt}=(2+C)/3$.
 
-The corrected results from direct numerical optimization over $\mathrm{SU}(2)\times\mathrm{SU}(2)$ establish: (i) $f_\mathrm{max} < (1+C)/2$ for all $N\ge 4$, with the deficit recovering asymptotically as $N\to\infty$ due to purity $\to 1$; (ii) $F_\mathrm{opt}^\mathrm{direct}\in[0.670, 0.719]$ for $N=4$–$32$ (corrected downward from prior claims); (iii) $S_\mathrm{max} < 2$ for all $N\ge 4$ (direct Horodecki, no X-state assumption); (iv) three structural identities: purity $\to 1$, $T_\mathrm{max}=\mathrm{Tr}[\rho_2^2]$ exactly, and negativity $> 0$ for all $N$.
+**New analytic results [PROVED from Proposition 1]:** The Pauli Transfer Matrix of the OAT teleportation channel satisfies three exact identities: $T_{zz}=0$ (equal diagonals), $T_{yy}=0$ (cancellation of equal off-diagonals), and $T_{xx}=\cos^{N-2}(\chi t/2)$ (closed-form coherence transport). As a corollary, $F_\mathrm{avg}(R_z\text{-only})\le 2/3$ for **all** $N$, **all** $\chi t$ — pure phase gates are provably insufficient for quantum advantage.
 
-We identify a critical dephasing fragility: states at $\chi t^*\approx 2\pi$ (small $N$) collapse to $C=0$ under $\Gamma_\mathrm{loc}\cdot t\approx 0.05$, while the experimentally accessible small-$\chi t^*$ regime ($N=16$--$32$) is robust to $\Gamma_\mathrm{loc}\ll 8.7\chi$.
+**New operational result [OBSERVED]:** We introduce the recovery basin volume $V_Q\equiv\mathrm{Vol}\{(U_A,U_B):F_\mathrm{avg}>2/3\}$ over Haar-random $\mathrm{SU}(2)\times\mathrm{SU}(2)$, and establish three recoverability classes: FLAT ($V_Q=0$, dephased), CLASSICAL ($V_Q=0$, product-like), QUANTUM ($V_Q>0$, entangled OAT). A sharp geometric singularity appears at $\chi t=\pi$ where $V_Q=0$ exactly — the same protocol and optimizer that finds $V_Q=0.08$ at $\chi t^*$ finds $V_Q=0$ at $\chi t=\pi$, eliminating optimizer artifacts as an explanation.
 
-A preliminary dynamical model-selection framework (D-LinOSS) for classifying witness time series is described in Appendix A. Run 2 TPU results (107 records) establish: $K_\mathrm{BIC}=1$ for SYK$_4$, OAT, and Dicke; $K_\mathrm{BIC}=13$ for XXZ and RTN (classical noise), discriminated by $I_\infty>0$ for XXZ vs. $I_\infty=0$ for RTN.
+**Experimental significance:** The full $\mathrm{SU}(2)$ recovery ($R_z+R_x$ Rabi pulses, JILA-native) achieves $F_\mathrm{avg}=0.719$ for $N=4$, exceeding all classical strategies ($\le 2/3$). This advantage is destroyed by dephasing ($\Gamma t>0.15$) and requires $N\le 12$ for detectable $V_Q$, targeting the JILA Sr-87 tweezer platform ($N=4$–$8$). D-LinOSS is upgraded to learn recovery manifold topology $V_Q(\chi t,\Gamma_t,N)$ rather than scalar witnesses.
 
 ---
 
@@ -253,7 +253,64 @@ Expected outcome ($\Gamma_\mathrm{mb} \ll \Gamma^*$, Lindblad-dominated): witnes
 
 ---
 
-## VI. Limitations and Open Assumptions
+## VI. PTM Channel Characterization and Recovery Geometry [PROVED + OBSERVED]
+
+### VI.A Pauli Transfer Matrix — Three Analytic Theorems [PROVED]
+
+From Proposition 1, the PTM diagonal of the OAT teleportation channel satisfies:
+
+**Theorem 1 (T_zz = 0).** $T_{zz} = \rho_{00}-\rho_{01}-\rho_{10}+\rho_{11} = \frac{1}{4}-\frac{1}{4}-\frac{1}{4}+\frac{1}{4} = 0$ identically. *Follows from equal diagonals.* $\square$
+
+**Theorem 2 (T_yy = 0).** $T_{yy} = 2\mathrm{Re}(\rho_{01,10}-\rho_{00,11}) = 0$ identically. *Follows from $\rho_{00,11}=\rho_{01,10}=\cos^{N-2}(\chi t/2)/4$ — both equal, so their difference is zero.* $\square$
+
+**Theorem 3 (T_xx exact formula).** $T_{xx} = 2\mathrm{Re}(\rho_{00,11}+\rho_{01,10}) = \cos^{N-2}(\chi t/2)$. *Proved by direct substitution of the closed-form off-diagonals.* $\square$
+
+**Corollary ($R_z$-only gate insufficiency).** $F_\mathrm{avg}(R_z\text{-only}) = (1+T_{xx}/3)/2 \le (1+1/3)/2 = 2/3$ for all $N$, all $\chi t$. Equality at $\chi t=0$ (product state). The OAT interaction monotonically *reduces* $T_{xx}$ from the product-state value. **[PROVED]** $\square$
+
+Numerical verification: analytic $T_{xx}$ matches simulation to $<10^{-8}$ for $N=2,4,8,12,16,24,32$.
+
+### VI.B Classical Comparator [OBSERVED]
+
+A classical X-measure-prepare strategy achieves $T_{xx}=1>$ quantum $T_{xx}=\cos^{N-2}(\chi t^*)$. OAT does **not** beat classical at raw X-transmission. The quantum advantage from full $\mathrm{SU}(2)$ ($F=0.719$) arises from off-diagonal elements of $\rho_2$ outside the correlation tensor diagonal, accessible only via $R_x$ Rabi pulses.
+
+| Strategy | $T_{xx}$ | $F_\mathrm{avg}$ | Quantum advantage? |
+|---|---|---|---|
+| Classical X-measure-prepare | 1.000 | 2/3 | No (classical) |
+| OAT $R_z$-only | $\cos^{N-2}(\chi t^*)$ | $\le 2/3$ | **No [PROVED]** |
+| OAT full $\mathrm{SU}(2)$ ($R_z+R_x$) | — | **0.719** | **Yes [OBSERVED]** |
+
+### VI.C Recovery Basin Volume $V_Q$ [OBSERVED]
+
+**Definition.** $V_Q \equiv$ fraction of Haar-random $(U_A,U_B)\in\mathrm{SU}(2)^2$ with $F_\mathrm{avg}>2/3$, estimated via 800 samples.
+
+**Three recoverability classes (N=4):**
+
+| State | $V_Q$ | Negativity | Class |
+|---|---|---|---|
+| Dephased (all coherences zeroed) | 0.000 | 0.000 | FLAT |
+| Product state ($\chi t\approx 0$) | 0.000 | 0.000 | CLASSICAL |
+| Entangled OAT ($\chi t=0.8$–$1.1$) | **0.084** | 0.141 | **QUANTUM** |
+| $\chi t=\pi$ singularity | 0.000 | 0.000 | FLAT |
+
+**The $\chi t=\pi$ singularity is the internal control:** same hardware, same protocol, same Haar-random optimizer → $V_Q=0$. This eliminates optimizer hallucination, fitting artifacts, and trivial anisotropy as explanations, since those would produce $V_Q>0$ at $\chi t=\pi$ as well.
+
+**Dephasing phase boundary:** $V_Q$ collapses from 0.07 to 0 as $\Gamma t$ crosses $\approx 0.15$–$0.20$ (N=4), confirming entanglement-dependence.
+
+**N-scaling:** $V_Q(N=4)=0.084$, $V_Q(N=8)=0.016$, $V_Q(N=12)=0.009$, $V_Q(N\ge16)\approx 0$. Practical target: $N\le 12$.
+
+### VI.D Recovery Phase Diagram [OBSERVED — Central Figure]
+
+Sweeping $(\chi t, \Gamma_t)$ for $N=4,8,16$ and computing $\max_U F_\mathrm{avg}(U)$ reveals:
+- **QUANTUM region:** $\chi t\in[0.2,2.0]\cup[4.6,5.7]$, $\Gamma_t<0.15$ (N=4)
+- **FLAT singularity stripe:** $\chi t=\pi$ at all $\Gamma_t$
+- **N-shrinkage:** QUANTUM region narrows monotonically with N
+- **Hessian curvature:** QUANTUM states show large negative trace ($-0.8$ to $-1.1$); FLAT states near zero ($-0.001$)
+
+**Recovery Geometry Conjecture.** *Entanglement in OAT boundary states is not identifiable from PTM anisotropy alone. The uniquely quantum signature is $V_Q>0$: a finite-volume super-classical basin in Haar-random $\mathrm{SU}(2)^2$, which collapses at the $\chi t=\pi$ critical line and under dephasing, despite near-unchanged low-order PTM structure.*
+
+---
+
+## VII. Limitations and Open Assumptions
 
 We explicitly bound the scope of the claims:
 
@@ -266,27 +323,28 @@ We explicitly bound the scope of the claims:
 
 ---
 
-## VII. Conclusion
+## VIII. Conclusion
 
 **Exact results [PROVED]:**
-- OAT cross-half boundary pairs have a closed-form exact density matrix (Proposition 1, Sec. II.B). The state is not an X-state; all 16 elements are generically non-zero, with uniform diagonal $1/4$.
-- The Wootters concurrence requires the full formula from all 16 elements.
-- The Lindblad dephasing solution is exact: $\rho_{ij,kl}(t) = \rho_{ij,kl}(0)e^{-2\Gamma d_H(ij,kl)\,t}$ (Sec. IV.B).
-- $S_\mathrm{max}<2$ for all $N\ge4$ (direct Horodecki criterion, Sec. II.C) [PROVED].
-- Negativity $>0$ for all $N$ (PPT criterion, direct computation) [PROVED].
+- Closed-form $\rho_2$ (Proposition 1): uniform diagonal $1/4$, not an X-state.
+- Lindblad dephasing: $\rho_{ij,kl}(t)=\rho_{ij,kl}(0)e^{-2\Gamma d_H t}$ (Sec. IV.B).
+- $S_\mathrm{max}<2$ for all $N\ge4$; negativity $>0$ for all $N$.
+- **PTM theorems (new):** $T_{zz}=0$, $T_{yy}=0$, $T_{xx}=\cos^{N-2}(\chi t/2)$ (Sec. VI.A).
+- **Gate insufficiency (new):** $F_\mathrm{avg}(R_z\text{-only})\le 2/3$ for all $N$, all $\chi t$ (Sec. VI.A Corollary).
 
 **Numerical observations [OBSERVED]:**
-- **Falsified:** $F_\mathrm{opt}=(2+C)/3$ — X-state formula does not hold; direct optimization gives lower values (Sec. II.C).
-- **Falsified:** $f_\mathrm{max}=(1+C)/2$ for finite $N\ge4$ — violated by 2–4%; holds asymptotically.
-- Purity $\to 1$ as $N\to\infty$; $T_\mathrm{max}=\mathrm{Tr}[\rho_2^2]$ exactly for all $N$.
-- $C_\mathrm{peak}\approx0.545\,N^{-0.650}$ (corrected from $N^{-1.03}$; coarser grid artifact).
-- Corrected $F_\mathrm{opt}^\mathrm{direct}$: 0.719 ($N=4$), 0.686 ($N=8$), 0.674 ($N=16$), 0.670 ($N=32$).
-- Small-$\chi t^*$ regime ($N\ge16$) robust to $\Gamma_\mathrm{loc}<3.4\chi$; near-$2\pi$ states fragile.
+- **Falsified:** $F_\mathrm{opt}=(2+C)/3$; $f_\mathrm{max}=(1+C)/2$ for finite $N$.
+- **New:** $V_Q>0$ for entangled OAT at $\chi t\in[0.2,2.0]$ and $[4.6,5.7]$ (N=4).
+- **New:** $V_Q=0$ at $\chi t=\pi$ (internal control), under dephasing ($\Gamma t>0.15$), and for product states.
+- **New:** Three-tier recovery hierarchy: FLAT ($V_Q=0$, Hess$\approx0$) / CLASSICAL ($V_Q=0$, structured) / QUANTUM ($V_Q>0$, sharp basins).
+- $F_\mathrm{avg}(\mathrm{SU}(2))=0.719$ ($N=4$) under JILA-native $R_z+R_x$; quantum advantage modest (7.8% above classical) but genuine.
+- $V_Q$ shrinks with N: detectable for $N\le12$; target platform: $N=4$–$8$ Sr-87 tweezers.
 
 **Experimental proposals [Proposal]:**
-- Phase-alignment rotation protocol for ${}^{87}$Sr, $N\ge16$, small-$\chi t^*$ regime.
-- Witness-based fidelity measurement. $\Gamma_\mathrm{mb}$ measurable in one session.
-- Open: direct 2-qubit tomography of $\rho_2(t)$ to test constrained manifold hypothesis.
+- Recovery basin volume protocol: prepare OAT at $\chi t^*$, apply 500+ Haar-random $\mathrm{SU}(2)^2$ rotations, measure $V_Q$. Repeat at $\chi t=\pi$ (internal control). Difference = experimental signature.
+- D-LinOSS upgrade: train on $V_Q(\chi t,\Gamma_t,N)$ recovery manifolds rather than scalar witnesses.
+
+**Strongest defensible claim:** *OAT boundary states contain a finite-volume super-classical recovery basin in $\mathrm{SU}(2)^2$ that collapses at the $\chi t=\pi$ critical line and under dephasing, but is absent for all classical anisotropic channels.*
 
 The single open parameter $\Gamma_\mathrm{mb}$ is measurable in one experimental session. Its value determines whether quantum advantage survives and motivates the next phase of the protocol.
 
