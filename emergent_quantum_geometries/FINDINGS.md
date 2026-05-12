@@ -2027,3 +2027,90 @@ Paper phrasing:
   significantly from the mean-field prediction beta=2, suggesting anomalous
   basin geometry consistent with a cusp-like approach to the chi_t=pi
   singular collapse point."
+
+
+---
+
+## Session: 2026-05-12 (Strategic Checkpoint)
+
+### 88. Current Narrative -- Complete Architecture [FRAMING]
+
+Six-layer narrative (do not add more layers until Gate 2 complete):
+
+  1. EXACT CHANNEL STRUCTURE
+     T_xx = cos^{N-2}(chi_t/2), T_yy = T_zz = 0.
+     Singular collapse at chi_t=pi. [PROVED]
+
+  2. OPERATIONAL LIMITATION THEOREM
+     F_avg(R_z-only) <= 2/3 for all N, all chi_t. [PROVED]
+     Pure phase gates cannot achieve quantum advantage, regardless of optimization.
+
+  3. GENUINE QUANTUM CORRECTION
+     Delta_F ~ 0.052 via full SU(2) recovery (N=4). [OBSERVED]
+     Accessible through basin geometry.
+
+  4. RECOVERY CRITICALITY
+     kappa_Q ~ |delta|^beta with beta=1.0 (N=4, R^2=0.954). [OBSERVED]
+     Non-mean-field cusp geometry (mean-field would give beta=2).
+     Singularity sharpens with N: N=4 is optimal experimental window.
+     [NEEDS Gate 2: beta = 1.00 +/- ?]
+
+  5. GEOMETRIC PHASE STRUCTURE
+     Three operational phases: QUANTUM/CLASSICAL/SINGULAR.
+     Each has distinct basin topology, curvature, and modal fingerprint. [OBSERVED]
+
+  6. D-LINOSS EXTENSION
+     Recovery manifolds as learned geometric embeddings.
+     Curve-shape fingerprint identifies singular class without labels. [OBSERVED, partial]
+
+### 89. Gate 2 Execution Plan [IMMEDIATE PRIORITY]
+
+Do NOT add new experiments until these are done:
+
+  A. Bootstrap 95% CI for beta and nu:
+     Method: run kappa_Q at 8 delta points x5 optimizer seeds each.
+     Resample with replacement 1000 times. Report 2.5/97.5 percentiles.
+     Target: beta = 1.00 +/- 0.XX
+
+  B. Haar convergence test for V_Q:
+     n_samples in {50, 100, 200, 400, 600, 800, 1000} at chi_t*.
+     Report: at what n does V_Q converge to within 5%?
+
+  C. Optimizer seed independence for kappa_Q:
+     n_restarts in {5, 10, 15, 20} at chi_t*.
+     10 random seeds. Report coefficient of variation.
+
+  D. Bootstrap 95% CI for nu:
+     V_Q at 8 chi_t points near chi_tc x5 seeds each.
+     Resample 1000 times.
+     Target: nu = 0.729 +/- 0.XX
+
+  E. Finite-size uncertainty propagation:
+     For each N, report kappa_Q mean +/- std over 5 optimizer seeds.
+
+### 90. Deep Physical Result: Singularity Sharpening [KEY FINDING]
+
+"The singularity sharpens with N."
+
+Physical table:
+  N=4:  kappa_Q ~ 0.083 at delta=0.032*pi   (broad, measurable critical regime)
+  N=6:  kappa_Q ~ 0.004 at delta=0.032*pi   (22x smaller)
+  N=8:  kappa_Q ~ 0.0001 at delta=0.032*pi  (830x smaller than N=4)
+  N=10: kappa_Q ~ 0.000006 (near numerical precision)
+
+Physical interpretation:
+  Small N: broad recoverable phase, experimentally accessible critical regime.
+  Large N: sharply pinched critical region, near-measure-zero recovery basin.
+  
+  N=4 is not computationally convenient -- it is the OPTIMAL OBSERVABLE WINDOW.
+  
+  For JILA Sr-87 tweezers (N=4-8):
+    N=4 gives widest critical regime and cleanest power law.
+    N=6 is the edge of measurability.
+    N=8+ requires hardware beyond current sensitivity.
+
+JILA-facing statement:
+  "Teleportation-capable states occupy a distinct recoverability phase
+  with measurable geometric criticality and experimentally internal
+  singular controls. The critical window is maximal at N=4 and sharpens
+  with system size, motivating experiments at N=4-6."
