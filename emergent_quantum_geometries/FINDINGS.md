@@ -1019,3 +1019,87 @@ Classification targets: {FLAT(V_Q=0), CLASSICAL(V_Q=0,F<2/3), QUANTUM(V_Q>0)}
 The D-LinOSS mission: learn recovery geometry from tensor-network simulations
 calibrated against JILA Sr-87 OAT experiments and IBM quantum datasets.
 Not just scalar witnesses -- the full recovery manifold topology.
+
+
+---
+
+## Session: 2026-05-12 (Case Assessment and JILA Relevance)
+
+### 51. What the Monte Carlo Actually Did [CLARIFICATION]
+
+The 'Monte Carlo' in basin_volume.py is Haar-random SU(2)×SU(2) sampling.
+NOT MCTS. NOT PEPS-MC. Specifically:
+1. Draw 800 random SU(2) matrices (U_A, U_B) from Haar measure
+2. For each pair compute F_avg(U_A⊗U_B rho)
+3. V_Q = fraction with F_avg > 2/3
+
+V_Q>0 means a finite-measure subset of SU(2)×SU(2) gives F>2/3.
+For dephased/product states: V_Q=0 exactly (no such region under Haar measure).
+
+Connection to arXiv:2603.16509 (Dziarmaga et al., PEPS Monte Carlo):
+- That paper: MC Metropolis-Hastings sampling from PEPS for 3D quantum annealing
+- OAT rho_2 IS a tensor network (1D, bond dim D=2-4)
+- For N>12: PEPS-MC could estimate V_Q without full 4^N density matrix
+- Kibble-Zurek phase transition structure in that paper is analogous to our
+  FLAT->CLASSICAL->QUANTUM transition in the recovery phase diagram
+- Upgrade path: train D-LinOSS on PEPS-MC V_Q trajectories for N=20-50
+
+### 52. Case Strength Summary
+
+PROVED (analytic):
+  - T_zz=0, T_yy=0, T_xx=cos^{N-2}(chi_t/2) from Proposition 1
+  - F_avg(Rz-only) <= 2/3 for all N, all chi_t
+
+OBSERVED (numerically robust):
+  - F_avg(SU2)=0.719>2/3 for N=4 at chi_t*
+  - V_Q>0 for entangled OAT; V_Q=0 for dephased, product, chi_t=pi
+  - Dephasing phase boundary at Gamma_t~0.15-0.20
+  - N-scaling confirmed N=2..32
+
+LIMITATIONS:
+  - V_Q small (5-8% at N=4, ~0 at N>=16)
+  - Quantum advantage modest: 7.8% above classical (0.719 vs 0.667)
+  - No CHSH violation (Bell nonlocality absent)
+  - N-scaling unfavorable at JILA lattice scales (N~100-1000)
+  - All simulation, no experimental implementation yet
+
+VERDICT: Strong methodology paper (PRA/PRResearch target).
+  Not Nature Physics without experimental validation.
+
+### 53. JILA Experimental Relevance
+
+Native gate match:
+  - Rz = clock laser phase shift (Sr-87, already implemented)
+  - Rx = Rabi pulses (already implemented)
+  These are EXACTLY the gates needed for our SU(2) recovery operations.
+
+Parameter targeting from phase diagram:
+  - Target: chi_t in [0.3, 1.0] (first QUANTUM lobe, N=4-8)
+  - Avoid: chi_t=pi (singularity), chi_t>2.0 (V_Q vanishes)
+  - Decoherence limit: Gamma_t < 0.15
+
+Optimal platform: N=4-8 atoms in tweezer array (Norcia et al. Science 2021).
+NOT large lattice clock (N~1000): V_Q~0 at those scales.
+
+Experimental protocol:
+  1. Prepare rho_2 via OAT at chi_t* (already demonstrated at JILA)
+  2. Apply Haar-random Rz+Rx to boundary atoms (500+ pairs)
+  3. Measure F_avg via state tomography
+  4. Estimate V_Q = frac(F>2/3)
+  5. Repeat at chi_t=pi (internal control -- expect V_Q=0)
+  6. The difference V_Q(chi_t*) - V_Q(pi) is the experimental signature
+
+### 54. D-LinOSS Mission (Final Statement)
+
+D-LinOSS learns recovery geometry from:
+  - Tensor-network simulation of OAT boundary states (this work)
+  - JILA Sr-87 experimental datasets (OAT squeezing trajectories)
+  - IBM quantum datasets (Trotterized OAT on gate-based QPU)
+
+Training target upgrade:
+  - OLD: C(t), W(t), S_CHSH(t) -- scalar observables
+  - NEW: V_Q(chi_t, Gamma_t, N) -- recovery basin volume
+
+Classification: {FLAT, CLASSICAL, QUANTUM} by recovery manifold topology.
+Generalization: different physics (MBL, SYK, Dicke) produce different topologies.
+Long-term: recovery geometry as universal quantum diagnostic across platforms.
