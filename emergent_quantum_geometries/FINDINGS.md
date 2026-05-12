@@ -1881,3 +1881,79 @@ Why powerful:
   - Allows "topological accessibility of teleportation resources"
 
 Implementation: grid SU(2)^2, threshold F>2/3, connected components via NetworkX.
+
+
+---
+
+## Session: 2026-05-12 (Critical Exponent Results)
+
+### 83. Critical Scaling Confirmed -- Two Clean Power Laws [OBSERVED]
+
+Script: critical_exponent.py | N=4, dense sampling near phase boundaries
+
+**RESULT A: kappa_Q ~ |chi_t - pi|^beta**
+  beta = 0.8660
+  A    = 0.3150
+  R^2  = 0.9626
+  N_fit = 12 points over ~2 decades (delta/pi: 0.0003 to 0.06)
+  Status: CLEAN POWER LAW (R^2 > 0.95) -- CRITICAL SCALING CONFIRMED
+
+  Analytic comparison:
+    Mean-field prediction (kQ ~ T_xx ~ sin^2(delta/2) ~ delta^2): beta=2.0
+    Square-root prediction (kQ ~ T_xx^{1/2} ~ delta):              beta=1.0
+    Observed:                                                       beta=0.866
+    -> NON-MEAN-FIELD exponent. beta < 1, consistent with anomalous geometry.
+    Note: beta ~ sqrt(3)/2 = 0.866 (geometric; probably coincidence).
+
+**RESULT B: V_Q ~ |chi_t - chi_tc|^nu (near QUANTUM-CLASSICAL boundary)**
+  chi_tc = 0.680*pi (empirical upper phase boundary)
+  nu     = 0.7293
+  C      = 0.0922
+  R^2    = 0.9718
+  N_fit  = 11 points
+  Status: CLEAN POWER LAW at QUANTUM-CLASSICAL boundary
+
+  Reference universality classes:
+    Mean-field:  nu=0.5
+    2D Ising:    nu=1.0
+    3D Ising:    nu=0.630
+    3D Heisenberg: nu=0.710
+    Observed:    nu=0.729 <- closest to 3D Heisenberg but NOT matching any standard class
+
+### 84. N-Universality Test Needed [PLANNED -- NEXT]
+
+CRITICAL QUESTION: Is beta universal (N-independent)?
+
+If beta(N=4) = beta(N=6) = beta(N=8) to within statistical uncertainty:
+  -> Universal exponent -> major result
+  -> "The recovery curvature exponent is N-independent in the range N=4-8"
+  -> This moves the paper significantly toward universality class claim
+
+If beta(N) shifts with N:
+  -> N-dependent exponent -> finite-size scaling required
+  -> beta(N->inf) extrapolation gives the thermodynamic exponent
+  -> Still a strong result but requires more work
+
+ALSO TEST: nu(N) for V_Q phase boundary.
+Is chi_tc(N) different? Does nu depend on N?
+
+### 85. Paper Impact of Critical Exponents [FRAMING]
+
+If beta and nu are N-universal to within error bars:
+  CLAIM: "The recovery manifold exhibits universal critical scaling
+  near the geometric phase boundaries, with exponents beta=0.866
+  and nu=0.729 that do not match any standard mean-field prediction."
+
+This is significantly stronger than:
+  "We found fidelity > 2/3."
+
+Because:
+  - Universal exponents suggest EMERGENT GEOMETRY, not model-specific artifacts
+  - Non-mean-field exponents imply genuinely anomalous geometry
+  - The chi_t=pi singularity is a PHASE BOUNDARY with measurable critical exponents
+
+Preferred phrasing:
+  "We observe critical scaling kappa_Q ~ |chi_t-pi|^{0.87} near the
+  singular collapse point, with R^2=0.96 over two decades. The exponent
+  deviates significantly from the mean-field prediction (beta=2), suggesting
+  anomalous curvature geometry in the recovery manifold near the singularity."
