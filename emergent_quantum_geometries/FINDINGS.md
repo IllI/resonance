@@ -684,3 +684,83 @@ This would explain why T_zz=0 (Z is fully scrambled by the OAT interaction)
 and T_xx > 0 (X-coherences survive in the boundary pair).
 
 OPEN: derive T_xx(N, chi_t) analytically from the closed-form rho_2 formula.
+
+
+---
+
+## Session: 2026-05-12 (Analytic PTM + Classical Comparator)
+
+### 34. PTM Analytic Theorems [PROVED from Proposition 1]
+
+From the closed-form rho_2 formula, three identities proved exactly:
+
+**Theorem A: T_zz = 0 identically**
+  T_zz = rho_00 - rho_01 - rho_10 + rho_11 = 1/4 - 1/4 - 1/4 + 1/4 = 0.
+  Follows directly from uniform diagonals.
+
+**Theorem B: T_yy = 0 identically**
+  T_yy = 2Re(rho_{01,10} - rho_{00,11}).
+  From the formula: rho_{00,11} = rho_{01,10} = cos^{N-2}(chi_t/2)/4 exactly.
+  Therefore T_yy = 0 identically.
+
+**Theorem C: T_xx = cos^{N-2}(chi_t/2)**
+  T_xx = 2Re(rho_{00,11} + rho_{01,10}) = 2*2*cos^{N-2}(chi_t/2)/4 = cos^{N-2}(chi_t/2).
+  This is an exact, closed-form formula for X-coherence transport.
+
+**Corollary (PROVED): F_avg(Rz-only) <= 2/3 for ALL N, ALL chi_t.**
+  F_avg = (1 + T_xx/3)/2. Since T_xx = cos^{N-2}(chi_t/2) <= 1, F_avg <= 2/3.
+  Equality achieved at chi_t=0 (product state). Rz-only gives NO quantum advantage.
+
+Numeric verification (N=4,8,12,...,32): analytic == numeric to 8 decimal places. CONFIRMED.
+
+### 35. Classical Comparator [OBSERVED]
+
+| Strategy | T_xx | T_yy | T_zz | F_avg |
+|----------|------|------|------|-------|
+| Classical X-measure-prepare | 1.000 | 0.000 | 0.000 | 0.667 |
+| Classical Z-measure-prepare | 0.000 | 0.000 | 1.000 | 0.667 |
+| Classical isotropic | 0.333 | 0.333 | 0.333 | 0.667 |
+| Quantum OAT (Rz-only) | 0.970 | 0.000 | 0.000 | 0.661 |
+| Quantum OAT (full SU(2)) | — | — | — | **0.719** |
+
+Key finding: Classical X-measure-prepare has T_xx=1 > quantum T_xx=0.97.
+The OAT channel does NOT beat classical in raw X-transmission.
+But full SU(2) optimization achieves F_avg=0.719 > 2/3 (all classical strategies).
+
+### 36. Entanglement Destruction Test [OBSERVED]
+
+| State | Negativity | f_max | F_avg | QA? |
+|-------|-----------|-------|-------|-----|
+| OAT N=4, chi_t*=5.934 | 0.0788 | 0.5780 | 0.7186 | YES |
+| Fully dephased (diag only) | 0.0000 | 0.2500 | 0.5000 | NO |
+| Product state (chi_t=0) | 0.0000 | 0.5003 | 0.6668 | NO |
+| Maximally mixed | 0.0000 | 0.2500 | 0.5000 | NO |
+
+Quantum advantage (F>2/3) exists ONLY for the entangled state.
+Destroying entanglement (dephasing) collapses F from 0.719 to 0.500.
+The advantage is entanglement-dependent and disappears without coherence. CONFIRMED.
+
+Note: negativity computation corrected (partial transpose: transpose(0,3,2,1), not (2,0,3,1)).
+
+### 37. Definitive Scientific Claim (Final Corrected Version)
+
+The correct operational claim, surviving all reviewer objections:
+
+> "OAT boundary states (N=4, Sr-87) achieve teleportation fidelity F_avg=0.719
+> under JILA-native SU(2) operations (Rz + Rx Rabi pulses), exceeding the
+> classical limit 2/3. This advantage: (a) is genuine -- destroyed by dephasing;
+> (b) exceeds all classical measure-prepare strategies; (c) requires Rx (not just Rz);
+> (d) co-occurs with a proved anisotropic PTM structure T_xx=cos^{N-2}(chi_t/2),
+> T_yy=T_zz=0 from Proposition 1."
+
+What the PTM anisotropy IS:
+- A structural property of the OAT resource [PROVED]
+- Explains why the channel is direction-selective
+- The classical X-restricted channel also has T_xx=1 > quantum T_xx=0.97
+
+What the PTM anisotropy IS NOT:
+- The source of quantum advantage (classical achieves T_xx=1 at F=2/3)
+- Evidence of X-sector quantum enhancement (classical is better at raw X-transmission)
+
+The quantum advantage comes from: full SU(2) alignment exploiting ALL off-diagonal
+elements of rho_2 (not just the correlation tensor diagonal) to maximize singlet fraction.
