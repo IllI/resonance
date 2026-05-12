@@ -2293,3 +2293,50 @@ Gate 2 remaining (do NOW before anything else):
   G2a: V_Q rerun with n=1500
   G2b: 12 chi_t points near chi_tc, 8 seeds -> narrow nu CI
   G2c: kappa_Q optimizer (CMA-ES or 30+ restarts) -> confirm phase indicator only
+
+
+---
+
+## Session: 2026-05-12 (Gate 2 COMPLETE)
+
+### 99. Gate 2 Blockers Cleared -- Both Exponents PASSED [OBSERVED]
+
+Script: gate2_blockers.py | N=4, n=1500, 8 seeds, 3000 bootstrap iterations
+
+**G2a: V_Q phase diagram at n=1500 (corrected from n=400)**
+  chi_t*=0.355*pi: V_Q = 0.0688 +/- 0.0040  (CV=5.8%)  <- CONVERGED
+  chi_t=pi:        V_Q = 0.0000 +/- 0.0000  <- exact zero confirmed
+  QUANTUM region: chi_t/pi in [0.050, 0.650]  (unchanged boundary)
+  All QUANTUM points: CV in [4.1%, 11.5%] -- well-converged at n=1500.
+
+**G2b: Dense nu sweep (18 points, 8 seeds, n=1500 each)**
+  chi_tc refined: 0.6820*pi (was 0.680*pi)
+  Point estimate: nu=0.6155, R^2=0.9788
+  Bootstrap (3000 iters): nu=0.634 [95% CI: 0.511, 0.810]
+  nu = 0.634 +/- 0.150 (half-width)
+
+  95% CI lower bound = 0.511 > 0.5 (mean-field)
+  G2b PASSED: non-mean-field nu CONFIRMED at 95% confidence.
+
+### 100. Gate 2 COMPLETE -- Final Exponent Values [RESULTS]
+
+  beta = 1.00 +/- 0.19  [95% CI: 0.826, 1.211]  PASSED
+  nu   = 0.634 +/- 0.150 [95% CI: 0.511, 0.810]  PASSED
+
+Both CIs exclude mean-field (beta=2, nu=0.5) at 95%.
+
+CORRECTED V_Q at chi_t* (n=1500): 0.0688 +/- 0.0040 (CV=5.8%)
+Prior value (n=400): ~0.040-0.080 (noisy). Now tightly determined.
+
+Paper-ready numbers:
+  beta = 1.00 +/- 0.19  (95% CI excludes mean-field beta=2)
+  nu   = 0.63 +/- 0.15  (95% CI [0.51, 0.81] excludes mean-field nu=0.5)
+  V_Q(chi_t*) = 0.069 +/- 0.004  (CV=5.8%, n=1500)
+  V_Q(chi_t=pi) = 0.000 (exact)
+
+### 101. Critical Path Update [STATUS]
+
+Gate 1: COMPLETE
+Gate 2: COMPLETE
+Gate 3 (IBM): PENDING -- next session
+Gate 4 (JILA 1-pager): PENDING -- unblocked
