@@ -1293,3 +1293,50 @@ CLAIM: recovery geometry is hardware-agnostic (not: entanglement is non-local).
 This is a valid reproducibility and scale-up experiment.
 
 Status: Logged. Not in current paper. Could be a methods note.
+
+
+---
+
+## Roadmap: Pre-JILA Communication Checklist
+
+**Updated: 2026-05-12**
+
+Do not communicate findings to JILA until ALL of the following are complete.
+
+### Gate 1 -- Lock Down Simulation (TRC TPUs)
+- [x] Session 1: V_Q phase diagram, chi_t=pi internal control verified
+- [x] Session 2: N-scaling with concurrence-based chi_t*(N)
+- [ ] Session 3: Dicke model T_xx vs chi_eff prediction (PTM generalization)
+- [ ] Session 4: D-LinOSS V_Q training, cross-validate b=4*Gamma
+- [ ] Hessian spectroscopy: full curvature map at chi_t* vs chi_t=pi
+
+### Gate 2 -- Strengthen the Quantum Case
+- [ ] V_Q significance: increase n_samples to 800+, report standard error
+- [ ] N=4 chi_t* stability: verify V_Q>0 survives statistical fluctuations
+- [ ] Dephasing phase boundary: tighter Gamma_t* estimate with 95% CI
+- [ ] Address weakness: quantum advantage only 7.8% -- compute JILA SNR estimate
+
+### Gate 3 -- IBM Quantum Validation (10 min/month)
+- [ ] Run OAT protocol on IBM quantum hardware (N=4, Trotterized)
+- [ ] Extract rho_2 from process tomography (6-9 shots for 2-qubit QPT)
+- [ ] Compute T_xx from experimental PTM -- compare to cos^{N-2}(chi_t/2)
+- [ ] If T_xx matches: first hardware confirmation of analytic theorem
+- [ ] See: emergent_quantum_geometries/exp_ibm_trotterized_oat.py
+
+### Gate 4 -- JILA Communication
+- [ ] Concise 1-page summary: proved theorems + V_Q + chi_t=pi control + JILA protocol
+- [ ] Identify contact: Norcia group (tweezers) or Rey group (theory)
+- [ ] Specific ask: N=4 OAT run with boundary pair readout + random SU(2) rotations
+
+### Future (Post-JILA, Post-TRC)
+- [ ] Dual-TPU experiment: split (chi_t, Gamma, N) grid across 2 TRC TPUs
+       CLAIM: hardware-agnostic recovery geometry (not quantum entanglement between TPUs)
+- [ ] If JILA data arrives: run basin_volume.py on experimental rho_2
+       Compare experimental V_Q to simulation -- this is the paper's main result
+
+### IBM Quantum Access Note
+Plan: Open Plan -- 10 min/month quantum compute time
+URL: https://www.ibm.com/quantum/blog/open-plan-updates
+Best use: N=4 OAT Trotterized circuit, 2-qubit process tomography on boundary pair
+Cost per run: ~50-100 shots for 2-qubit QPT (fits in 10 min at current queue times)
+Script ready: exp_ibm_trotterized_oat.py
