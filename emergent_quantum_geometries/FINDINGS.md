@@ -1957,3 +1957,73 @@ Preferred phrasing:
   singular collapse point, with R^2=0.96 over two decades. The exponent
   deviates significantly from the mean-field prediction (beta=2), suggesting
   anomalous curvature geometry in the recovery manifold near the singularity."
+
+
+---
+
+## Session: 2026-05-12 (N-Universality Results)
+
+### 86. Critical Exponent N-Scaling -- Corrected Results [OBSERVED]
+
+Script: beta_n_scaling.py | N in {4,6,8,10}, delta range 0.0006-0.10
+
+**CORRECTION to SS83:**
+  Previous beta=0.866 was a CROSSOVER ARTIFACT (wider delta range mixed two regimes).
+  Asymptotic fit (smaller delta, tight range) gives:
+    N=4: beta = 1.0001, A=0.584, R^2=0.954 <- clean LINEAR scaling
+
+**N=4: beta = 1.0 (linear)** [CORRECTED, CONFIRMED]
+  kappa_Q ~ 0.584 * |chi_t - pi|^1.0
+  Physical: Hessian curvature is LINEAR in distance from singularity.
+  NOT mean-field (beta=2 would mean kQ~T_xx).
+  Instead: kQ ~ sqrt(T_xx) since T_xx ~ delta^2 and kQ ~ delta^1.
+  Interpretation: the recovery basin has a CUSP-LIKE approach to the singularity,
+  not a smooth quadratic one.
+
+**N=6,8,10: kappa_Q collapses below numerical resolution at same delta range.**
+  For N=6, delta=0.032*pi: kappa_Q ~ 0.003 (barely above noise)
+  For N=8, delta=0.032*pi: kappa_Q ~ 0.0001 (noise floor)
+  For N=10, delta=0.032*pi: kappa_Q ~ 0.000006 (numerical precision)
+  
+  Root cause: T_xx = cos^{N-2}(chi_t/2) ~ sin^{N-2}(delta/2) ~ delta^{N-2}
+    N=4: T_xx ~ delta^2 (measurable)
+    N=6: T_xx ~ delta^4 (collapses faster by delta^2)
+    N=8: T_xx ~ delta^6 (even faster)
+  
+  To fit beta(N=6) need delta >> current range (delta/pi ~ 0.05-0.30).
+  This requires a separate sweep with larger deltas for N>4.
+
+**KEY IMPLICATION:**
+  The chi_t=pi singularity becomes SHARPER with N:
+  - N=4: kappa_Q has a gentle linear approach to 0 (beta=1)
+  - N=6: kappa_Q collapses N-2=4 times faster (beta would be ~2)
+  - N=8: kappa_Q collapses 6 times faster
+  This is consistent with N=4 being the optimal experimental window
+  (confirmed from earlier phase diagram work).
+  For JILA experiments: N=4 gives the widest observable critical regime.
+
+### 87. Corrected Beta and Physical Interpretation [ANALYSIS]
+
+TRUE RESULT: beta = 1.0 for N=4, R^2=0.954
+  kappa_Q ~ 0.584 * |chi_t - pi|^1.0
+
+Physical meaning of beta=1:
+  Since T_xx = cos^{N-2}(chi_t/2) ~ (delta/2)^{N-2} for N=4: T_xx ~ delta^2
+  kappa_Q ~ delta^1 = T_xx^{1/2}
+
+  The Hessian of the recovery landscape scales as the SQUARE ROOT of the
+  PTM coherence T_xx near the singularity.
+  This is a non-trivial geometric result:
+  "Basin curvature is proportional to sqrt(T_xx) near the singular phase."
+
+Physical scenario consistent with beta=1:
+  Near chi_t=pi, the recovery basin has a CUSP structure in F(theta):
+  F(theta) ~ F_max - |theta|^{alpha}  (cusp, not parabola)
+  For a cusp: Hessian alpha at the cusp is NOT well-defined (diverges at cusp).
+  Instead kQ measures the "effective" Hessian, which scales linearly with T_xx^{1/2}.
+
+Paper phrasing:
+  "The recovery curvature exponent beta=1.0 (R^2=0.954, N=4) deviates
+  significantly from the mean-field prediction beta=2, suggesting anomalous
+  basin geometry consistent with a cusp-like approach to the chi_t=pi
+  singular collapse point."
