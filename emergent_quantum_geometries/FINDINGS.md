@@ -2207,3 +2207,89 @@ ACTION ITEMS:
   2. Report kappa_Q only as: zero at pi / non-zero at chi_t* (qualitative)
   3. For paper figure: show kappa_Q mean +/- std over 6 seeds, not single estimate
   4. Improve kappa_Q via line search starting from best-found optimum (more restarts)
+
+
+---
+
+## Session: 2026-05-12 (Strategic Hardening)
+
+### 94. Downgrade kappa_Q from Precision Observable to Phase Indicator [FRAMING]
+
+kappa_Q should NOT be cited as a precise value.
+It should be presented as a PHASE INDICATOR only.
+
+Table for paper:
+  Regime      kappa_Q behavior
+  QUANTUM     finite negative curvature (nonzero, optimizer-dependent)
+  CLASSICAL   shallow curvature (smaller, still noisy)
+  SINGULAR    collapse to zero (EXACT, optimizer-independent)
+
+The singularity (kappa_Q=0 at chi_t=pi) is the only robust value.
+All other kappa_Q values should be reported qualitatively or as order-of-magnitude.
+
+PRIMARY QUANTITATIVE OBSERVABLES (robust):
+  beta = 1.00 +/- 0.19  [Gate 2 PASSED]
+  nu   = 0.63 +/- 0.17  [Gate 2 PARTIAL -- report observationally only]
+  V_Q (with n>=1500)
+  Singular-collapse ratios (singularity vs. nonzero, not precise peak)
+
+### 95. nu -- Correct Epistemic Status [CORRECTION]
+
+Current nu = 0.63 +/- 0.17 [95% CI: 0.46, 0.80]
+Lower CI bound = 0.46 < 0.5 (mean-field).
+
+DO NOT CLAIM:
+  - universality class distinction
+  - critical universality
+  - non-mean-field nu
+
+DO CLAIM:
+  "We observe nu = 0.63 +/- 0.17, consistent with non-mean-field scaling
+  but not yet statistically distinguishable from mean-field (nu=0.5) at 95%."
+
+Elevate nu claim only after Gate 2b (12+ points, 8 seeds near chi_tc) is done.
+
+### 96. IBM Gate 3 -- Cross-Platform Consistency, NOT Proof [FRAMING]
+
+DO NOT present IBM hardware as proof of teleportation.
+DO present as: "hardware consistency with the analytic recovery geometry."
+
+Test strategy:
+  1. Measure T_xx(chi_t) at 3-5 values on IBM quantum
+  2. Compare to cos^{N-2}(chi_t/2) -- analytic prediction
+  3. Include chi_t=pi as internal null (T_xx ~ 0 on hardware too)
+  4. Phrase: "hardware measurements are consistent with the PTM theorem
+     within Trotter and gate-error bounds"
+
+The strength of Gate 3:
+  Cross-platform survivability, NOT precision.
+  Noisy intermediate-scale hardware adds qualitative support, not quantitative.
+  Gate-error noise, Trotterization, and SPAM errors must be acknowledged.
+
+### 97. Topology -- Paper 2, Not Paper 1 [DECISION]
+
+Persistent homology, basin connectivity (C_conn), Betti numbers:
+  - Belong in a SECOND paper or follow-up theory section.
+  - Adding now risks making the paper appear diffuse.
+  - Current paper scope is already substantial.
+  - Note topology direction in Discussion/Outlook section ONLY.
+
+### 98. Current Scope for Paper 1 [FINAL SCOPE]
+
+Paper 1 claims (exact scope):
+  1. Exact PTM: T_xx = cos^{N-2}(chi_t/2), T_yy=T_zz=0  [PROVED]
+  2. R_z-only bound: F <= 2/3 for all N, chi_t            [PROVED]
+  3. SU(2) correction: Delta_F ~ 0.052 (N=4)              [OBSERVED]
+  4. Recovery criticality: beta=1.00+/-0.19               [OBSERVED, Gate 2 PASSED]
+  5. Geometric phase: QUANTUM/CLASSICAL/SINGULAR           [OBSERVED]
+  6. Singularity sharpens with N; N=4 optimal window       [OBSERVED]
+  7. Dicke crossover: V_Q>0 near g_c                      [OBSERVED]
+  8. IBM: T_xx consistent with theorem                     [Gate 3]
+  9. Recovery Basin Conjecture (formal)                    [HYPOTHESIS]
+
+Paper 2 (future): topology, universal scaling collapse, D-LinOSS full upgrade.
+
+Gate 2 remaining (do NOW before anything else):
+  G2a: V_Q rerun with n=1500
+  G2b: 12 chi_t points near chi_tc, 8 seeds -> narrow nu CI
+  G2c: kappa_Q optimizer (CMA-ES or 30+ restarts) -> confirm phase indicator only
