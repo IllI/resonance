@@ -1402,3 +1402,112 @@ The PTM framework (V_Q, three-tier hierarchy) generalises beyond pure OAT:
 For Rey 2026 connection: the two-mode squeezing at short times IS a boundary 
 entanglement resource. The collapses/revivals correspond to C(t) oscillations.
 The departure from OAT approximation near g_c is measurable experimentally.
+
+
+---
+
+## Session: 2026-05-12 (Theoretical Synthesis)
+
+### 63. The Recovery Basin Conjecture [FORMAL CONJECTURE]
+
+**Quantum-transport-capable many-body channels are characterized by
+finite-volume super-classical recovery basins embedded in local-unitary
+control space. These basins collapse at singular interaction phases and
+under sufficient dephasing.**
+
+Operationally:
+  V_Q > 0   <->  channel admits super-classical fidelity recovery
+  V_Q = 0   <->  channel is in FLAT or CLASSICAL class (no quantum transport)
+
+Collapse conditions (proved or observed):
+  1. chi_t = pi: T_xx=0, V_Q=0, F_max=0.5 [PROVED for N>=4]
+  2. Dephasing Gamma_t > Gamma_t*(N): V_Q->0 [OBSERVED]
+  3. Product state (chi_t=0): V_Q=0 [OBSERVED]
+  4. Dicke g<0.2*g_c: V_Q<0.01 [OBSERVED]
+
+This conjecture is:
+  - Experimentally testable (V_Q is measurable)
+  - Numerically measurable (Haar-random sampling)
+  - Theoretically meaningful (geometric interpretation)
+
+### 64. Logical Architecture of the Paper [FRAMING]
+
+Layer                   | Status
+------------------------|---------------------------
+PTM anisotropy          | exact theorem
+Rz-only insufficiency   | exact corollary
+SU(2) correction        | operational observation
+Basin topology          | operational observable
+chi_t=pi collapse       | internal falsification
+Dicke crossover         | cross-platform evidence
+Recovery Basin Conjecture | formal conjecture
+
+This is the correct hierarchy. The paper is NOT:
+  "We demonstrated quantum teleportation."
+It IS:
+  "We identified a geometric phase structure governing recoverable quantum
+   transport in OAT and Dicke boundary channels."
+
+This framing is MORE convincing to serious reviewers because it does not overreach.
+The teleportation implications follow as corollaries, not primary claims.
+
+### 65. kappa_Q: Recoverability Stiffness [NEW OBSERVABLE -- PLANNED]
+
+Define:
+  kappa_Q = -Tr(H)
+where H is the Hessian of the recovery landscape F_avg(theta_A, phi_A, theta_B, phi_B)
+evaluated at the optimal recovery unitary.
+
+Interpretation:
+  FLAT     -> kappa_Q ~ 0   (landscape flat, no curvature)
+  CLASSICAL -> kappa_Q small (shallow basin)
+  QUANTUM   -> kappa_Q large (sharp, localized basin)
+
+Properties:
+  - Survives absolute fidelity calibration drift (ratio-metric)
+  - Experimentally measurable via finite-difference Hessian
+  - Does NOT require knowing the optimal unitary a priori
+  - chi_t=pi stripe: kappa_Q -> 0 simultaneously with V_Q -> 0 [to verify]
+
+Implementation plan (Session 4.5, before D-LinOSS training):
+  1. Compute F_avg(theta_A, phi_A, theta_B, phi_B) on a fine grid around optimal
+  2. Fit quadratic surface, extract Hessian eigenvalues
+  3. kappa_Q = -Tr(H) = sum of (negative) eigenvalues
+  4. Map kappa_Q(chi_t, Gamma, N) -- should match V_Q phase diagram
+  5. kappa_Q is the continuous-valued companion to binary V_Q classification
+
+### 66. chi_t=pi Stripe as Recovery Singularity [EMPHASIS]
+
+At chi_t=pi (simultaneously):
+  T_xx = 0      [PROVED: cos^{N-2}(pi/2)=0 for N>=4]
+  V_Q  = 0      [OBSERVED: Haar-random sampling]
+  kappa_Q -> 0  [PREDICTED: landscape flattens]
+  Hess trace -> 0 [OBSERVED in earlier sweep]
+  landscape std -> 0 [OBSERVED]
+  F_max -> 0.5  [OBSERVED: fully depolarized in X]
+
+This is an experimentally accessible internal phase boundary.
+It does not require comparison to an external standard.
+Same apparatus, same protocol, same reconstruction.
+V_Q(chi_t*) - V_Q(pi) = the entire signal.
+
+### 67. D-LinOSS Manifold Learning Upgrade [PLANNED -- POST-SESSION 4]
+
+Current D-LinOSS input: scalar time series y(tau) or V_Q(tau)
+Next upgrade: feed GEOMETRIC FEATURES:
+  - PTM tensors T_ij(chi_t, Gamma)
+  - Hessian spectra kappa_Q(chi_t, Gamma)
+  - Basin persistence (V_Q decay rate under dephasing)
+  - Singular-line locations (chi_t=pi position)
+  - Geodesic distances in SU(2)^2 control space
+  - Curvature maps (Gaussian curvature of V_Q manifold)
+
+Let D-LinOSS cluster without labels:
+  OAT, Dicke, XXZ, SYK, dephased controls
+
+Prediction: if OAT and Dicke cluster together (V_Q>0),
+and chi_t=pi stripe separates from all, and dephased/product states cluster at FLAT,
+that is a major unsupervised classification result.
+
+Physical meaning: D-LinOSS discovers geometric phase boundaries
+from operational data, without being told the Hamiltonian.

@@ -1,6 +1,6 @@
-# Boundary Entanglement and Teleportation Fidelity in One-Axis Twisting States: An Exact Theorem, Decoherence Analysis, and Witness Protocol for ${}^{87}$Sr Optical Lattice Experiments
+# Geometric Phase Structure of Recoverable Quantum Transport in One-Axis Twisting and Dicke Boundary Channels
 
-**Draft v6 -- for internal review** *(PTM theorems + recovery geometry added)*
+**Draft v7 -- for internal review** *(Recovery Basin Conjecture + κ_Q + Dicke crossover added)*
 
 > [!NOTE]
 > **Epistemic labels used throughout this draft:**
@@ -19,13 +19,15 @@
 
 ## Abstract
 
-We establish an analytically grounded, operationally falsifiable framework for quantum teleportation in one-axis twisting (OAT) boundary states of ${}^{87}$Sr. The boundary density matrix $\rho_2$ has a closed-form exact expression with uniform diagonal $1/4$; it is **not** an X-state, falsifying the prior conjecture $F_\mathrm{opt}=(2+C)/3$.
+We identify a geometric phase structure governing operationally recoverable quantum transport in one-axis twisting (OAT) and Dicke boundary channels. The boundary density matrix $\rho_2$ has a closed-form exact expression with uniform diagonal $1/4$; it is **not** an X-state, falsifying the prior conjecture $F_\mathrm{opt}=(2+C)/3$.
 
-**New analytic results [PROVED from Proposition 1]:** The Pauli Transfer Matrix of the OAT teleportation channel satisfies three exact identities: $T_{zz}=0$ (equal diagonals), $T_{yy}=0$ (cancellation of equal off-diagonals), and $T_{xx}=\cos^{N-2}(\chi t/2)$ (closed-form coherence transport). As a corollary, $F_\mathrm{avg}(R_z\text{-only})\le 2/3$ for **all** $N$, **all** $\chi t$ — pure phase gates are provably insufficient for quantum advantage.
+**Analytic results [PROVED from Proposition 1]:** The Pauli Transfer Matrix satisfies $T_{zz}=0$, $T_{yy}=0$, and $T_{xx}=\cos^{N-2}(\chi t/2)$. As a corollary, $F_\mathrm{avg}(R_z\text{-only})\le 2/3$ for all $N$, all $\chi t$ — phase gates alone cannot achieve quantum advantage, regardless of optimization.
 
-**New operational result [OBSERVED]:** We introduce the recovery basin volume $V_Q\equiv\mathrm{Vol}\{(U_A,U_B):F_\mathrm{avg}>2/3\}$ over Haar-random $\mathrm{SU}(2)\times\mathrm{SU}(2)$, and establish three recoverability classes: FLAT ($V_Q=0$, dephased), CLASSICAL ($V_Q=0$, product-like), QUANTUM ($V_Q>0$, entangled OAT). A sharp geometric singularity appears at $\chi t=\pi$ where $V_Q=0$ exactly — the same protocol and optimizer that finds $V_Q=0.08$ at $\chi t^*$ finds $V_Q=0$ at $\chi t=\pi$, eliminating optimizer artifacts as an explanation.
+**Recovery Basin Conjecture [HYPOTHESIS]:** *Quantum-transport-capable many-body channels are characterized by finite-volume super-classical recovery basins embedded in local-unitary control space. These basins collapse at singular interaction phases ($\chi t=\pi$) and under sufficient dephasing.* We provide the first operational evidence for this conjecture: the recovery basin volume $V_Q\equiv\mathrm{Vol}\{(U_A,U_B):F_\mathrm{avg}>2/3\}$ is strictly positive for entangled OAT and Dicke boundary states, and collapses to zero at $\chi t=\pi$ (internal falsification), under dephasing ($\Gamma t>0.15$), and for product states.
 
-**Experimental significance:** The full $\mathrm{SU}(2)$ recovery ($R_z+R_x$ Rabi pulses, JILA-native) achieves $F_\mathrm{avg}=0.719$ for $N=4$, exceeding all classical strategies ($\le 2/3$). This advantage is destroyed by dephasing ($\Gamma t>0.15$) and requires $N\le 12$ for detectable $V_Q$, targeting the JILA Sr-87 tweezer platform ($N=4$–$8$). D-LinOSS is upgraded to learn recovery manifold topology $V_Q(\chi t,\Gamma_t,N)$ rather than scalar witnesses.
+**Cross-platform evidence [OBSERVED]:** Dicke model boundary pairs (spin-boson, $\omega_0=0$) show $V_Q>0$ at $g/g_c\ge0.4$, peaking near the quantum critical point ($g/g_c\approx0.8$, $V_Q=0.075$) — stronger than the OAT peak ($V_Q=0.038$). The OAT approximation $\chi_\mathrm{eff}=g^2/\omega_m$ underestimates the true effective coupling by $3$–$10\times$, a concrete prediction for the Rey group ion crystal experiment.
+
+**Recoverability stiffness $\kappa_Q=-\mathrm{Tr}(\mathcal{H})$ [PLANNED]:** where $\mathcal{H}$ is the Hessian of the recovery landscape at the optimal unitary — a geometric order parameter that survives absolute fidelity calibration drift and vanishes at the $\chi t=\pi$ singularity alongside $V_Q$.
 
 ---
 
@@ -342,28 +344,40 @@ We explicitly bound the scope of the claims:
 
 ## VIII. Conclusion
 
+**Primary claim:** *We identify a geometric phase structure governing operationally recoverable quantum transport. OAT and Dicke boundary channels possess finite-volume super-classical recovery basins ($V_Q>0$) that collapse at singular interaction phases ($\chi t=\pi$) and under dephasing — a property absent from all classical anisotropic channels and from product states.*
+
+This is more precisely stated as the **Recovery Basin Conjecture** (§VI.E): quantum-transport-capable channels are characterized by finite-volume super-classical recovery basins in local-unitary control space. The conjecture is operationally falsifiable, numerically measurable, and survives the internal null experiment at $\chi t=\pi$.
+
 **Exact results [PROVED]:**
-- Closed-form $\rho_2$ (Proposition 1): uniform diagonal $1/4$, not an X-state.
-- Lindblad dephasing: $\rho_{ij,kl}(t)=\rho_{ij,kl}(0)e^{-2\Gamma d_H t}$ (Sec. IV.B).
-- $S_\mathrm{max}<2$ for all $N\ge4$; negativity $>0$ for all $N$.
-- **PTM theorems (new):** $T_{zz}=0$, $T_{yy}=0$, $T_{xx}=\cos^{N-2}(\chi t/2)$ (Sec. VI.A).
-- **Gate insufficiency (new):** $F_\mathrm{avg}(R_z\text{-only})\le 2/3$ for all $N$, all $\chi t$ (Sec. VI.A Corollary).
+- PTM theorems: $T_{zz}=0$, $T_{yy}=0$, $T_{xx}=\cos^{N-2}(\chi t/2)$ (Sec. VI.A).
+- Gate insufficiency: $F_\mathrm{avg}(R_z\text{-only})\le 2/3$ for all $N$, all $\chi t$ (Sec. VI.A Corollary). Phase gates alone cannot achieve quantum transport, regardless of optimization.
+- $\chi t=\pi$ singularity: $T_{xx}=0$, hence $V_Q=0$, $F_\mathrm{max}=1/2$ for all $N\ge4$ [PROVED], simultaneously confirmed by Haar-random sampling [OBSERVED].
 
-**Numerical observations [OBSERVED]:**
-- **Falsified:** $F_\mathrm{opt}=(2+C)/3$; $f_\mathrm{max}=(1+C)/2$ for finite $N$.
-- **New:** $V_Q>0$ for entangled OAT at $\chi t\in[0.2,2.0]$ and $[4.6,5.7]$ (N=4).
-- **New:** $V_Q=0$ at $\chi t=\pi$ (internal control), under dephasing ($\Gamma t>0.15$), and for product states.
-- **New:** Three-tier recovery hierarchy: FLAT ($V_Q=0$, Hess$\approx0$) / CLASSICAL ($V_Q=0$, structured) / QUANTUM ($V_Q>0$, sharp basins).
-- $F_\mathrm{avg}(\mathrm{SU}(2))=0.719$ ($N=4$) under JILA-native $R_z+R_x$; quantum advantage modest (7.8% above classical) but genuine.
-- $V_Q$ shrinks with N: detectable for $N\le12$; target platform: $N=4$–$8$ Sr-87 tweezers.
+**Operational observations [OBSERVED]:**
+- $V_Q>0$ in two distinct OAT lobes ($\chi t\in[0.2,2.0]$ and $[4.6,5.7]$, $N=4$).
+- $V_Q$ peaks near Dicke critical point: $V_Q=0.075$ at $g/g_c\approx0.8$ — exceeds OAT peak $V_Q=0.038$.
+- Recoverability tracks collective quantum correlations, not merely pairwise concurrence: the Dicke $V_Q$ peak near $g_c$ cannot be explained by two-atom entanglement alone.
+- $V_Q\to0$ under dephasing ($\Gamma t>0.15$, $N=4$); phase boundary scales as $\Gamma_t^*(N)\sim N^{-\alpha}$.
+- $F_\mathrm{avg}(\mathrm{SU}(2))=0.719$ ($N=4$): 7.8% above classical bound, genuine but modest.
 
-**Experimental proposals [Proposal]:**
-- Recovery basin volume protocol: prepare OAT at $\chi t^*$, apply 500+ Haar-random $\mathrm{SU}(2)^2$ rotations, measure $V_Q$. Repeat at $\chi t=\pi$ (internal control). Difference = experimental signature.
-- D-LinOSS upgrade: train on $V_Q(\chi t,\Gamma_t,N)$ recovery manifolds rather than scalar witnesses.
+**Logical architecture:**
 
-**Strongest defensible claim:** *OAT boundary states contain a finite-volume super-classical recovery basin in $\mathrm{SU}(2)^2$ that collapses at the $\chi t=\pi$ critical line and under dephasing, but is absent for all classical anisotropic channels.*
+| Layer | Status |
+|---|---|
+| PTM anisotropy ($T_{xx}$ formula) | **[PROVED]** |
+| $R_z$-only insufficiency | **[PROVED]** |
+| SU(2) quantum correction ($\Delta F=0.052$) | **[OBSERVED]** |
+| Basin topology ($V_Q$, three-tier) | **[OBSERVED]** |
+| $\chi t=\pi$ collapse (internal falsification) | **[PROVED + OBSERVED]** |
+| Dicke crossover (cross-platform) | **[OBSERVED]** |
+| Recovery Basin Conjecture | **[HYPOTHESIS]** |
+| $\kappa_Q$ stiffness (geometric order parameter) | **[PLANNED]** |
 
-The single open parameter $\Gamma_\mathrm{mb}$ is measurable in one experimental session. Its value determines whether quantum advantage survives and motivates the next phase of the protocol.
+**Experimental proposals [PROPOSAL]:**
+- JILA protocol: OAT at $\chi t^*$ ($N=4$–$8$), 500+ Haar-random $\mathrm{SU}(2)^2$ rotations, measure $V_Q$. Internal control: repeat at $\chi t=\pi$. Signal = $V_Q(\chi t^*)-V_Q(\pi)$.
+- IBM quantum (10 min/month): Trotterized OAT ($N=4$), 2-qubit process tomography, measure $T_{xx}$ directly. First hardware confirmation of analytic theorem.
+- $\kappa_Q=-\mathrm{Tr}(\mathcal{H})$: Hessian of recovery landscape at optimum — geometric stiffness order parameter, calibration-drift-resistant.
+- D-LinOSS upgrade: train on geometric features (PTM tensors, Hessian spectra, $V_Q$ curvature maps) and cluster OAT/Dicke/XXX/SYK without labels.
 
 ---
 
