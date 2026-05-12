@@ -2487,3 +2487,75 @@ ANALYTIC NOTE on T_xx factor-of-2:
   Numeric T_xx = cos^{N-2}(chi_t/2)/2 (includes 1/2 from Pauli normalization).
   Analytic T_xx (paper) = cos^{N-2}(chi_t/2). Factor-of-2 is convention.
   Both are consistent; paper uses unnormalized convention.
+
+
+---
+
+## Session: 2026-05-12 (PTM Rank Reframe + Bridge Experiment)
+
+### 107. PTM Rank Reframe -- Goldilocks Zone [KEY INSIGHT]
+
+Rank-1 -> rank-4 -> rank-1 across the phase structure:
+  chi_t=0 (product):    rank 1  (under-entangled, output=I/2)
+  chi_t in (0,pi):      rank 4  (informationally expressive)
+  chi_t=pi (singular):  rank 1  (over-scrambled, output=I/2)
+
+BOTH boundaries collapse to rank-1 but for different physical reasons:
+  chi_t=0:  under-entangled (insufficient quantum correlations)
+  chi_t=pi: destructive interference / complete PTM collapse
+
+The teleportation-capable phase is a rank-4 Goldilocks zone between two
+informationally collapsed rank-1 boundaries.
+
+Phase taxonomy (paper-ready table):
+  Property         | Product (chi_t=0) | QUANTUM OAT | Singular (chi_t=pi)
+  PTM rank         | 1                 | 4           | 1
+  F_avg            | 2/3               | 0.719       | 1/2
+  V_Q              | 0 (classical)     | 0.069       | 0
+  kappa_Q          | finite            | finite      | 0 (exact)
+  Recovery basin   | classical only    | supercritical | none
+
+### 108. IBM Strategy Pivot -- PTM Rank Transition Only [DECISION]
+
+IBM runtime should ONLY test:
+  Experiment A: Measure PTM at chi_t={0, chi_t*, pi}
+  Observe: rank 1 -> rank 4 -> rank 1 transition.
+  Measure T_xx and compare to cos^{N-2}(chi_t/2).
+
+DO NOT measure on IBM:
+  V_Q (too expensive, needs Haar sampling over many shots)
+  kappa_Q (needs Hessian, far too noisy)
+  Full teleportation fidelity (Bell measurement + correction overhead)
+
+Reason: PTM reconstruction is standard, compact, analytically anchored.
+The rank-1->4->1 transition is an extremely distinctive prediction.
+Even noisy confirmation is meaningful.
+
+### 109. Bridge Correlation Experiment [NEXT COMPUTATION]
+
+Most important remaining TPU experiment:
+  Sweep (F_avg, V_Q) across chi_t, Gamma_t, N.
+  Test: Delta_F = F_avg - 2/3 propto V_Q^alpha near transition.
+  If confirmed: V_Q becomes the operational order parameter of teleportation.
+
+Target: both F_avg and V_Q vanish at chi_t=pi and under strong dephasing.
+If their ratio is approximately constant -> direct proportionality.
+If power law: fit alpha.
+
+### 110. Paper Reframe -- Geometric Classification [STRATEGIC]
+
+The paper is becoming:
+  "A geometric and operator-theoretic classification of recoverable quantum channels"
+  with OAT, Dicke, and D-LinOSS as exemplars.
+
+Key shift:
+  OLD: "We discovered teleportation enhancement"
+  NEW: "We characterized a recoverability phase structure of quantum channels"
+
+Teleportation becomes the operational witness, not the sole claim.
+This makes the work harder to dismiss if fidelity values shift under hardware noise.
+
+Connections to flag (observationally, do not overstate):
+  - Measurement-induced phase transitions (both have rank-1 boundaries)
+  - Scrambling windows (Goldilocks zone = finite coherent recovery window)
+  - Error-correctable phases (recovery basin is the analog of code distance)
