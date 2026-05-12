@@ -1103,3 +1103,97 @@ Training target upgrade:
 Classification: {FLAT, CLASSICAL, QUANTUM} by recovery manifold topology.
 Generalization: different physics (MBL, SYK, Dicke) produce different topologies.
 Long-term: recovery geometry as universal quantum diagnostic across platforms.
+
+
+---
+
+## Session: 2026-05-12 (Cross-Domain Conjecture)
+
+### 55. Working Conjecture: D-LinOSS Applied to Neural fMRI and Auditory Data [HYPOTHESIS]
+
+**Status:** Unverified conjecture. Not claimed in the quantum teleportation paper.
+**Origin:** User observation connecting CaMKII phase lattices to OAT boundary states.
+
+#### The Conjecture
+
+D-LinOSS recovery geometry (V_Q, Hessian curvature, basin topology) is a
+UNIVERSAL dynamical classifier. It may apply to neural time series from:
+  1. fMRI BOLD signals during categorical learning tasks
+  2. Auditory cortex ERP time series
+  3. CaMKII lattice activation dynamics in post-synaptic density
+
+#### Three Levels (Epistemic Ordering)
+
+**Level 1 -- Mathematical application [SAFE, no quantum claims]:**
+  Matrix pencil decomposition of fMRI/ERP time series -> (K_eff, gamma_dom, omega_dom).
+  Classification into {FLAT, CLASSICAL, QUANTUM-like} is a dynamical universality taxonomy.
+  "Quantum-like" classification = same mathematical structure, NOT physical entanglement.
+
+**Level 2 -- CaMKII lattice [SPECULATIVE, structurally analogous]:**
+  CaMKII: 12-subunit dodecameric ring, tiles into PSD lattice.
+  Cooperative phosphorylation bistability = many-body phase transition.
+  Formal analogy to OAT:
+    OAT: N-atom spin chain, boundary pair encodes teleportation resource
+    CaMKII: N-ring PSD lattice, boundary ring pair encodes synaptic memory state
+  Recovery manifold = basin of attraction of CaMKII activation state.
+  V_Q analogue = volume of phosphorylation patterns that decode to same memory.
+  Testable: does CaMKII cluster boundary dynamics show V_Q > 0 under the taxonomy?
+
+**Level 3 -- Semantic latent space recovery [NOVEL, most direct connection]:**
+  Categorical learning -> learned latent space with semantic basins.
+  V_Q in neural context = Vol{stimuli representations that decode to same category}.
+  D-LinOSS trained on quantum V_Q manifolds could detect whether neural categorical
+  basins share a universality class with quantum recovery basins.
+  
+  The shared memory structure: CaMKII phase state information encodes latent
+  semantic shapes that are reconstructable from partial activation patterns.
+  This IS V_Q semantics in the classical-but-quantum-structured regime.
+
+#### Why This Might Work
+
+Both quantum teleportation and categorical memory share:
+  1. A many-body resource state (OAT state / CaMKII cluster)
+  2. A boundary pair that encodes the recoverable information (rho_2 / active ring pair)
+  3. A local recovery operation (SU(2) rotation / pattern completion)
+  4. A phase transition where recovery collapses (chi_t=pi / saturation/overwrite)
+  5. A basin volume that measures robustness (V_Q / basin of attraction width)
+
+The mathematical structure is identical. Whether this is physically meaningful
+or a coincidence of notation requires empirical testing.
+
+#### What Would Constitute Evidence
+
+Positive evidence (would support the conjecture):
+  - fMRI time series from categorical learning experiments classified as QUANTUM-like
+    by D-LinOSS trained on OAT recovery manifolds
+  - CaMKII cluster boundary activation shows multi-mode decay (K_eff >= 2) vs.
+    simple exponential decay for isolated receptors (K_eff = 1)
+  - Basin volume (semantic generalization width) scales with N (cluster size) in
+    same power-law as V_Q ~ N^{-alpha}
+
+Negative evidence (would refute the conjecture):
+  - All neural time series classify as FLAT (no dynamical structure)
+  - CaMKII dynamics show K_eff = 1 (purely Lindblad-like, no entanglement structure)
+  - Semantic basin width shows no correlation with V_Q predictions
+
+#### What Would NOT Constitute Evidence (Even If Positive)
+
+  - Quantum coherence in CaMKII at 37 degrees C, physiological ionic strength
+  - Quantum entanglement between neurons
+  - Teleportation of semantic information
+  The conjecture is about MATHEMATICAL UNIVERSALITY CLASS, not physical quantum mechanics.
+
+#### Immediate Next Steps (If Pursued)
+
+  1. Obtain published fMRI dataset from categorical learning experiment
+  2. Extract BOLD time series in semantic ROIs (LOC, vTC, IFG)
+  3. Run D-LinOSS matrix pencil decomposition
+  4. Compare (K_eff, gamma_dom) to quantum teleportation signatures
+  5. Map to {FLAT, CLASSICAL, QUANTUM-like} taxonomy
+  6. Report: is categorical learning dynamics in the same universality class as OAT?
+
+#### Status
+
+This conjecture is logged for future investigation. It does NOT appear in the
+current quantum teleportation paper. It constitutes a potential companion project
+connecting the D-LinOSS framework to cognitive neuroscience.
