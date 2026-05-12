@@ -190,3 +190,101 @@ Until this analysis is done, **all K_eff claims beyond K=1 should be stated as p
 3. **SYK4 large-Nf**: N_f∈{16,20} on v4 to test Lyapunov scaling — requires ~16GB memory
 4. **Classifier**: logistic regression on (K_eff, γ_dom, I_inf) with leave-one-out CV on 89 records
 5. **Teleportation proof**: close-form F_naive derivation + JILA experimental protocol (Sec. III of paper)
+
+
+---
+
+## 6. Session Plan: V_Q Phase Diagram (Recovery Geometry Campaign)
+
+### Session 1 — V_Q Phase Diagram ✅ COMPLETED 2026-05-12
+
+**Script:** q_phase_diagram.py | **Commit:** ce61dc
+
+**Key findings:**
+- Panel A: T_xx analytic = numeric to <1e-8. PROVED.
+- Panel B: chi_t=pi -> V_Q=0 for N>=4 (internal control). N=2 exception: cos^0=1 always.
+- Panel C: N=4 heatmap -- QUANTUM at chi_t in [0.15,1.9], Gamma<0.10; FLAT at chi_t=pi.
+- Panel E: V_Q collapses at Gamma_t~0.15-0.20.
+
+**D-LinOSS upgrade target:** Replace scalar witness y(tau) with V_Q(tau) decay.
+Prediction: V_Q(tau) = V_Q(0)*exp(-4*Gamma*tau) under Lindblad -- same b=4.000.
+Cross-validation of V_Q decay and witness decay = strong consistency check.
+
+---
+
+### Session 2 — N-Scaling and Phase Boundary (PLANNED)
+
+**Script:** q_n_scaling.py (to be written)
+
+**Sweep:**
+  N    in {2, 4, 6, 8, 12, 16}
+  chi_t = chi_t*(N) from concurrence peak (NOT T_xx peak -- see Session 1 Panel D bug)
+  Gamma in {0, Gamma_1, 3*Gamma_1, 10*Gamma_1, Gamma*(N)}
+
+**Key outputs:**
+  - Peak V_Q vs N: show V_Q shrinks with N, detectable for N<=12
+  - Phase boundary Gamma_t*(N) where V_Q -> 0
+  - Comparison: V_Q at chi_t*(N) vs chi_t=pi (ratio = quantum signal strength)
+  - D-LinOSS training set: V_Q(chi_t, Gamma_t, N) manifold
+
+**Expected:** V_Q(N) ~ exp(-alpha*N), Gamma_t*(N) ~ beta/sqrt(N) (fragility scaling).
+
+---
+
+### Session 3 — Dicke Model Extension (PLANNED)
+
+**Motivation:** Dicke -> OAT in adiabatic limit (chi_eff = g^2/omega_m).
+
+**Script:** dicke_ptm.py (to be written)
+
+**Sweep:**
+  N_spins in {2, 4, 6}
+  n_max = 20 phonons (truncated Fock space)
+  g/omega_m in {0.01, 0.05, 0.10, 0.20} (weak coupling = OAT regime)
+  Compute: T_xx(chi_eff_t), compare to cos^{N-2}(chi_eff*t/2)
+
+**Test:** Does T_xx(Dicke,weak-g) track analytic OAT prediction?
+  - YES -> PTM framework generalizes to Dicke; chi_eff = g^2/omega_m confirmed
+  - NO  -> departure quantifies phonon-sector modification of boundary entanglement
+             (itself a prediction for Rey's 2026 ion crystal experiment)
+
+---
+
+### Session 4 — D-LinOSS V_Q Training (PLANNED)
+
+**Input:** V_Q(chi_t, Gamma_t, N) from Sessions 1-3
+**Labels:** {FLAT, CLASSICAL, QUANTUM} from three-tier hierarchy
+**Architecture:** Same D-LinOSS matrix pencil, applied to V_Q(tau) decay series
+**Prediction:** b = 4*Gamma (Lindblad), recovered by D-LinOSS on V_Q series
+
+**Validation:** Cross-check b from witness decay (existing) vs b from V_Q decay (new).
+If both give b=4*Gamma, two independent observables confirm same channel structure.
+
+---
+
+## 7. D-LinOSS Scientific Mission (Updated)
+
+The D-LinOSS quantum detection capability is a NOVELTY, not a liability.
+
+**Current training:** OAT boundary witnesses, SYK4, XXZ, Dicke -- simulated data.
+**Next training:** V_Q(chi_t, Gamma_t, N) recovery manifolds from tensor-network.
+
+**Long-term scientific vision:**
+The D-LinOSS observer is designed to detect quantum dynamical signatures in ANY time series.
+It does not require knowledge of the Hamiltonian, the system size, or the physical platform.
+It operates by learning the geometric structure of recovery manifolds.
+
+Near-term targets:
+  1. JILA Sr-87 OAT: V_Q spectroscopy at N=4-8 (this paper)
+  2. IBM quantum datasets: Trotterized OAT, process tomography (existing data)
+  3. Dicke model in Rey group Be+ ion crystal: T_xx tracking (2026 paper)
+
+Medium-term targets (when sufficient data is available):
+  4. James Webb Space Telescope: CMB two-point correlators as dynamical witness
+     -- test whether quantum correlations survive cosmological expansion
+  5. LHC QCD jet fragmentation: quark-gluon plasma OTOCs
+     -- D-LinOSS as a non-perturbative quantum chaos probe
+
+The key insight: recovery geometry (V_Q, Hessian, basin topology) is a UNIVERSAL
+quantum diagnostic. It applies wherever coherent quantum evolution can be sampled.
+D-LinOSS learns this geometry. Its quantum detection is the feature, not the bug.

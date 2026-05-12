@@ -267,7 +267,24 @@ From Proposition 1, the PTM diagonal of the OAT teleportation channel satisfies:
 
 **Corollary ($R_z$-only gate insufficiency).** $F_\mathrm{avg}(R_z\text{-only}) = (1+T_{xx}/3)/2 \le (1+1/3)/2 = 2/3$ for all $N$, all $\chi t$. Equality at $\chi t=0$ (product state). The OAT interaction monotonically *reduces* $T_{xx}$ from the product-state value. **[PROVED]** $\square$
 
-Numerical verification: analytic $T_{xx}$ matches simulation to $<10^{-8}$ for $N=2,4,8,12,16,24,32$.
+**The unique quantum correction — SU(2) gain formula [OBSERVED].** The full local $\mathrm{SU}(2)\times\mathrm{SU}(2)$ recovery (native JILA gates: $R_z$ phase shifts + $R_x$ Rabi pulses) achieves $F_\mathrm{avg}^{\mathrm{SU}(2)} > 2/3$. The gain over the provably-classical $R_z$-only strategy is:
+$$\boxed{\Delta F = F_\mathrm{avg}^{\mathrm{SU}(2)} - F_\mathrm{avg}^{R_z} \ge F_\mathrm{avg}^{\mathrm{SU}(2)} - \frac{2}{3}}$$
+
+For $N=4$: $\Delta F = 0.719 - 2/3 \approx 0.052$. This gap is the *operationally unique quantum correction*: it vanishes for all classical anisotropic channels and for all $R_z$-only quantum protocols, but is accessible via the full $R_x$ Rabi pulse that exploits the off-diagonal coherence structure of $\rho_2$.
+
+> [!IMPORTANT]
+> The Corollary + gain formula together form the central experimental prediction:
+> (1) $R_z$-only is **provably** bounded at $F = 2/3$ — no optimization can exceed it.
+> (2) $R_z + R_x$ achieves $F = 0.719$ — a 7.8% quantum excess.
+> (3) The difference is the measurable signature of OAT boundary entanglement at JILA.
+
+**$\chi t = \pi$ singularity [OBSERVED, PROVED in part].** At $\chi t = \pi$: $T_{xx} = \cos^{N-2}(\pi/2) = 0$ for all $N \ge 4$ (zero by the analytic formula), $V_Q = 0$ (confirmed by Haar-random sampling), $F_\mathrm{max} = 1/2$ (fully depolarized in X). This is a teleportation critical line — the manifold collapses identically at this OAT phase regardless of $N$, $\Gamma$, or measurement basis. *Experiment:* run identical protocol at $\chi t^*$ and $\chi t = \pi$ on same apparatus; the $V_Q$ difference is the within-experiment falsification.
+
+**Note on $N=2$ exception.** For $N=2$: $\cos^{N-2}(\chi t/2) = \cos^0(\cdot) = 1$ identically, so the $\chi t=\pi$ singularity does not apply. The $N=2$ state is a pure Bell pair $|\Psi^+\rangle$ for all $\chi t$ — perfect teleportation. The internal control requires $N \ge 4$ (at least one bulk atom to trace out).
+
+Numerical verification: analytic $T_{xx}$ matches simulation to $<10^{-8}$ for $N=2,4,8,12,16,24,32$ (Panel A, `vq_phase_diagram.py`).
+
+
 
 ### VI.B Classical Comparator [OBSERVED]
 
