@@ -601,3 +601,86 @@ It is operationally measurable, experimentally realistic, and not an inferred qu
 The PTM anisotropy (T_xx = 1.923, T_yy = 0.015, T_zz = 0) is a NEW finding:
 the OAT channel is NOT a depolarizing channel — it has a preferred axis (X)
 that reflects the phase structure of the OAT boundary state.
+
+
+---
+
+## Session: 2026-05-12 (Channel Tomography — Corrected)
+
+### 30. Normalization Correction [CRITICAL] — PTM Convention Verified
+
+The previous F_avg=0.823 result was a 2x normalization error.
+Audit (Bell, Werner p=1/3, maximally mixed) confirms correct convention:
+- Bell resource: F_avg=1.000 ✓
+- Werner p=1/3: F_avg=0.667 ✓
+- Max mixed:    F_avg=0.500 ✓
+
+### 31. Corrected Channel Tomography Results [OBSERVED]
+
+**Rz-only result: F_avg BELOW classical limit for all N**
+
+| N  | chi_t* | C      | F_avg(Rz) | F_e    | T_xx  | T_yy  | T_zz  |
+|----|--------|--------|-----------|--------|-------|-------|-------|
+| 2  | 3.140  | 1.0000 | 0.6667    | 0.5000 | 1.000 | 1.000 | 1.000 |
+| 4  | 0.355  | 0.2221 | 0.6615    | 0.4922 | 0.962 | 0.007 | 0.000 |
+| 8  | 0.125  | 0.1298 | 0.6647    | 0.4971 | 0.966 | 0.021 | 0.000 |
+| 16 | 0.062  | 0.0846 | 0.6656    | 0.4983 | 0.968 | 0.029 | 0.000 |
+
+Rz-only (virtual Z rotations) is INSUFFICIENT for quantum advantage.
+The channel is anisotropic but F_avg stays at/below 2/3.
+
+**PTM structure (N=4, corrected):**
+- T_xx = 0.962, T_yy = 0.007, T_zz = 0.000 [standard [-1,1] convention]
+- Anisotropy confirmed: X-axis preserved at 96%, Y/Z collapsed
+- Reviewer's T_xx=1.923 concern was VALID — that was the unnormalized value
+
+**Bloch sphere map (N=4, Rz-aligned) [OBSERVED]:**
+
+| Input | bx_in | by_in | bz_in | bx_out | by_out | bz_out | |r_out| |
+|-------|-------|-------|-------|--------|--------|--------|--------|
+| |+x>  | +1.0  |  0.0  |  0.0  | +0.962 |  0.000 |  0.000 | 0.962  |
+| |-x>  | -1.0  |  0.0  |  0.0  | -0.962 |  0.000 |  0.000 | 0.962  |
+| |+y>  |  0.0  | +1.0  |  0.0  |  0.000 | +0.007 |  0.000 | 0.007  |
+| |-y>  |  0.0  | -1.0  |  0.0  |  0.000 | -0.007 |  0.000 | 0.007  |
+| |+z>  |  0.0  |  0.0  | +1.0  |  0.000 |  0.000 |  0.000 | 0.000  |
+| |-z>  |  0.0  |  0.0  | -1.0  |  0.000 |  0.000 |  0.000 | 0.000  |
+
+**Interpretation:** This is an axis-selective channel that collapses Y and Z,
+preserving only the X-coherence. The F_avg formula confirms this is below
+classical threshold because the channel too aggressively erases Y and Z.
+
+### 32. Gate Set Analysis [OBSERVED]
+
+| Gate set | F_avg (N=4) | Quantum advantage? | JILA native? |
+|----------|-------------|-------------------|--------------|
+| Rz only | 0.661 | NO (<2/3) | YES (virtual Z) |
+| Full SU(2) | 0.719 | YES (>2/3) | YES (Rz + Rx Rabi) |
+| Classical limit | 0.667 | boundary | — |
+
+**Conclusion:** Quantum advantage requires full SU(2) local operations.
+For JILA Sr-87: Rz (virtual Z, zero-cost software) + Rx (Rabi pulse, native).
+This is the standard single-qubit gate set — NOT exotic.
+
+The correct experimental claim is:
+> "OAT boundary states achieve teleportation fidelity F_avg=0.719 (N=4)
+> under JILA-native single-qubit operations (Rz + Rx Rabi pulses),
+> exceeding the classical limit despite lacking CHSH violation."
+
+### 33. New Theoretical Priority: Explain PTM Anisotropy
+
+The channel structure T_xx >> T_yy, T_zz is now the centerpiece finding.
+Physical explanation needed:
+
+WHY does the OAT boundary pair preferentially preserve X-coherence?
+
+Candidate mechanism:
+- OAT phase evolution: U = exp(-i chi_t J_z^A J_z^B)
+- The J_z operator is diagonal in Z basis
+- This commutes with Z-correlations but NOT with X-correlations
+- Result: Z-information is scrambled (J_z^A J_z^B coupling encodes Z history)
+- X-information survives because X-coherences are not directly coupled
+
+This would explain why T_zz=0 (Z is fully scrambled by the OAT interaction)
+and T_xx > 0 (X-coherences survive in the boundary pair).
+
+OPEN: derive T_xx(N, chi_t) analytically from the closed-form rho_2 formula.
