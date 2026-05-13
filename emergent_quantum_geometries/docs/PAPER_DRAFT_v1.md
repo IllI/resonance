@@ -1,6 +1,6 @@
 # Reduced-State Correlation Structure in Cross-Half ZZ OAT Dynamics: Tensor-Network Analysis and Superconducting Hardware Validation
 
-**Draft v9 -- Topology replication complete; framing corrected** *(§IX: Runs 1–3 complete; R²=0.986/0.976; null <0.5σ; layout-independent)*
+**Draft v10 -- Critical fixes: §III.B/§VI.A contradiction resolved; §V.B protocol angles corrected; Corollary derivation made explicit** *(§IX: Runs 1–3 complete; R²=0.986/0.976; null <0.5σ; layout-independent)*
 
 > [!NOTE]
 > **Epistemic labels used throughout this draft:**
@@ -19,7 +19,7 @@
 
 ## Abstract
 
-We analyze the reduced-state correlation structure of cross-half ZZ one-axis twisting (OAT) dynamics and validate the predicted observable structure on superconducting quantum hardware. The boundary density matrix $\rho_2$ has a closed-form exact expression with uniform diagonal $1/4$; it is **not** an X-state, falsifying the prior conjecture $F_\mathrm{opt}=(2+C)/3$.
+We analyze the reduced-state correlation structure of cross-half ZZ one-axis twisting (OAT) dynamics and validate the predicted observable structure on superconducting quantum hardware. The boundary density matrix $\rho_2$ has a closed-form exact expression with uniform diagonal $1/4$; it is **not** an X-state, correcting the X-state approximation used in earlier work on this system, which incorrectly gave $F_\mathrm{opt}=(2+C)/3$.
 
 **Analytic results [PROVED from Proposition 1]:** The Pauli Transfer Matrix satisfies $T_{zz}=0$, $T_{yy}=0$, and $T_{xx}=\cos^{N-2}(\chi t/2)$. As a corollary, $F_\mathrm{avg}(R_z\text{-only})\le 2/3$ for all $N$, all $\chi t$ — phase gates alone cannot achieve quantum advantage, regardless of optimization.
 
@@ -56,7 +56,9 @@ The entanglement witness $W = \frac{1}{4}\mathbb{I} - |\Psi^+\rangle\langle\Psi^
 
 ### I.D Connection to the Dicke Model Experiment
 
-Bullock, Muleady *et al.* [arXiv:2602.06114, 2026] have recently realized the Dicke Hamiltonian $H_\mathrm{Dicke} = \omega_0 J_z + \omega_m a^\dagger a + g(a^\dagger + a)J_x$ in a ${}^9\mathrm{Be}^+$ ion crystal. Here $\omega_0$ is the spin transition frequency, $J_z, J_x$ are collective spin operators for all $N$ ions, $\omega_m$ is a phonon mode frequency, $a^\dagger/a$ are phonon creation/annihilation operators satisfying $[a, a^\dagger]=1$, and $g$ is the light-matter coupling strength. Their experiment observed two-mode squeezing, Rényi entropy growth, and collapses and revivals. Our theorem provides the operational connection between such boundary correlations and demonstrated teleportation advantage via local phase-alignment rotations.
+Bullock, Muleady *et al.* [arXiv:2602.06114, 2026] have recently realized the Dicke Hamiltonian $H_\mathrm{Dicke} = \omega_0 J_z + \omega_m a^\dagger a + g(a^\dagger + a)J_x$ in a ${}^9\mathrm{Be}^+$ ion crystal. Here $\omega_0$ is the spin transition frequency, $J_z, J_x$ are collective spin operators for all $N$ ions, $\omega_m$ is a phonon mode frequency, $a^\dagger/a$ are phonon creation/annihilation operators satisfying $[a, a^\dagger]=1$, and $g$ is the light-matter coupling strength. Their experiment observed two-mode squeezing, Rényi entropy growth, and collapses and revivals.
+
+The OAT effective coupling arises from the Dicke model via adiabatic elimination of the phonon mode at $\omega_m \gg \omega_0$, giving $\chi_\mathrm{eff} = g^2/\omega_m$. However, this approximation underestimates the true effective coupling because: (1) at the quantum critical point $g_c = \sqrt{\omega_0\omega_m}/2$, the coupling $g/g_c \ge 0.4$ in the Bullock *et al.* experiment, placing the system beyond the adiabatic-elimination regime; (2) the exact Dicke boundary $V_Q$ computed via MPS simulation (§VI.C) peaks at $g/g_c \approx 0.8$ with $V_Q = 0.075$, compared to the OAT approximation's $V_Q = 0.038$ at the same coupling ratio — a factor of $\approx 2\times$ underestimate in $V_Q$; and (3) the singlet-fraction optimization at the exact Dicke boundary gives $F_\mathrm{opt}$ values corresponding to effective $\chi_\mathrm{eff}^\mathrm{exact}/\chi_\mathrm{eff}^\mathrm{OAT} \approx 3$–$10\times$ across the experimental coupling range $g/g_c \in [0.4, 0.9]$ (see §VI.C numerical sweep). This is a concrete, falsifiable prediction for the Rey group ion crystal experiment.
 
 ---
 
@@ -151,14 +153,21 @@ For a pure state this equals $C$ exactly; for the mixed OAT states at $N \ge 4$,
 
 Without any pre-measurement rotation, a Bell measurement on $\rho_2(\chi t^*)$ yields the *unoptimized* fidelity. Here we define $F_\mathrm{naive} \equiv (1+C)/2$: this is the teleportation fidelity achievable by the best fixed-basis Bell measurement over all four Bell states, without any phase alignment. (Equivalently, $F_\mathrm{naive}$ is the fidelity achieved by the optimal classical correction given knowledge of $C$ but no phase information.) The gain from phase alignment is then:
 
-### III.B The Rotation [Exact]
+### III.B The Rotation [Exact for $N=2$; First Step Only for $N\ge4$]
 
-Two local phase gates $U_\mathrm{align} = R_z(\theta_A)\otimes R_z(\theta_B)$, where $R_z(\theta) = \begin{pmatrix}e^{-i\theta/2}&0\\0&e^{i\theta/2}\end{pmatrix}$, rotate the boundary pair's reference frame before Bell measurement. The angles $\theta_A, \theta_B$ are chosen to make $z$ real and positive, aligning the dominant coherence with $|\Psi^+\rangle$. After this rotation the maximal singlet fraction $f_\mathrm{max} = (1+C)/2$ is realized, achieving $F_\mathrm{opt} = (2+C)/3$.
+> [!IMPORTANT]
+> **For $N\ge4$, the $R_z$-only rotation is necessary but not sufficient.** The Corollary proved in §VI.A shows $F_\mathrm{avg}(R_z\text{-only})\le 2/3$ for *all* $N$, *all* $\chi t$. The heading "Local Phase-Alignment Rotation" refers to the $R_z$ step as the essential first step — it aligns the phase of the dominant coherence — but the full $\mathrm{SU}(2)\times\mathrm{SU}(2)$ optimization (adding an $R_x$ Rabi pulse) is required to reach $F_\mathrm{opt}=0.719$ for $N\ge4$.
 
-**The gain formula [PROVED for the definition of $F_\mathrm{naive}$; HYPOTHESIS for the lower-bound claim]:**
-$$\Delta F = F_\mathrm{opt} - F_\mathrm{naive} \ge \frac{1-C}{6}$$
+Two local phase gates $U_\mathrm{align} = R_z(\theta_A)\otimes R_z(\theta_B)$, where $R_z(\theta) = \begin{pmatrix}e^{-i\theta/2}&0\\0&e^{i\theta/2}\end{pmatrix}$, rotate the boundary pair's reference frame before Bell measurement. The angles $\theta_A, \theta_B$ are chosen to make $z = \rho_{00,11}$ real and positive, aligning the dominant coherence with $|\Psi^+\rangle$.
 
-where $F_\mathrm{naive} \equiv (1+C)/2$ is defined as the fidelity achievable by the best fixed-basis Bell measurement without phase information. The actual unoptimized fidelity from the OAT density matrix is $F_0 = (3 + \cos^{N/2-1}(\chi t^*/2))/6 \le F_\mathrm{naive}$, so $\Delta F \ge (1-C)/6$ is a lower bound **[OBSERVED]**, not an equality.
+**$N=2$ [PROVED]:** For $N=2$, $\rho_2$ is pure and $f_\mathrm{max}=(1+C)/2$ is exact for pure states (Wootters). The $R_z$-only rotation suffices: $F_\mathrm{opt}=(2+C)/3$ holds. $\square$
+
+**$N\ge4$ [PROVED + OBSERVED]:** The Corollary (§VI.A) proves $F_\mathrm{avg}(R_z\text{-only})\le 2/3$ for all $N\ge4$, all $\chi t$. Direct numerical optimization (§II.C) confirms $F_\mathrm{opt}^\mathrm{direct}=0.719$ for $N=4$ — achievable only by the full $\mathrm{SU}(2)\times\mathrm{SU}(2)$ unitary ($R_z$ phase alignment + $R_x$ Rabi pulse), not by $R_z$ alone. The $R_z$ rotation is the necessary first step; $R_x$ provides the additional 0.052 quantum correction.
+
+**The gain formula [OBSERVED for $N\ge4$]:**
+$$\Delta F = F_\mathrm{opt}^{\mathrm{SU}(2)} - F_\mathrm{avg}^{R_z} \ge F_\mathrm{opt}^{\mathrm{SU}(2)} - \frac{2}{3}$$
+
+For $N=4$: $\Delta F = 0.719 - 2/3 \approx 0.052$. This gap is the operationally unique quantum correction — it vanishes for all $R_z$-only protocols (proved) and for classical channels, but is accessible via $R_x$ exploiting the off-diagonal coherence structure of $\rho_2$.
 
 ### III.C Corrected Gains for JILA [OBSERVED + Proposal]
 
@@ -247,11 +256,11 @@ Quantum advantage at $N = 4$ requires $\Gamma_\mathrm{eff} = \Gamma_1 + \Gamma_\
 |---|---|---|
 | 1 | State preparation | Global $\pi/2$ pulse: $|0\rangle^4 \to |+\rangle^4$ |
 | 2 | OAT evolution | Hold for $\tau$; 20 time points spanning $[0,\, 3\Gamma_\mathrm{eff}^{-1}]$ |
-| 3 | Phase-alignment rotation | $R_z(164.4^\circ)$ on atom $A$, $R_z(0^\circ)$ on atom $B$ |
+| 3 | Phase-alignment rotation | Full $\mathrm{SU}(2)\times\mathrm{SU}(2)$ optimal unitary at $\chi t^*$: $R_z$ phase alignment followed by $R_x$ Rabi pulse on atom $A$; specific angles from direct numerical optimization (§II.C). **Note:** The $R_z(164.4^\circ)$ angle in earlier drafts was from the falsified X-state formula and is incorrect for $N\ge4$; the correct rotation requires the full $\mathrm{SU}(2)$ unitary (supplementary numerical table). |
 | 4 | Bell measurement | CNOT + $Z$-basis readout on boundary pair |
 | 5 | Streaming | 280 shots × 20 points $= 5600$ total shots |
 
-Expected outcome ($\Gamma_\mathrm{mb} \ll \Gamma^*$, Lindblad-dominated): witness decays as $e^{-4\Gamma t}$; $F_\mathrm{pred} \approx 0.77$ confirms quantum advantage.
+Expected outcome ($\Gamma_\mathrm{mb} \ll \Gamma^*$, Lindblad-dominated): witness decays as $e^{-4\Gamma t}$; $F_\mathrm{pred} = 0.719$ (direct optimization, §II.C; corrected from earlier estimate of 0.77 which used the falsified X-state formula) confirms quantum advantage above the $2/3$ classical bound.
 
 ### V.C IBM Quantum Protocol [PROPOSAL — pre-registered; see §IX]
 
@@ -271,7 +280,9 @@ From Proposition 1, the PTM diagonal of the OAT teleportation channel satisfies:
 
 **Theorem 3 (T_xx exact formula).** $T_{xx} = 2\mathrm{Re}(\rho_{00,11}+\rho_{01,10}) = \cos^{N-2}(\chi t/2)$. *Proved by direct substitution of the closed-form off-diagonals.* $\square$
 
-**Corollary ($R_z$-only gate insufficiency).** $F_\mathrm{avg}(R_z\text{-only}) = (1+T_{xx}/3)/2 \le (1+1/3)/2 = 2/3$ for all $N$, all $\chi t$. Equality at $\chi t=0$ (product state). The OAT interaction monotonically *reduces* $T_{xx}$ from the product-state value. **[PROVED]** $\square$
+**Corollary ($R_z$-only gate insufficiency).** The general average fidelity of a unital channel is $F_\mathrm{avg} = (1 + (T_{xx}+T_{yy}+T_{zz})/3)/2$. Substituting Theorems 1 and 2 ($T_{yy}=T_{zz}=0$) gives $F_\mathrm{avg}(R_z\text{-only}) = (1+T_{xx}/3)/2$. Since $T_{xx}=\cos^{N-2}(\chi t/2)\le 1$ for all $N\ge4$, all $\chi t$, this yields $F_\mathrm{avg}(R_z\text{-only}) \le (1+1/3)/2 = 2/3$. Equality holds only at $\chi t=0$ (product state, $T_{xx}=1$). The OAT interaction monotonically *reduces* $T_{xx}$ from the product-state value, strictly forbidding $R_z$-only from crossing the classical limit for any $\chi t > 0$. **[PROVED]** $\square$
+
+*Note: This Corollary is consistent with Section III.B — $R_z$ phase alignment is the necessary first step but cannot alone achieve $F > 2/3$ for $N\ge4$. The full $\mathrm{SU}(2)\times\mathrm{SU}(2)$ unitary is required (§III.B, §III.C).*
 
 **The unique quantum correction — SU(2) gain formula [OBSERVED].** The full local $\mathrm{SU}(2)\times\mathrm{SU}(2)$ recovery (native JILA gates: $R_z$ phase shifts + $R_x$ Rabi pulses) achieves $F_\mathrm{avg}^{\mathrm{SU}(2)} > 2/3$. The gain over the provably-classical $R_z$-only strategy is:
 $$\boxed{\Delta F = F_\mathrm{avg}^{\mathrm{SU}(2)} - F_\mathrm{avg}^{R_z} \ge F_\mathrm{avg}^{\mathrm{SU}(2)} - \frac{2}{3}}$$
