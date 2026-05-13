@@ -262,28 +262,78 @@ def run_batch(records: list) -> list:
 
 
 # ── File ingestion ────────────────────────────────────────────────────────────
-def load_input(path: str) -> list:
-    """Load CSV, JSON, or HDF5 input file."""
+import csv as _csv_mod
+
+def _load_csv(path):
+    with open(path, newline="") as f:
+        reader = _csv_mod.DictReader(f)
+        rows = list(reader)
+    return rows, list(rows[0].keys()) if rows else ([], [])
+
+def _load_h5(path):
+    import h5py
+    rows, keys = [], []
+    with h5py.File(path, "r") as f:
+        keys = list(f.keys())
+        n = len(np.array(f[keys[0]]))
+        for i in range(n):
+            rows.append({k: float(np.array(f[k])[i]) for k in keys})
+    return rows, keys
+
+def _load_npz(path):
+    d = np.load(path, allow_pickle=True)
+    keys = list(d.keys())
+    n = len(d[keys[0]])
+    rows = [{k: float(d[k][i]) for k in keys} for i in range(n)]
+    return rows, keys
+
+def _load_mat(path):
+    from scipy.io import loadmat
+    d = loadmat(path)
+    keys = [k for k in d if not k.startswith("_")]
+    n = len(np.array(d[keys[0]]).flatten())
+    rows = [{k: float(np.array(d[k]).flatten()[i]) for k in keys} for i in range(n)]
+    return rows, keys
+
+def _load_tdms(path):
+    from nptdms import TdmsFile
+    f = TdmsFile.read(path)
+    keys = [ch.name for group in f.groups() for ch in group.channels()]
+    rows = []
+    channels = [(g, ch) for g in f.groups() for ch in g.channels()]
+    n = min(len(ch.data) for _, ch in channels)
+    for i in range(n):
+        rows.append({ch.name: float(ch.data[i]) for _, ch in channels})
+    return rows, keys
+
+
+def load_input(path: str):
+    """Load CSV, JSON, HDF5, or NPZ input file.
+
+    Returns
+    -------
+    (rows, cols) : tuple[list[dict], list[str]]
+        rows — list of dicts (one per data point)
+        cols — list of column/key names found in the file
+    """
     if path.endswith('.csv'):
-        import csv
-        with open(path) as f:
-            reader = csv.DictReader(f)
-            return list(reader)
+        return _load_csv(path)
     elif path.endswith('.json'):
         with open(path) as f:
-            return json.load(f)
+            data = json.load(f)
+        if isinstance(data, list) and data:
+            return data, list(data[0].keys())
+        raise ValueError("JSON must be a list of dicts")
     elif path.endswith('.h5') or path.endswith('.hdf5'):
-        import h5py
-        records = []
-        with h5py.File(path, 'r') as f:
-            N_arr = np.array(f['N'])
-            chi_arr = np.array(f['chi_t'])
-            gam_arr = np.array(f.get('gamma_t', np.zeros_like(chi_arr)))
-            for N, chi, gam in zip(N_arr, chi_arr, gam_arr):
-                records.append({'N': N, 'chi_t': chi, 'gamma_t': gam})
-        return records
+        return _load_h5(path)
+    elif path.endswith('.npz') or path.endswith('.npy'):
+        return _load_npz(path)
+    elif path.endswith('.mat'):
+        return _load_mat(path)
+    elif path.endswith('.tdms'):
+        return _load_tdms(path)
     else:
-        raise ValueError(f"Unsupported format: {path}. Use .csv, .json, or .h5")
+        raise ValueError(f"Unsupported format: {path}. Use .csv, .json, .h5, .npz, .mat, or .tdms")
 
 
 # ── CLI ───────────────────────────────────────────────────────────────────────
@@ -300,7 +350,7 @@ if __name__ == '__main__':
 
     if args.input:
         print(f"Loading {args.input}...", flush=True)
-        records = load_input(args.input)
+        records, _ = load_input(args.input)
         print(f"Running pipeline on {len(records)} points...", flush=True)
         results = run_batch(records)
     else:
