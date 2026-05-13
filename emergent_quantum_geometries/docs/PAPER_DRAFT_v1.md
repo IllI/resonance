@@ -270,7 +270,7 @@ A minimal hardware test of **Theorem 3** ($T_{xx} = \cos^{N-2}(\chi t/2)$) using
 
 ## VI. PTM Channel Characterization and Recovery Geometry [PROVED + OBSERVED]
 
-### VI.A Pauli Transfer Matrix — Three Analytic Theorems [PROVED]
+### VI.A Pauli Transfer Matrix — Four Analytic Theorems [PROVED]
 
 From Proposition 1, the PTM diagonal of the OAT teleportation channel satisfies:
 
@@ -284,18 +284,33 @@ From Proposition 1, the PTM diagonal of the OAT teleportation channel satisfies:
 
 *Note: This Corollary is consistent with Section III.B — $R_z$ phase alignment is the necessary first step but cannot alone achieve $F > 2/3$ for $N\ge4$. The full $\mathrm{SU}(2)\times\mathrm{SU}(2)$ unitary is required (§III.B, §III.C).*
 
+**Theorem 4 (Singular manifold is maximally mixed). [PROVED]** For all $N \ge 4$:
+$$\rho_2(\chi t = \pi) = \frac{\mathbb{I}}{4}$$
+
+*Proof.* From Proposition 1 with $m = N/2 - 1 \ge 1$: the general matrix element is
+$$\rho_{(i_L i_R),(j_L j_R)}(\pi) = \frac{1}{4}\,e^{i\pi[\cdots]} \cdot \cos^m\!\left(\frac{(i_R-j_R)\pi}{2}\right) \cdot \cos^m\!\left(\frac{(i_L-j_L)\pi}{2}\right).$$
+For any off-diagonal element, either $i_R \ne j_R$ or $i_L \ne j_L$. Since $\cos(\pm\pi/2) = 0$ and $m \ge 1$, the corresponding cosine factor vanishes, annihilating all off-diagonals. The diagonal elements $\rho_{ii,ii} = 1/4$ for all $i$ (uniform, from equal amplitudes). Therefore $\rho_2(\pi) = \mathbb{I}/4$. $\square$
+
+**Corollary (Teleportation completely fails at $\chi t=\pi$). [PROVED]** For $N \ge 4$, $F_\mathrm{avg}(U_A\otimes U_B,\,\chi t=\pi) = 1/2$ for *all* $(U_A, U_B) \in \mathrm{SU}(2)^2$.
+
+*Proof.* The completely mixed state $\mathbb{I}/4$ is invariant under all unitaries ($U\,(\mathbb{I}/4)\,U^\dagger = \mathbb{I}/4$). For the maximally mixed state, all PTM elements $T_{ij} = 0$, so $F_\mathrm{avg} = (1+0)/2 = 1/2$ regardless of the local rotation applied. $\square$
+
+> [!IMPORTANT]
+> **Theorem 4 + Corollary complete the proof of the internal null:** at $\chi t=\pi$, the boundary channel is a completely depolarising qubit channel, and no local operation can recover any quantum information. This is not a numerical observation — it is an exact theorem. The IBM hardware results ($T_{xx}(\pi) = 0.003 \pm 0.008$, $0.4\sigma$) are the experimental confirmation.
+
 **The unique quantum correction — SU(2) gain formula [OBSERVED].** The full local $\mathrm{SU}(2)\times\mathrm{SU}(2)$ recovery (native JILA gates: $R_z$ phase shifts + $R_x$ Rabi pulses) achieves $F_\mathrm{avg}^{\mathrm{SU}(2)} > 2/3$. The gain over the provably-classical $R_z$-only strategy is:
 $$\boxed{\Delta F = F_\mathrm{avg}^{\mathrm{SU}(2)} - F_\mathrm{avg}^{R_z} \ge F_\mathrm{avg}^{\mathrm{SU}(2)} - \frac{2}{3}}$$
 
 For $N=4$: $\Delta F = 0.719 - 2/3 \approx 0.052$. This gap is the *operationally unique quantum correction*: it vanishes for all classical anisotropic channels and for all $R_z$-only quantum protocols, but is accessible via the full $R_x$ Rabi pulse that exploits the off-diagonal coherence structure of $\rho_2$.
 
 > [!IMPORTANT]
-> The Corollary + gain formula together form the central experimental prediction:
-> (1) $R_z$-only is **provably** bounded at $F = 2/3$ — no optimization can exceed it.
-> (2) $R_z + R_x$ achieves $F = 0.719$ — a 7.8% quantum excess.
-> (3) The difference is the measurable signature of OAT boundary entanglement at JILA.
+> Theorems 1–4 together characterise the complete channel structure:
+> (1) $R_z$-only is **provably** bounded at $F = 2/3$ (Corollary to Theorems 1–3).
+> (2) $R_z + R_x$ achieves $F = 0.719$ — a 7.8% quantum excess **[OBSERVED]**.
+> (3) At $\chi t=\pi$, **$F = 1/2$ for all local operations** (Theorem 4) — teleportation is completely prohibited.
+> (4) The phase transition $\chi t^* \to \pi$ maps to $F_\mathrm{opt} \to 1/2$: a sharp, proved operational threshold.
 
-**$\chi t = \pi$ singularity [OBSERVED, PROVED in part].** At $\chi t = \pi$: $T_{xx} = \cos^{N-2}(\pi/2) = 0$ for all $N \ge 4$ (zero by the analytic formula), $V_Q = 0$ (confirmed by Haar-random sampling), $F_\mathrm{max} = 1/2$ (operationally unrecoverable (geometrically collapsed in X)). This is a teleportation critical line — the manifold collapses identically at this OAT phase regardless of $N$, $\Gamma$, or measurement basis. *Experiment:* run identical protocol at $\chi t^*$ and $\chi t = \pi$ on same apparatus; the $V_Q$ difference is the within-experiment falsification.
+**$\chi t = \pi$ singularity [PROVED — see Theorem 4].** At $\chi t = \pi$: $\rho_2 = \mathbb{I}/4$ (maximally mixed, Theorem 4), $T_{xx}=T_{yy}=T_{zz}=0$ (all PTM elements zero), $V_Q = 0$ (confirmed by Haar-random sampling and implied by $F_\mathrm{avg}=1/2$), $F_\mathrm{avg} = 1/2$ for all $(U_A,U_B)$ (Corollary to Theorem 4). This is a teleportation critical line — the channel collapses identically at this OAT phase regardless of $N$, $\Gamma$, or measurement basis.
 
 **Note on $N=2$ exception.** For $N=2$: $\cos^{N-2}(\chi t/2) = \cos^0(\cdot) = 1$ identically, so the $\chi t=\pi$ singularity does not apply. The $N=2$ state is a pure Bell pair $|\Psi^+\rangle$ for all $\chi t$ — perfect teleportation. The internal control requires $N \ge 4$ (at least one bulk atom to trace out).
 
