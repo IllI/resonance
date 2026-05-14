@@ -233,9 +233,10 @@ def bootstrap_enrichment(strata, F_all, n_boot=200, seed=0):
 
 
 # ── Local dimension vs teleportation ─────────────────────────────────────────
-def dim_vs_teleportation(Xb, F_all, n_bins=8):
+def dim_vs_teleportation(Xb, F_all, n_bins=8, emb=None):
     from dlinoss_geometry import twonn_intrinsic_dim
-    D_local = twonn_intrinsic_dim(Xb[:,_C["sv_1"]:_C["sv_1"]+3])
+    X_dim = emb if emb is not None else Xb
+    D_local = twonn_intrinsic_dim(X_dim)
     valid = D_local[D_local>0.1]
     if len(valid) < n_bins*2: return []
     bins = np.percentile(valid, np.linspace(0,100,n_bins+1))
@@ -366,7 +367,7 @@ def run(scale="small", out="program_f"):
     print("\n"+"="*60)
     print("LOCAL DIMENSION vs TELEPORTATION P(F>2/3|D_eff)")
     print("="*60)
-    dim_results=dim_vs_teleportation(Xb,F_train)
+    dim_results=dim_vs_teleportation(Xb,F_train,emb=emb)
     for r in dim_results:
         print(f"  D_eff [{r['d_lo']:.2f},{r['d_hi']:.2f}]  "
               f"n={r['n']:4d}  P(F>2/3)={r['P_F_above']:.3f}")
