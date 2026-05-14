@@ -4,6 +4,9 @@
 This repository contains the analysis pipeline for characterizing
 **OAT boundary channel geometry** from experimental or simulated data.
 
+> **New to this tool? Start here:**  
+> **[Step-by-Step User Guide (with screenshots) →](docs/JILA_PIPELINE_USER_GUIDE.md)**
+
 ---
 
 ## What This Does
@@ -23,6 +26,16 @@ You run this locally on your own hardware.
 ---
 
 ## Quick Start
+
+### Option A — Graphical Interface (recommended for most users)
+
+```bash
+python jila_gui.py
+```
+
+This opens the point-and-click dashboard. Load your data file, click **Run Local**, and the results window appears with plots and download buttons. See the **[User Guide](docs/JILA_PIPELINE_USER_GUIDE.md)** for a full walkthrough with screenshots.
+
+### Option B — Command line
 
 ```bash
 pip install numpy scipy h5py
@@ -55,12 +68,16 @@ print(result['F_avg_theory'])  # 0.758
 
 ## Input Formats
 
-| Format | Columns/Keys |
-|---|---|
-| CSV | `N`, `chi_t`, `gamma_t` (optional) |
-| JSON | List of `{N, chi_t, gamma_t}` dicts |
-| HDF5 | Datasets `N`, `chi_t`, `gamma_t` |
-| Direct | `T_xx_measured`, `T_yz_measured` (from Ramsey) |
+| Format | Extension | Arrays/Columns needed |
+|---|---|---|
+| **NumPy archive** | **`.npz`** | **`N`, `chi_t`, `gamma_t` (optional)** |
+| CSV | `.csv` | `N`, `chi_t`, `gamma_t` (optional) |
+| HDF5 | `.h5` | Datasets `N`, `chi_t`, `gamma_t` |
+| JSON | `.json` | List of `{N, chi_t, gamma_t}` dicts |
+| Direct (Ramsey) | Python | `T_xx_measured`, `T_yz_measured` |
+
+**Sample files for testing:** see the [`sample_data/`](sample_data/) folder.
+Start with `sample_ideal_sweep.npz` — it runs in under 5 seconds locally.
 
 ---
 

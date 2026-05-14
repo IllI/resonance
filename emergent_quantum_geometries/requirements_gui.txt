@@ -1,0 +1,13 @@
+# JILA Pipeline GUI — minimal dependencies
+# These are installed automatically by launch.py into an isolated .venv
+# Do NOT install these globally — let launch.py manage them.
+
+numpy>=1.24
+scipy>=1.10
+matplotlib>=3.7
+pillow>=9.0          # screenshot capture & PNG export
+psutil>=5.9          # cross-platform process liveness check (TRC lock)
+
+# Optional — skip gracefully if install fails
+h5py>=3.0            # HDF5 input/export (comment out if not needed)
+# nptdms>=0.28       # LabVIEW .tdms files (uncomment if needed)

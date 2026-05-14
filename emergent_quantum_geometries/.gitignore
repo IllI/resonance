@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+
+# Virtual environment (created by launch.py — never commit this)
+.venv/
+
+# TRC lock file (active TPU session marker — should never be committed)
+.jila_tpu.lock
+
+# Generated data / outputs
+_jila_tpu_input.json
+ptm_results.json
+*.npz.tmp
+
+# Jupyter
+.ipynb_checkpoints/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp

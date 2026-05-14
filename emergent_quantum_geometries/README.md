@@ -107,20 +107,44 @@ emergent_quantum_geometries/
 
 ### Prerequisites
 ```bash
-pip install -r requirements.txt
-# Requires: jax[tpu], qiskit, qiskit-aer, numpy, scipy, pandas, matplotlib
+pip install -r requirements_gui.txt
 ```
 
-### Run the MPS simulation (N=4, exact)
-```python
-# src/simulation/oat_teleport_v3_tpu.py
+> **Full dependency list:** `numpy scipy matplotlib h5py pillow`  
+> For the TPU cloud feature you also need the [Google Cloud CLI](https://cloud.google.com/sdk/docs/install) authenticated as `cityzenill@gmail.com` with project `time-emission`.
+
+---
+
+### Option A — Graphical Interface (recommended for most users)
+
+```bash
+python jila_gui.py
+```
+
+The GUI walks you through the entire workflow:
+
+1. **Browse / Select File** — load `.npz`, `.csv`, `.h5`, or `.mat`
+2. **Map columns** — tell the app which column is χt, N, γt
+3. **▶ Run Locally (CPU)** — instant results for small datasets (< 200 rows)
+4. **🚀 Deploy to TPU (TRC)** — one-click cloud deployment for large datasets
+5. **View results** — six-panel phase diagram, data table, and export panel
+6. **🗑 Delete TPU Resources** — always run this after a cloud job
+
+Full instructions with screenshots: [`docs/JILA_PIPELINE_USER_GUIDE.md`](docs/JILA_PIPELINE_USER_GUIDE.md)
+
+---
+
+### Option B — Script / Programmatic
+
+```bash
+# Run the MPS simulation directly (N=4, exact)
 python src/simulation/oat_teleport_v3_tpu.py
 # Output: results/simulation/oat_teleport_v3_results.json
-# Expected: C=0.309, F_opt=0.7696, Tr[Wρ₂]=-0.183 at χt*=1.091
+# Expected: C=0.309, F_opt=0.7696 at χt*=1.091
 ```
 
-### Run the hybrid loop controller (synthetic validation)
 ```python
+# Use the hybrid loop controller
 from src.controller.jila_tpu_controller import JILATPUController
 
 controller = JILATPUController(N=4, chi_Hz=1.0)
@@ -135,6 +159,23 @@ python src/experiments/exp_ibm_trotterized_oat.py   # IBM Lindblad probe
 python src/experiments/exp_syk_ed_adapter.py         # SYK probe (G_R(t) ED)
 python src/experiments/exp_mbl_xxz_adapter.py        # MBL probe (XXZ chain)
 ```
+
+---
+
+### TRC-Approved Cloud Zones (TPU Research Cloud)
+
+The GUI's zone dropdown is pre-configured to only show approved zones:
+
+| Zone | Chip | Type | Notes |
+|------|------|------|-------|
+| `europe-west4-a` | v6e-8 | spot | 64 chips, may preempt |
+| `us-east1-d` | v6e-8 | spot | 64 chips, alternative |
+| `us-central1-a` | v5e-8 | spot | 64 chips |
+| `us-central2-b` | v4-8 | on-demand | 32 chips, never preempts |
+
+> **Billing account:** The project `time-emission` must be linked to **"My Billing Account TPU"** in the [GCP Billing console](https://console.cloud.google.com/billing). Linking to any other account will cause `PERMISSION_DENIED` errors.
+
+> **TRC Commandments (short version):** Always use spot (`--spot` flag). Always delete both the TPU node AND the Queued Resource when done. Run `gcloud compute tpus queued-resources list --project=time-emission` and verify zero rows before closing your session.
 
 ---
 
