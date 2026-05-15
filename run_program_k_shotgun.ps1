@@ -61,15 +61,8 @@ function Queue-Node {
     Start-Sleep 3
 }
 
-function Test-SSH {
-    # Returns true if SSH works on this node right now (30s timeout)
-    param([string]$NodeVm, [string]$Zone)
-    $r = gcloud compute tpus tpu-vm ssh $NodeVm `
-        --project=$Project --zone=$Zone `
-        --ssh-flag="-o ConnectTimeout=30 -o StrictHostKeyChecking=no -o BatchMode=yes" `
-        --command="echo SSH_OK" 2>&1
-    return ($r -match "SSH_OK")
-}
+# SSH verification removed -- v6e TPU SSH daemon can take 5-10 min after
+# ACTIVE state is reported. SCP upload below is the real connectivity gate.
 
 # TRC-approved zones — NOTE on flags:
 # Bible says "--best-effort" for v6e spot, but this gcloud version
@@ -112,13 +105,8 @@ $RoundNo = 0
             $s = Get-State $z.Name $z.Zone
             Log "  $($z.Name): $s"
             if ($s -eq "ACTIVE" -and $null -eq $Winner) {
-                Log "  SSH-verifying $($z.Name)..."
-                if (Test-SSH "$($z.Name)-vm" $z.Zone) {
-                    $Winner = $z
-                    Log "*** WINNER (SSH verified): $($z.Name) in $($z.Zone) ***"
-                } else {
-                    Log "  SSH failed (likely PREEMPTED) -- skipping $($z.Name)"
-                }
+                $Winner = $z
+                Log "*** WINNER (ACTIVE): $($z.Name) in $($z.Zone) -- proceeding to upload ***"
             }
             if ($s -match "PREEMPTED|FAILED|SUSPENDED") {
                 Log "  $($z.Name) $s -- re-queuing..."
