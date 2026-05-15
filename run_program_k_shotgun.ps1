@@ -89,7 +89,7 @@ $RoundNo = 0
 
 :RaceLoop while ($true) {
     $RoundNo++
-    Log "--- Round $RoundNo: Queuing 3 zones ---"
+    Log "--- Round $($RoundNo): Queuing 3 zones ---"
     foreach ($z in $Zones) { Queue-Node $z }
 
     # Race loop
