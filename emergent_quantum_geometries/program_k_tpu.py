@@ -109,6 +109,15 @@ def build_mbl_xxz(N, J=1.0, Dz=1.0, W=5.0, seed=0):
         H  += h_i * site_op(Z, i, N)
     return H
 
+# Disordered XXZ W-sweep for transport/localization phase boundary
+# W=1.0: weak disorder, transport present
+# W=3.7: near MBL transition
+# W=5.0: clearly localized
+# W=8.0: deep localization
+def build_disordered_xxz_W(W, seed=42):
+    """Factory returning a builder for DisorderedXXZ at disorder W."""
+    return lambda N: build_mbl_xxz(N, W=W, seed=seed)
+
 def apply_U(psi, evals, evecs, t):
     return evecs @ (np.exp(-1j*evals*t) * (evecs.conj().T @ psi))
 
@@ -240,6 +249,46 @@ def scramble_rho2(rho2, rng):
     U  = np.kron(UA, UB)
     return U @ rho2 @ U.conj().T
 
+# Single-qubit Clifford group (24 elements as 2x2 unitaries)
+_S = np.array([[1,0],[0,1j]], dtype=complex)       # Phase gate
+_H = np.array([[1,1],[1,-1]], dtype=complex) / math.sqrt(2)
+_CLIFFORD_1Q = None
+
+def _build_clifford_group():
+    """Build all 24 single-qubit Clifford unitaries."""
+    global _CLIFFORD_1Q
+    if _CLIFFORD_1Q is not None:
+        return _CLIFFORD_1Q
+    gens = [I2, _H, _S, _H @ _S, _S @ _H, _H @ _S @ _H]
+    cliffords = set()
+    queue = [I2]
+    seen = [I2]
+    while queue:
+        g = queue.pop()
+        for gen in [_H, _S]:
+            for ng in [g @ gen, gen @ g]:
+                # Canonicalize by fixing global phase
+                key = np.round(ng / ng.flat[np.argmax(np.abs(ng))], 6).tobytes()
+                if key not in cliffords:
+                    cliffords.add(key)
+                    seen.append(ng)
+                    queue.append(ng)
+    _CLIFFORD_1Q = seen[:24]
+    return _CLIFFORD_1Q
+
+def clifford_scramble_rho2(rho2, rng):
+    """Apply random LOCAL CLIFFORD gates C_A x C_B to pair RDM.
+    Harder adversarial test than continuous rotation:
+    - Clifford group permutes X,Y,Z axes discretely (not just rotates)
+    - Preserves entanglement structure but changes ALL PTM/MI geometry
+    - If predictor survives: tracking transport organization, not coordinates.
+    """
+    cliffs = _build_clifford_group()
+    CA = cliffs[rng.integers(0, len(cliffs))]
+    CB = cliffs[rng.integers(0, len(cliffs))]
+    U  = np.kron(CA, CB)
+    return U @ rho2 @ U.conj().T
+
 # ---- Causal fraction P(t_dF < t_rec) with Wilson CI ----------------------
 
 def causal_fraction_ci(on_dF, on_rec, js, alpha=0.05):
@@ -320,6 +369,8 @@ def main():
                    default=["XY","XXZ","Ising","TiltedIsing"])
     p.add_argument("--basis-scramble", type=int, default=5,
                    help="N random basis rotations for adversarial stability test")
+    p.add_argument("--clifford-scramble", type=int, default=0,
+                   help="N random LOCAL CLIFFORD scrambles (harder than continuous rotation)")
     p.add_argument("--out",       default="program_k_results.json")
     args = p.parse_args()
     N = args.N
@@ -333,12 +384,17 @@ def main():
     psi0_P = [site_op(P,0,N)@psi0 for P in PAULIS]
 
     MODEL_BUILDERS = {
-        "XY":          lambda: build_xy(N),
-        "XXZ":         lambda: build_xxz(N),
-        "Ising":       lambda: build_ising(N),
-        "TiltedIsing": lambda: build_tilted_ising(N),
-        "OAT":         lambda: build_oat(N, chi=1.0/N),
-        "MBL_XXZ":     lambda: build_mbl_xxz(N, W=5.0, seed=42),
+        "XY":               lambda: build_xy(N),
+        "XXZ":              lambda: build_xxz(N),
+        "Ising":            lambda: build_ising(N),
+        "TiltedIsing":      lambda: build_tilted_ising(N),
+        "OAT":              lambda: build_oat(N, chi=1.0/N),
+        "MBL_XXZ":          lambda: build_mbl_xxz(N, W=5.0, seed=42),
+        # Disorder W-sweep: transport -> localization phase boundary
+        "DisorderedXXZ_W1": lambda: build_mbl_xxz(N, W=1.0, seed=42),
+        "DisorderedXXZ_W3": lambda: build_mbl_xxz(N, W=3.0, seed=42),
+        "DisorderedXXZ_W5": lambda: build_mbl_xxz(N, W=5.0, seed=42),
+        "DisorderedXXZ_W8": lambda: build_mbl_xxz(N, W=8.0, seed=42),
     }
 
     print("="*72, flush=True)
@@ -510,6 +566,30 @@ def main():
         else:
             mean_sp = std_sp = None
 
+        # Clifford scramble (harder adversarial test)
+        clifford_precs = []
+        if args.clifford_scramble > 0:
+            crng = np.random.default_rng(777)
+            _build_clifford_group()  # pre-build
+            for _ in range(args.clifford_scramble):
+                feats_c = []
+                for j in js:
+                    for ti in range(len(ts)):
+                        rho2_b = pair_rdm(
+                            apply_U(psi0, evals, evecs, ts[ti]), N, 0, j)
+                        rho2_c = clifford_scramble_rho2(rho2_b, crng)
+                        mi_c = obs_MI(rho2_c)
+                        feats_c.append([mi_c, ex_EE[j][ti], ex_OS[j][ti]])
+                lg_c = logistic_proxy_train_eval(feats_c, labels_m)
+                clifford_precs.append(lg_c['prec'])
+            mean_cp = float(np.mean(clifford_precs))
+            std_cp  = float(np.std(clifford_precs))
+            print(f"  Clifford-scramble precision ({args.clifford_scramble} runs): "
+                  f"{mean_cp:.3f} +- {std_cp:.3f}  "
+                  f"(nominal={logistic_m['prec']:.3f})", flush=True)
+        else:
+            mean_cp = std_cp = None
+
         all_results[model_name] = {
             "ts": ts.tolist(), "js": js,
             # Raw trajectories (for spacetime plots)
@@ -535,9 +615,10 @@ def main():
                        "causal_ci_hi":      cf_hi,
                        "verdict":           causal_verdict},
             "logistic_within":   logistic_m,
-            "basis_scramble": {"mean_prec": mean_sp,
-                               "std_prec":  std_sp,
-                               "n_runs":    args.basis_scramble},
+            "basis_scramble":   {"mean_prec": mean_sp, "std_prec": std_sp,
+                                 "n_runs":    args.basis_scramble},
+            "clifford_scramble": {"mean_prec": mean_cp, "std_prec": std_cp,
+                                  "n_runs":    args.clifford_scramble},
         }
 
     # Cross-model logistic (trained on all models, tests generalization)
