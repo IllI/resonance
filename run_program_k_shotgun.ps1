@@ -44,11 +44,19 @@ function Kill-Node {
 function Queue-Node {
     param($n)
     $nName=$n.Name; $nZone=$n.Zone; $nAccel=$n.Accel; $nRuntime=$n.Runtime
-    Log "  Queuing $nName ($nAccel) in $nZone..."
-    $res = gcloud compute tpus queued-resources create $nName `
-        --node-id="$nName-vm" --project=$Project --zone=$nZone `
-        --accelerator-type=$nAccel --runtime-version=$nRuntime `
-        --spot --quiet 2>&1
+    $nSpot=$n.SpotFlag  # "--best-effort" for v6e spot, "" for v4 on-demand
+    Log "  Queuing $nName ($nAccel) in $nZone (spot flag: '$nSpot')..."
+    if ($nSpot) {
+        $res = gcloud compute tpus queued-resources create $nName `
+            --node-id="$nName-vm" --project=$Project --zone=$nZone `
+            --accelerator-type=$nAccel --runtime-version=$nRuntime `
+            $nSpot --quiet 2>&1
+    } else {
+        $res = gcloud compute tpus queued-resources create $nName `
+            --node-id="$nName-vm" --project=$Project --zone=$nZone `
+            --accelerator-type=$nAccel --runtime-version=$nRuntime `
+            --quiet 2>&1
+    }
     Log "  -> $res"
     Start-Sleep 3
 }
@@ -62,11 +70,14 @@ function Test-SSH {
     return ($r -match "SSH_OK")
 }
 
-# TRC-approved spot zones
+# TRC-approved spot zones (Bible-compliant flags)
+# v4-8 us-central2-b: on-demand, NO spot flag
+# v6e-8 us-east1-d:   spot, --best-effort
+# v6e-8 europe-west4-a: spot, --best-effort
 $Zones = @(
-    @{ Name="kn14-1"; Zone="us-central2-b"; Accel="v4-8";  Runtime="tpu-vm-v4-base"  },
-    @{ Name="kn14-2"; Zone="us-east1-d";    Accel="v6e-8"; Runtime="v2-alpha-tpuv6e" },
-    @{ Name="kn14-3"; Zone="europe-west4-a";Accel="v6e-8"; Runtime="v2-alpha-tpuv6e" }
+    @{ Name="kn14-1"; Zone="us-central2-b"; Accel="v4-8";  Runtime="tpu-vm-v4-base";  SpotFlag=""              },
+    @{ Name="kn14-2"; Zone="us-east1-d";    Accel="v6e-8"; Runtime="v2-alpha-tpuv6e"; SpotFlag="--best-effort" },
+    @{ Name="kn14-3"; Zone="europe-west4-a";Accel="v6e-8"; Runtime="v2-alpha-tpuv6e"; SpotFlag="--best-effort" }
 )
 
 # Program K v3 N=14 run command
