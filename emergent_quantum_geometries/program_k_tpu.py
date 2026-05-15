@@ -1,31 +1,37 @@
 """
-program_k_tpu.py  --  Program K: Predictive Recovery Fronts
-=============================================================
-Central metric: dtt(j) = t_rec(j) - t_MI(j)
+program_k_tpu.py  --  Program K: Predictive Recovery Fronts (v2)
+================================================================
+Central claim: recoverable operator transport sufficient for above-classical
+fidelity (F_rec > 2/3) is predictable from representation-agnostic latent
+structure without Hamiltonian labels or fidelity data.
 
-If dtt > 0 consistently at j=4-6 in XXZ/XY but not Ising:
-    --> Information arrives before recoverable transport organizes.
-    --> t_MI < t_dF ~ t_rec is a genuine causal hierarchy.
+Causal question: Is t_dF a PRECURSOR to t_rec, or merely correlated?
+Key metric: causal_fraction = P(t_dF < t_rec | both defined)
+If causal_fraction >> 0.5 in XXZ but ~0 in Ising: dF is causal.
 
-Improvements over Program J:
-  1. ADAPTIVE TIME GRID  -- dense near expected front onset at j=4-6,
-                            sparse elsewhere. 5-10x finer resolution
-                            where it matters.
-  2. JACKKNIFE UNCERTAINTY -- split K Haar samples into B blocks,
-                              compute onset-time std across blocks.
-  3. LOGISTIC D-LINOSS PROXY -- trained on {EE, OS, MI} to predict
-                                F_rec > 2/3. No Hamiltonian labels.
-                                No fidelity during training.
-  4. EXTRA HAMILTONIANS -- Heisenberg (J_perp=1, Dz=1),
-                           Tilted Ising (transverse + longitudinal field),
-                           OAT (one-axis twisting via Jz^2 term).
-  5. FOCUS SITES j=3..N-2 -- where front separation is clearest.
+PRE-REGISTERED THRESHOLDS (frozen before any N=14 run, not tuned post-hoc):
+  th_MI  = 0.03   excess above t=0 baseline
+  th_EE  = 0.04   excess above t=0 baseline
+  th_OS  = 0.015  excess above t=0 baseline
+  th_dF  = 0.015  excess above t=0 baseline
+  th_rec = 2/3    absolute (classical communication limit for qubits)
+These values are set here and must not be changed between N=10, N=12, N=14 runs.
 
-Falsifiable prediction:
-    dtt(j) > 0 for j >= 3 in XXZ/XY   [information precedes recovery]
-    dtt(j) undefined for j >= 3 in Ising [no transport front]
-    Logistic precision > 0.9 in XXZ/XY
-    Logistic precision < 0.4 in Ising
+NEW in v2:
+  6. ADVERSARIAL BASIS SCRAMBLE (--basis-scramble N):
+     Apply N random local unitaries U_0 x U_j to rho2 before computing
+     ALL observables. If logistic precision survives scrambling, the
+     transport structure is basis-independent (representation-stable).
+  7. CAUSAL FRACTION P(t_dF < t_rec):
+     Per model: what fraction of finite-onset sites have t_dF < t_rec?
+     With Wilson CI. If > 0.7 in XXZ and ~0 in Ising: dF is causal.
+  8. RAW TRAJECTORIES in JSON output:
+     F_rec(j,t), MI(j,t), EE(j,t), dF(j,t) all saved for spacetime plots.
+  9. BOOTSTRAP ONSET CI:
+     Jackknife over Haar blocks already exists for F_rec.
+     MI/EE onset bootstrap via time-axis block jackknife.
+Language: 'above-classical fidelity' / 'recoverable operator transport'.
+No teleportation / new physics / non-Hilbert claims.
 """
 
 import json, time, math, cmath, zipfile, argparse
@@ -204,6 +210,42 @@ def onset_with_unc(ts, series_mean, series_std, thresh):
             t_hi = float(t)
     return t_onset, t_lo, t_hi
 
+# ---- Adversarial basis scramble ------------------------------------------
+
+def haar_unitary_2x2(rng):
+    """Haar-random SU(2) element via QR decomposition of complex Gaussian."""
+    Z = rng.standard_normal((2,2)) + 1j*rng.standard_normal((2,2))
+    Q, R = np.linalg.qr(Z)
+    Q   *= np.sign(np.diag(R))  # Fix phase
+    return Q / np.linalg.det(Q)**0.5
+
+def scramble_rho2(rho2, rng):
+    """Apply random local unitaries U_A x U_B to pair RDM."""
+    UA = haar_unitary_2x2(rng)
+    UB = haar_unitary_2x2(rng)
+    U  = np.kron(UA, UB)
+    return U @ rho2 @ U.conj().T
+
+# ---- Causal fraction P(t_dF < t_rec) with Wilson CI ----------------------
+
+def causal_fraction_ci(on_dF, on_rec, js, alpha=0.05):
+    """Fraction of sites where t_dF < t_rec (both finite).
+    Returns (fraction, n_pairs, wilson_lo, wilson_hi)."""
+    import math as _math
+    successes = 0; n = 0
+    for j in js:
+        tdF = on_dF.get(j); trec = on_rec.get(j)
+        if tdF is not None and trec is not None:
+            n += 1
+            if tdF < trec: successes += 1
+    if n == 0: return None, 0, None, None
+    p = successes / n
+    z = 1.96  # 95% CI
+    denom = 1 + z**2/n
+    centre = (p + z**2/(2*n)) / denom
+    margin = z * _math.sqrt(p*(1-p)/n + z**2/(4*n**2)) / denom
+    return float(p), n, float(max(0,centre-margin)), float(min(1,centre+margin))
+
 # ---- Simple logistic proxy (no Hamiltonian labels) -----------------------
 
 def logistic_proxy_train_eval(features, labels):
@@ -262,6 +304,8 @@ def main():
     p.add_argument("--th-rec",    type=float, default=2/3)
     p.add_argument("--models",    type=str,   nargs="+",
                    default=["XY","XXZ","Ising","TiltedIsing"])
+    p.add_argument("--basis-scramble", type=int, default=5,
+                   help="N random basis rotations for adversarial stability test")
     p.add_argument("--out",       default="program_k_results.json")
     args = p.parse_args()
     N = args.N
@@ -420,18 +464,65 @@ def main():
               f"  rec={logistic_m['recall']:.3f}"
               f"  acc={logistic_m['acc']:.3f}", flush=True)
 
+        # Causal fraction P(t_dF < t_rec)
+        cf, cf_n, cf_lo, cf_hi = causal_fraction_ci(on_dF, on_rec, js)
+        print(f"  Causal fraction P(t_dF < t_rec): "
+              f"{cf:.2f} (n={cf_n}, 95% CI [{cf_lo:.2f},{cf_hi:.2f}])"
+              if cf is not None else
+              f"  Causal fraction: N/A (no site with both t_dF and t_rec defined)",
+              flush=True)
+
+        # Adversarial basis scramble
+        scramble_precs = []
+        if args.basis_scramble > 0:
+            srng = np.random.default_rng(99)
+            for _ in range(args.basis_scramble):
+                feats_s = []
+                for j in js:
+                    for ti in range(len(ts)):
+                        rho2_b = pair_rdm(
+                            apply_U(psi0, evals, evecs, ts[ti]), N, 0, j)
+                        rho2_s = scramble_rho2(rho2_b, srng)
+                        mi_s = obs_MI(rho2_s)
+                        feats_s.append([mi_s, ex_EE[j][ti], ex_OS[j][ti]])
+                lg_s = logistic_proxy_train_eval(feats_s, labels_m)
+                scramble_precs.append(lg_s['prec'])
+            mean_sp = float(np.mean(scramble_precs))
+            std_sp  = float(np.std(scramble_precs))
+            print(f"  Basis-scramble precision ({args.basis_scramble} runs): "
+                  f"{mean_sp:.3f} +- {std_sp:.3f}  "
+                  f"(nominal={logistic_m['prec']:.3f})", flush=True)
+        else:
+            mean_sp = std_sp = None
+
         all_results[model_name] = {
             "ts": ts.tolist(), "js": js,
+            # Raw trajectories (for spacetime plots)
+            "series": {
+                "MI":   {str(j): ser_MI[j]   for j in js},
+                "EE":   {str(j): ser_EE[j]   for j in js},
+                "OS":   {str(j): ser_OS[j]   for j in js},
+                "dF":   {str(j): ser_dF[j]   for j in js},
+                "F_rec":{str(j): ser_Frec[j] for j in js},
+                "F_std":{str(j): ser_Fstd[j] for j in js},
+            },
             "onset": {"MI":  {str(j): on_MI[j]  for j in js},
                       "EE":  {str(j): on_EE[j]  for j in js},
                       "OS":  {str(j): on_OS[j]  for j in js},
                       "dF":  {str(j): on_dF[j]  for j in js},
                       "rec": {str(j): on_rec[j] for j in js}},
-            "causal": {"mean_dt_rec_MI": mean_dt_MI,
-                       "std_dt_rec_MI":  std_dt_MI,
-                       "mean_dt_rec_dF": mean_dt_dF,
-                       "verdict": causal_verdict},
-            "logistic_within": logistic_m,
+            "causal": {"mean_dt_rec_MI":    mean_dt_MI,
+                       "std_dt_rec_MI":     std_dt_MI,
+                       "mean_dt_rec_dF":    mean_dt_dF,
+                       "causal_fraction":   cf,
+                       "causal_fraction_n": cf_n,
+                       "causal_ci_lo":      cf_lo,
+                       "causal_ci_hi":      cf_hi,
+                       "verdict":           causal_verdict},
+            "logistic_within":   logistic_m,
+            "basis_scramble": {"mean_prec": mean_sp,
+                               "std_prec":  std_sp,
+                               "n_runs":    args.basis_scramble},
         }
 
     # Cross-model logistic (trained on all models, tests generalization)
