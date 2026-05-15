@@ -69,13 +69,17 @@ $Zones = @(
     @{ Name="kn14-3"; Zone="europe-west4-a";Accel="v6e-8"; Runtime="v2-alpha-tpuv6e" }
 )
 
-# Program K N=14 run command (runs fully on TPU, saves results there)
+# Program K v3 N=14 run command
+# THREE JOBS: (1) causal hierarchy t_MI<t_dF~t_rec at large j
+#             (2) disorder phase boundary W=1->8
+#             (3) Clifford scramble stress test
 $RemoteCmd = (
     "pip install -q 'jax[tpu]' scipy 2>/dev/null; " +
     "python3 ~/program_k_tpu.py " +
-    "--N 14 --T-max 7.0 --n-coarse 30 --n-fine 80 --t-onset 3.5 " +
-    "--K 200 --B 5 --j-focus 5 6 7 8 9 " +
-    "--models XY XXZ Ising TiltedIsing " +
+    "--N 14 --T-max 8.0 --n-coarse 40 --n-fine 100 --t-onset 3.5 " +
+    "--K 200 --B 5 --j-focus 4 5 6 7 8 9 10 11 " +
+    "--models XXZ Ising TiltedIsing MBL_XXZ DisorderedXXZ_W1 DisorderedXXZ_W3 " +
+    "--basis-scramble 5 --clifford-scramble 5 " +
     "--out ~/program_k_N14_results.json " +
     "> ~/program_k_N14.log 2>&1"
 )
