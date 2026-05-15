@@ -62,10 +62,11 @@ function Queue-Node {
 }
 
 function Test-SSH {
-    # Returns true if SSH works on this node right now
+    # Returns true if SSH works on this node right now (30s timeout)
     param([string]$NodeVm, [string]$Zone)
     $r = gcloud compute tpus tpu-vm ssh $NodeVm `
         --project=$Project --zone=$Zone `
+        --ssh-flag="-o ConnectTimeout=30 -o StrictHostKeyChecking=no -o BatchMode=yes" `
         --command="echo SSH_OK" 2>&1
     return ($r -match "SSH_OK")
 }
