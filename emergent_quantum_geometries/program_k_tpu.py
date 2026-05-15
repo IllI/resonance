@@ -95,6 +95,20 @@ def build_oat(N, chi=1.0):
     Jz = sum(site_op(Z,i,N) for i in range(N)) / 2
     return chi * (Jz @ Jz)
 
+def build_mbl_xxz(N, J=1.0, Dz=1.0, W=5.0, seed=0):
+    """Disordered XXZ -- many-body localized above W~3.7.
+    H = XXZ + sum_i h_i * Z_i,  h_i ~ Uniform[-W, W].
+    Above the MBL transition: strong entanglement BUT zero transport.
+    Critical adversarial control: same interaction as clean XXZ,
+    same entanglement growth, but the blind predictor should say NO recovery.
+    """
+    rng_h = np.random.default_rng(seed)
+    H = build_xxz(N, J=J, Dz=Dz)
+    for i in range(N):
+        h_i = rng_h.uniform(-W, W)
+        H  += h_i * site_op(Z, i, N)
+    return H
+
 def apply_U(psi, evals, evecs, t):
     return evecs @ (np.exp(-1j*evals*t) * (evecs.conj().T @ psi))
 
@@ -324,6 +338,7 @@ def main():
         "Ising":       lambda: build_ising(N),
         "TiltedIsing": lambda: build_tilted_ising(N),
         "OAT":         lambda: build_oat(N, chi=1.0/N),
+        "MBL_XXZ":     lambda: build_mbl_xxz(N, W=5.0, seed=42),
     }
 
     print("="*72, flush=True)
