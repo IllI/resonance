@@ -131,12 +131,11 @@ $RoundNo = 0
     Log "  Waiting 3 min for SSH daemon to start on $WinVm..."
     Start-Sleep 180
 
-    # Upload script (ConnectTimeout=120, no BatchMode so gcloud can distribute keys)
+    # Upload script (gcloud+plink handles SSH natively on Windows -- no custom flags)
     Log "--- Uploading script to $WinVm ---"
     $up = gcloud compute tpus tpu-vm scp `
         "$ScriptDir\program_k_tpu.py" "$WinVm`:~/program_k_tpu.py" `
-        --project=$Project --zone=$WinZone `
-        --ssh-flag="-o ConnectTimeout=120 -o StrictHostKeyChecking=no" 2>&1
+        --project=$Project --zone=$WinZone 2>&1
     Log "  Upload: $up"
 
     # Verify upload succeeded; if not, winner may have gone PREEMPTED during upload
@@ -147,11 +146,10 @@ $RoundNo = 0
         continue RaceLoop
     }
 
-    # Launch analysis on TPU (background via nohup, survives SSH drop)
+    # Launch analysis on TPU (background via nohup, gcloud+plink handles SSH)
     Log "--- Launching N=14 analysis on $WinVm ($WinZone) ---"
     $launch = gcloud compute tpus tpu-vm ssh $WinVm `
         --project=$Project --zone=$WinZone `
-        --ssh-flag="-o ConnectTimeout=120 -o StrictHostKeyChecking=no" `
         --command="nohup bash -c '$RemoteCmd' > /dev/null 2>&1 &" 2>&1
     Log "  Launch: $launch"
 
