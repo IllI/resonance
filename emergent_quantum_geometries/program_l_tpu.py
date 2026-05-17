@@ -633,12 +633,27 @@ LAMBDA_STABLE = 0.07
 STABLE_BASIN_D_EFF   = 0.08
 STABLE_BASIN_DX_NORM = 1.00   # disabled — shot noise floor
 STABLE_BASIN_SUSCEPT = 10.00  # disabled — inherits dx_norm noise
+#
+# NULL_PRED_EPS: kill-switch threshold (N6).
+#   If max predicted |Δx| across ALL non-identity gates < this value, force identity.
+#   Catches OAT's coherent oscillation phase: Jacobian predicts near-zero response
+#   for all gates → no gate can help → stay identity unconditionally.
+#   Pre-registered at 0.02 (approx noise floor of the perturbation model).
+NULL_PRED_EPS = 0.02
+#
+# DISORDER_BASIS_INVAR_THRESH: disorder detection threshold (N6).
+#   When basis_invar (index 11) exceeds this value, suppress the gradient alignment
+#   term entirely. The Jacobian perturbation model was calibrated on clean XXZ;
+#   in disordered models (W3) the channel correlations are different, so gradient
+#   advice is actively harmful. Strata score alone is reliable across all regimes.
+#   Pre-registered at 0.15.
+DISORDER_BASIS_INVAR_THRESH = 0.15
 
 
 def ctrl_agnostic(step, N, rho, obs_history, t_history,
                   dropout_rng, use_dropout=True, **_):
     """
-    D-LinOSS agnostic controller v4 (N3) — regime-conditioned λ.
+    D-LinOSS agnostic controller v5 (N6) — null-prediction kill switch + disorder gate.
 
     Architecture:  z_t = f(x_{0:t}, u_{0:t}, Δx_{0:t})
 
@@ -647,14 +662,17 @@ def ctrl_agnostic(step, N, rho, obs_history, t_history,
                  + α_eff(t)    * cos(Δx_pred, Δx_obs)   ← susceptibility-gated
                  - lambda_eff(t)                          ← regime-conditioned penalty
 
-    Complementary gate (N3 innovation):
-        high susceptibility  →  α_eff↑  + lambda_eff=LAMBDA_SPARSE  (W3 regime)
-        low susceptibility   →  α_eff≈0 + lambda_eff=LAMBDA_STABLE  (OAT/stable)
+    N6 additions:
+      1. Null-prediction kill switch:
+         If max(|Δx_pred|) < NULL_PRED_EPS for ALL non-identity gates → return identity.
+         Catches OAT's coherent oscillation: Jacobian predicts near-zero response
+         for all gates, so no gate can help. Forces true zero intervention.
 
-    Stable basin criteria (all three must hold):
-        |D_eff|       < STABLE_BASIN_D_EFF
-        ||Δx||        < STABLE_BASIN_DX_NORM
-        susceptibility < STABLE_BASIN_SUSCEPT
+      2. Disorder detection gradient gate:
+         If basis_invar > DISORDER_BASIS_INVAR_THRESH → set alignment = 0.
+         Jacobian calibrated on clean XXZ; disordered models (W3) have different
+         channel correlations. Removing gradient advice for disordered models
+         lets strata score alone drive selection — which is regime-agnostic.
 
     Perturbation model calibrated from N1 response Jacobian:
         high-response channels: D_eff, noise_slope, basis_invar, front_v
@@ -695,16 +713,32 @@ def ctrl_agnostic(step, N, rho, obs_history, t_history,
         mask  = dropout_rng.binomial(1, 1.0 - P_DROPOUT, size=N_OBS).astype(float)
         x_cur = x_cur * mask
 
+    # Pre-compute all predicted states (needed for kill switch + scoring)
+    all_preds = [_predict_obs_after_cliff(x_cur, ci) for ci in range(1, N_CLIFF)]
+
+    # N6 kill switch: if no gate predicts a response above noise floor, stay identity.
+    # OBS: Jacobian returns near-zero Δx for all gates during OAT oscillation peak.
+    max_pred_response = max(
+        float(np.linalg.norm(x_pred - x_cur)) for x_pred in all_preds
+    )
+    if max_pred_response < NULL_PRED_EPS:
+        return (0, 0)   # unconditional identity — nothing will help
+
+    # N6 disorder gate: suppress gradient alignment in disordered regimes.
+    # basis_invar (index 11) elevated when local basis invariance breaks down.
+    # Jacobian calibrated on clean XXZ — advice is unreliable for W3/disordered.
+    basis_inv_cur = float(x_cur[11]) if len(x_cur) > 11 else 0.0
+    disorder_detected = basis_inv_cur > DISORDER_BASIS_INVAR_THRESH
+
     # Identity baseline — no sparsity penalty for doing nothing
     best_idx, best_score = 0, strata_score(x_cur)
 
-    for ci in range(1, N_CLIFF):   # skip identity
-        x_pred     = _predict_obs_after_cliff(x_cur, ci)
+    for ci, x_pred in enumerate(all_preds, start=1):   # ci=1..N_CLIFF-1
         delta_pred = x_pred - x_cur
         dp_norm    = float(np.linalg.norm(delta_pred))
 
-        # Gradient alignment
-        if dx_norm > 1e-8 and dp_norm > 1e-8:
+        # Gradient alignment (zeroed in disordered regime — bad Jacobian advice)
+        if (not disorder_detected) and dx_norm > 1e-8 and dp_norm > 1e-8:
             alignment = float(np.dot(delta_pred, dx_recent) / (dp_norm * dx_norm))
         else:
             alignment = 0.0
@@ -1308,6 +1342,14 @@ def main():
     p.add_argument("--stable-basin-suscept", type=float, default=STABLE_BASIN_SUSCEPT,
                    dest="stable_basin_suscept",
                    help="Max susceptibility for stable-basin classification (default 0.15)")
+    # ── N6 pre-registered thresholds ────────────────────────────────────────────
+    p.add_argument("--null-prediction-eps", type=float, default=NULL_PRED_EPS,
+                   dest="null_pred_eps",
+                   help="Kill-switch: force identity if max gate response < eps (N6, default 0.02)")
+    p.add_argument("--disorder-basis-invar-thresh", type=float,
+                   default=DISORDER_BASIS_INVAR_THRESH,
+                   dest="disorder_basis_invar_thresh",
+                   help="Disable gradient alignment when basis_invar > thresh (N6, default 0.15)")
 
     p.add_argument("--smoke-test", action="store_true",
                    help="Quick validation: N=6, 2 models, B=1, 15 steps")
