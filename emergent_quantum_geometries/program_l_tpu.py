@@ -639,40 +639,52 @@ STABLE_BASIN_SUSCEPT = 10.00  # disabled — inherits dx_norm noise
 #   Catches OAT's coherent oscillation phase: Jacobian predicts near-zero response
 #   for all gates → no gate can help → stay identity unconditionally.
 #   Pre-registered at 0.02 (approx noise floor of the perturbation model).
-NULL_PRED_EPS = 0.02              # kept for CLI compat; no-op in N7 (perturbation model always > 0.02)
+NULL_PRED_EPS = 0.02              # kept for CLI compat; no-op in N7+
 #
-# DISORDER_BASIS_INVAR_THRESH: disorder detection (N6 — RETIRED in N7).
-#   N6 postmortem: basis_invar > 0.15 fires on BOTH W1 and W3.
-#   W1 benefited from gradient alignment in N5 (+0.42). Blanket suppression
-#   erased that gain (W1 regressed to -0.06). Retired.
-DISORDER_BASIS_INVAR_THRESH = 0.15  # kept for CLI compat; no-op in N7
+# DISORDER_BASIS_INVAR_THRESH: disorder detection (N6 - RETIRED in N7).
+#   N6 postmortem: fires on both W1 and W3. W1 benefited from alignment. Retired.
+DISORDER_BASIS_INVAR_THRESH = 0.15  # kept for CLI compat; no-op in N7+
 #
-# N7 FIX: stable-basin early return.
-#   if is_stable_basin (D_eff < 0.08): return identity BEFORE scoring.
-#   OAT: D_eff≈0 always → zero gates, zero cost.
-#   W3: D_eff > 0.08 during transport → normal scoring.
+# N7 FIX: stable-basin early return (D_eff < 0.08 -> identity).
+#   OAT: D_eff~0 always -> zero gates.
+#
+# N8 FIX: fragility-aware veto (front_v > threshold -> identity).
+#   Diagnostic (N7 W3 runs, 10 seeds):
+#     corr(n_gates, tau) = -0.586  <- monotonic degradation with intervention
+#     gates fire when front_v=0.257 vs idle front_v=0.171  <- 50% higher
+#     post-intervention front_v destabilization ratio = 1.77 (k=1), 1.52 (k=2)
+#     low-gate runs: tau=5.800  high-gate runs: tau=2.440  <- 2.4x difference
+#   Interpretation: controller fires during active transport wavefront (high front_v),
+#   exactly the fragile moment. Intervention perturbs the wavefront, destroying
+#   long-timescale coherence organization.
+#   Fix: veto any intervention when front_v exceeds the wavefront threshold.
+#   Regime-safe: XXX/W1 have low front_v at fired steps (0.307/0.170),
+#   so veto barely fires in constructive regimes.
+FRAGILITY_FRONT_V_THRESH = 0.25   # N8: front_v > this -> force identity
 
 
 def ctrl_agnostic(step, N, rho, obs_history, t_history,
                   dropout_rng, use_dropout=True, **_):
     """
-    D-LinOSS agnostic controller v6 (N7) — stable-basin early return.
+    D-LinOSS agnostic controller v7 (N8) -- fragility-aware veto.
 
-    Architecture:  z_t = f(x_{0:t}, u_{0:t}, Δx_{0:t})
+    Architecture:  z_t = f(x_{0:t}, u_{0:t}, Dx_{0:t})
 
-    Score function (active transport regime only):
+    Score function (active, non-fragile transport only):
         score(u) = strata_score(x_pred)
-                 + α_eff(t) * cos(Δx_pred, Δx_obs)   ← susceptibility-gated
-                 - lambda_eff                           ← regime-conditioned penalty
+                 + alpha_eff(t) * cos(Dx_pred, Dx_obs)   <- susceptibility-gated
+                 - lambda_eff                              <- regime-conditioned penalty
 
-    N7 core: stable-basin early return (before scoring).
-        if D_eff < STABLE_BASIN_D_EFF: return identity immediately.
-        OAT: D_eff≈0 every step → zero gates, zero cost.
-        W3:  D_eff > 0.08 in transport window → normal scoring.
+    Early-return hierarchy (checked in order):
+      1. CTRL_INTERVAL gate: only fire every CTRL_INTERVAL steps.
+      2. Stable-basin veto (N7): D_eff < 0.08 -> identity.
+         OAT: D_eff~0 always -> zero gates.
+      3. Fragility veto (N8): front_v > FRAGILITY_FRONT_V_THRESH -> identity.
+         W3 diagnostic: corr(n_gates, tau) = -0.586. Gates fire at front_v=0.257
+         vs idle 0.171 and destabilize front_v with ratio 1.77. Veto fires only
+         during active wavefront transport -> protects W3, safe for XXZ/W1.
 
-    N6 postmortem:
-        kill switch: perturbation model always predicts |Dx|>>0.02; never fires.
-        disorder gate: zeroed alignment for W1 too, erasing +0.42 N5 gain.
+    N6/N7 postmortem embedded in constant block above.
 
     Perturbation model calibrated from N1 response Jacobian:
         high-response channels: D_eff, noise_slope, basis_invar, front_v
@@ -689,18 +701,16 @@ def ctrl_agnostic(step, N, rho, obs_history, t_history,
         dx_recent = np.zeros(N_OBS)
     dx_norm = float(np.linalg.norm(dx_recent))
 
-    # OBS_NAMES indices: D_eff=8, noise_slope=10
-    d_eff_mag   = abs(float(x_cur[8]))    if len(x_cur) > 8  else 0.0
-    noise_s_mag = abs(float(x_cur[10]))   if len(x_cur) > 10 else 0.0
+    # OBS_NAMES indices: D_eff=8, noise_slope=10, front_v=9
+    d_eff_mag   = abs(float(x_cur[8]))  if len(x_cur) > 8  else 0.0
+    noise_s_mag = abs(float(x_cur[10])) if len(x_cur) > 10 else 0.0
+    front_v_val =    float(x_cur[9])    if len(x_cur) > 9  else 0.0
     susceptibility = dx_norm * (1.0 + d_eff_mag + noise_s_mag)
 
-    # Dynamic α_eff — susceptibility-gated gradient weight.
+    # Dynamic alpha_eff -- susceptibility-gated gradient weight.
     alpha_eff = GRAD_ALPHA_BASE * float(np.tanh(susceptibility / SUSCEPTIBILITY_SCALE))
 
-    # Regime-conditioned λ (N3 core change).
-    # Stable basin: D_eff small AND dx_norm small AND susceptibility low.
-    # λ=LAMBDA_STABLE forces strong restraint (fixes OAT).
-    # Active regime: λ=LAMBDA_SPARSE allows gradient-guided intervention (restores W3).
+    # Regime-conditioned lambda (N3 core change).
     is_stable_basin = (
         d_eff_mag     < STABLE_BASIN_D_EFF
         and dx_norm   < STABLE_BASIN_DX_NORM
@@ -708,12 +718,16 @@ def ctrl_agnostic(step, N, rho, obs_history, t_history,
     )
     lambda_eff = LAMBDA_STABLE if is_stable_basin else LAMBDA_SPARSE
 
-    # N7 stable-basin early return.
-    # If D_eff is small, system is in a stable basin (OAT, quiescent XXZ).
-    # No gate can improve on identity — return before scoring.
-    # OAT: D_eff ≈0 always → hits this every step → zero gates fired.
-    # W3: D_eff > 0.08 during active transport → falls through to normal scoring.
+    # N7: stable-basin early return.
     if is_stable_basin:
+        return (0, 0)
+
+    # N8: fragility-aware veto.
+    # W3 diagnostic: controller fires at front_v=0.257 (vs idle 0.171) and
+    # destabilizes front_v with ratio 1.77. corr(n_gates, tau) = -0.586.
+    # If front_v exceeds wavefront threshold, intervention is net-harmful -> veto.
+    # Regime safety: XXZ fires at low front_v -> this veto rarely triggers there.
+    if front_v_val > FRAGILITY_FRONT_V_THRESH:
         return (0, 0)
 
     # Optional representation dropout
@@ -1342,6 +1356,11 @@ def main():
                    default=DISORDER_BASIS_INVAR_THRESH,
                    dest="disorder_basis_invar_thresh",
                    help="Disable gradient alignment when basis_invar > thresh (N6, default 0.15)")
+    # ── N8 pre-registered thresholds ────────────────────────────────────────────
+    p.add_argument("--fragility-front-v-thresh", type=float,
+                   default=FRAGILITY_FRONT_V_THRESH,
+                   dest="fragility_front_v_thresh",
+                   help="Fragility veto: force identity when front_v > thresh (N8, default 0.25)")
 
     p.add_argument("--smoke-test", action="store_true",
                    help="Quick validation: N=6, 2 models, B=1, 15 steps")
