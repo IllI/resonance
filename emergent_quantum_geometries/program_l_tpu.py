@@ -603,45 +603,56 @@ def ctrl_haware(step, N, psi=None, H=None, dt=None, noise_params=None,
 
 
 
-# ── Program N2 controller constants (pre-registered, frozen before run) ────────
+# ── Program N3 controller constants (pre-registered, frozen before run) ────────
 #
 # GRAD_ALPHA_BASE: maximum gradient-following weight.
-#   Reduced from 0.20 (N1) → 0.05 to avoid overpowering strata score.
-#   Actual α_eff(t) is further gated by local susceptibility — see below.
+#   Unchanged from N2 = 0.05. Gated by susceptibility — see α_eff below.
 GRAD_ALPHA_BASE = 0.05
 #
-# SUSCEPTIBILITY_SCALE: controls sensitivity threshold for gradient activation.
+# SUSCEPTIBILITY_SCALE: sensitivity threshold for gradient activation.
 #   α_eff = GRAD_ALPHA_BASE * tanh(susceptibility / SUSCEPTIBILITY_SCALE)
-#   At low susceptibility (stable regime): α_eff ≈ 0  → restraint
-#   At high susceptibility (fragile regime): α_eff → GRAD_ALPHA_BASE
 SUSCEPTIBILITY_SCALE = 0.3
 #
-# LAMBDA_SPARSE: intervention sparsity penalty applied to all non-identity gates.
-#   score(u≠I) -= LAMBDA_SPARSE  → controller prefers identity unless improvement > λ
-#   Restores OAT restraint; suppresses unnecessary intervention in stable basins.
+# LAMBDA_SPARSE: intervention sparsity penalty in ACTIVE transport regimes.
+#   N2 value = 0.02. Kept for non-stable-basin steps.
 LAMBDA_SPARSE = 0.02
+#
+# LAMBDA_STABLE: higher sparsity penalty enforced in STABLE BASINS.
+#   N3 addition: fixes OAT over-firing from N2 (10 gates, tau_a < tau_s).
+#   In a stable basin, controller must clear 0.07 improvement to fire any gate.
+#   OAT at D_eff≈0 will not clear this bar. W3 in active regime is NOT stable
+#   basin → gets LAMBDA_SPARSE=0.02, restoring gradient-following gain.
+LAMBDA_STABLE = 0.07
+#
+# Stable basin detection thresholds (pre-registered, CLI-overridable):
+#   STABLE_BASIN_D_EFF    — max |D_eff| to classify as stable
+#   STABLE_BASIN_DX_NORM  — max ||Δx|| to classify as stable
+#   STABLE_BASIN_SUSCEPT  — max susceptibility to classify as stable
+STABLE_BASIN_D_EFF   = 0.08
+STABLE_BASIN_DX_NORM = 0.05
+STABLE_BASIN_SUSCEPT = 0.15
 
 
 def ctrl_agnostic(step, N, rho, obs_history, t_history,
                   dropout_rng, use_dropout=True, **_):
     """
-    D-LinOSS agnostic controller v3 — Jacobian-calibrated, susceptibility-gated.
+    D-LinOSS agnostic controller v4 (N3) — regime-conditioned λ.
 
     Architecture:  z_t = f(x_{0:t}, u_{0:t}, Δx_{0:t})
 
     Score function:
         score(u) = strata_score(x_pred)
-                 + α_eff(t) * cos(Δx_pred, Δx_obs)   ← gradient alignment
-                 - LAMBDA_SPARSE                        ← sparsity penalty (u≠I only)
+                 + α_eff(t)    * cos(Δx_pred, Δx_obs)   ← susceptibility-gated
+                 - lambda_eff(t)                          ← regime-conditioned penalty
 
-    Dynamic α_eff:
-        susceptibility = ||Δx_t|| * (1 + |D_eff| + |noise_slope|)
-        α_eff = GRAD_ALPHA_BASE * tanh(susceptibility / SUSCEPTIBILITY_SCALE)
+    Complementary gate (N3 innovation):
+        high susceptibility  →  α_eff↑  + lambda_eff=LAMBDA_SPARSE  (W3 regime)
+        low susceptibility   →  α_eff≈0 + lambda_eff=LAMBDA_STABLE  (OAT/stable)
 
-    Effect:
-        - Stable regimes (OAT, clean XXZ): α_eff ≈ 0, λ enforces restraint
-        - Fragile/transition regimes (W3): α_eff > 0, gradient following activates
-        - Null regimes (Ising): gradient signal near zero, restraint wins
+    Stable basin criteria (all three must hold):
+        |D_eff|       < STABLE_BASIN_D_EFF
+        ||Δx||        < STABLE_BASIN_DX_NORM
+        susceptibility < STABLE_BASIN_SUSCEPT
 
     Perturbation model calibrated from N1 response Jacobian:
         high-response channels: D_eff, noise_slope, basis_invar, front_v
@@ -658,12 +669,24 @@ def ctrl_agnostic(step, N, rho, obs_history, t_history,
         dx_recent = np.zeros(N_OBS)
     dx_norm = float(np.linalg.norm(dx_recent))
 
-    # Dynamic α_eff — susceptibility-gated gradient weight.
     # OBS_NAMES indices: D_eff=8, noise_slope=10
     d_eff_mag   = abs(float(x_cur[8]))    if len(x_cur) > 8  else 0.0
     noise_s_mag = abs(float(x_cur[10]))   if len(x_cur) > 10 else 0.0
     susceptibility = dx_norm * (1.0 + d_eff_mag + noise_s_mag)
+
+    # Dynamic α_eff — susceptibility-gated gradient weight.
     alpha_eff = GRAD_ALPHA_BASE * float(np.tanh(susceptibility / SUSCEPTIBILITY_SCALE))
+
+    # Regime-conditioned λ (N3 core change).
+    # Stable basin: D_eff small AND dx_norm small AND susceptibility low.
+    # λ=LAMBDA_STABLE forces strong restraint (fixes OAT).
+    # Active regime: λ=LAMBDA_SPARSE allows gradient-guided intervention (restores W3).
+    is_stable_basin = (
+        d_eff_mag     < STABLE_BASIN_D_EFF
+        and dx_norm   < STABLE_BASIN_DX_NORM
+        and susceptibility < STABLE_BASIN_SUSCEPT
+    )
+    lambda_eff = LAMBDA_STABLE if is_stable_basin else LAMBDA_SPARSE
 
     # Optional representation dropout
     if use_dropout and len(obs_history) >= 4:
@@ -684,8 +707,8 @@ def ctrl_agnostic(step, N, rho, obs_history, t_history,
         else:
             alignment = 0.0
 
-        # Combined score: strata + gradient - sparsity penalty
-        sc = strata_score(x_pred) + alpha_eff * alignment - LAMBDA_SPARSE
+        # Combined score: strata + gradient - regime-conditioned penalty
+        sc = strata_score(x_pred) + alpha_eff * alignment - lambda_eff
         if sc > best_score:
             best_score = sc
             best_idx   = ci
@@ -1269,6 +1292,20 @@ def main():
                    default=["static", "haware", "agnostic"],
                    choices=["static", "haware", "agnostic", "dd_xy8", "dd_cpmg", "random"],
                    help="Controllers to run (default: static haware agnostic)")
+
+    # ── N3 pre-registered stable-basin thresholds (CLI-overridable) ────────────
+    p.add_argument("--lambda-stable", type=float, default=LAMBDA_STABLE,
+                   dest="lambda_stable",
+                   help="Sparsity penalty in stable basins (N3, default 0.07)")
+    p.add_argument("--stable-basin-d-eff", type=float, default=STABLE_BASIN_D_EFF,
+                   dest="stable_basin_d_eff",
+                   help="Max |D_eff| for stable-basin classification (default 0.08)")
+    p.add_argument("--stable-basin-dx-norm", type=float, default=STABLE_BASIN_DX_NORM,
+                   dest="stable_basin_dx_norm",
+                   help="Max ||Δx|| for stable-basin classification (default 0.05)")
+    p.add_argument("--stable-basin-suscept", type=float, default=STABLE_BASIN_SUSCEPT,
+                   dest="stable_basin_suscept",
+                   help="Max susceptibility for stable-basin classification (default 0.15)")
 
     p.add_argument("--smoke-test", action="store_true",
                    help="Quick validation: N=6, 2 models, B=1, 15 steps")
