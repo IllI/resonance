@@ -625,13 +625,14 @@ LAMBDA_SPARSE = 0.02
 LAMBDA_STABLE = 0.07
 #
 # Stable basin detection thresholds (pre-registered, CLI-overridable):
-#   STABLE_BASIN_D_EFF    — max |D_eff| to classify as stable  (primary discriminant)
-#   STABLE_BASIN_DX_NORM  — DISABLED (set to 1.0): shot noise keeps dx_norm > 0.05
-#                           in all regimes; D_eff alone is the clean discriminant.
-#   STABLE_BASIN_SUSCEPT  — max susceptibility to classify as stable
+#   STABLE_BASIN_D_EFF    — ACTIVE: |D_eff| < 0.08 is the sole clean discriminant.
+#                           D_eff≈0 in OAT (stable), D_eff>0 in W3/XXZ (active).
+#   STABLE_BASIN_DX_NORM  — DISABLED (1.0): shot noise keeps dx_norm > 0.05 everywhere.
+#   STABLE_BASIN_SUSCEPT  — DISABLED (10.0): susceptibility inherits dx_norm noise floor.
+#                           D_eff alone is sufficient and physically motivated.
 STABLE_BASIN_D_EFF   = 0.08
-STABLE_BASIN_DX_NORM = 1.00   # effectively disabled — dx_norm always exceeds 0.05
-STABLE_BASIN_SUSCEPT = 0.15
+STABLE_BASIN_DX_NORM = 1.00   # disabled — shot noise floor
+STABLE_BASIN_SUSCEPT = 10.00  # disabled — inherits dx_norm noise
 
 
 def ctrl_agnostic(step, N, rho, obs_history, t_history,
