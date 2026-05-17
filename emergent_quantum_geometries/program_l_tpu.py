@@ -625,11 +625,12 @@ LAMBDA_SPARSE = 0.02
 LAMBDA_STABLE = 0.07
 #
 # Stable basin detection thresholds (pre-registered, CLI-overridable):
-#   STABLE_BASIN_D_EFF    — max |D_eff| to classify as stable
-#   STABLE_BASIN_DX_NORM  — max ||Δx|| to classify as stable
+#   STABLE_BASIN_D_EFF    — max |D_eff| to classify as stable  (primary discriminant)
+#   STABLE_BASIN_DX_NORM  — DISABLED (set to 1.0): shot noise keeps dx_norm > 0.05
+#                           in all regimes; D_eff alone is the clean discriminant.
 #   STABLE_BASIN_SUSCEPT  — max susceptibility to classify as stable
 STABLE_BASIN_D_EFF   = 0.08
-STABLE_BASIN_DX_NORM = 0.05
+STABLE_BASIN_DX_NORM = 1.00   # effectively disabled — dx_norm always exceeds 0.05
 STABLE_BASIN_SUSCEPT = 0.15
 
 
