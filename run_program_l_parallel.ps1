@@ -168,20 +168,41 @@ if ($Script -eq "program_o_tpu.py") {
 }
 
 # ── 4. Wait for a winner; experiment loop with fallback ───────────────────────
-Write-Host "[POLL] Waiting for first zone to go ACTIVE (all others remain queued as standbys)..."
-$Deadline  = (Get-Date).AddMinutes($QueueMaxMin)
-$Winner    = $null
-$Succeeded = $false
+Write-Host "[POLL] Waiting for first zone to go ACTIVE (shotgun -- all zones queued, stale PROVISIONING re-queued every 15min)..."
+$Deadline       = (Get-Date).AddMinutes($QueueMaxMin)
+$Winner         = $null
+$Succeeded      = $false
+$ProvStartTimes = @{}   # track when each QRName entered PROVISIONING
+$ProvTimeoutMin = 15    # re-queue if stuck PROVISIONING longer than this
 
 while (-not $Succeeded) {
-    # Find next ACTIVE candidate we haven't tried; track if anything is PROVISIONING
-    $active       = $null
-    $anyProgress  = $false
+    $active      = $null
+    $anyProgress = $false
     foreach ($c in $Candidates) {
         $st = Get-QRState $c.QRName $c.Zone
         Write-Host "  $($c.Zone): $st"
-        if ($st -eq "PROVISIONING") { $anyProgress = $true }
-        if ($st -eq "ACTIVE" -and $c.QRName -ne ($Winner.QRName)) {
+
+        if ($st -eq "PROVISIONING") {
+            $anyProgress = $true
+            # Track when this zone first entered PROVISIONING
+            if (-not $ProvStartTimes.ContainsKey($c.QRName)) {
+                $ProvStartTimes[$c.QRName] = Get-Date
+            }
+            $provMin = ((Get-Date) - $ProvStartTimes[$c.QRName]).TotalMinutes
+            if ($provMin -gt $ProvTimeoutMin) {
+                Write-Host "  [REQUEUE] $($c.Zone) stuck PROVISIONING ${provMin}min -- deleting and re-queuing fresh..."
+                gcloud compute tpus queued-resources delete $c.QRName --project=$Project --zone=$($c.Zone) --quiet 2>$null
+                Start-Sleep -Seconds 5
+                $reqCmd = "gcloud compute tpus queued-resources create $($c.QRName) --project=$Project --zone=$($c.Zone) --accelerator-type=$($c.AccelType) --runtime-version=$($c.Runtime) --node-id=$($c.NodeId) --spot --quiet 2>&1"
+                Invoke-Expression $reqCmd | Out-Null
+                $ProvStartTimes.Remove($c.QRName)
+                Write-Host "  [REQUEUE] $($c.Zone) re-queued."
+            }
+        } elseif ($st -eq "WAITING_FOR_RESOURCES") {
+            # Reset PROVISIONING timer if it fell back
+            if ($ProvStartTimes.ContainsKey($c.QRName)) { $ProvStartTimes.Remove($c.QRName) }
+            $anyProgress = $true
+        } elseif ($st -eq "ACTIVE" -and $c.QRName -ne ($Winner.QRName)) {
             $active = $c; break
         }
     }
@@ -192,7 +213,7 @@ while (-not $Succeeded) {
             $extendedDeadline = (Get-Date).AddMinutes(8)
             if ($extendedDeadline -gt $Deadline) {
                 $Deadline = $extendedDeadline
-                Write-Host "  [EXTEND] Zone(s) PROVISIONING -- deadline extended to $($Deadline.ToString('HH:mm:ss'))"
+                Write-Host "  [EXTEND] Zones active -- deadline extended to $($Deadline.ToString('HH:mm:ss'))"
             }
         }
         if ((Get-Date) -gt $Deadline) {
