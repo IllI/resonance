@@ -80,46 +80,54 @@ function Delete-All([array]$cands) {
 }
 
 function Launch-Experiment([hashtable]$c) {
-    # Accept host key + wait for SSH
+    # Single atomic SSH: Python check + dep install in ONE round trip.
+    # StrictHostKeyChecking=no skips fingerprint prompt -- eliminates that delay.
     Write-Host "[SSH] Connecting to $($c.Zone) ($($c.NodeId))..."
     $sshOk = $false
-    $sshEnd = (Get-Date).AddMinutes(5)
+    $sshEnd = (Get-Date).AddMinutes(3)
+    $sshFlag = "--ssh-flag=-o StrictHostKeyChecking=no --ssh-flag=-o ConnectTimeout=10"
     while (-not $sshOk -and (Get-Date) -lt $sshEnd) {
         $st = Get-QRState $c.QRName $c.Zone
         if ($st -ne "ACTIVE") { Write-Host "[ERROR] Node became $st before SSH."; return $false }
-        "y" | gcloud compute tpus tpu-vm ssh $c.NodeId --project=$Project --zone=$($c.Zone) --command="echo SSH_READY" 2>&1 | Out-Null
-        if ($LASTEXITCODE -eq 0) { $sshOk = $true } else { Start-Sleep -Seconds 10 }
+        gcloud compute tpus tpu-vm ssh $c.NodeId --project=$Project --zone=$($c.Zone) `
+            --ssh-flag="-o StrictHostKeyChecking=no" --ssh-flag="-o ConnectTimeout=10" `
+            --command="echo SSH_READY" 2>$null | Out-Null
+        if ($LASTEXITCODE -eq 0) { $sshOk = $true } else { Start-Sleep -Seconds 8 }
     }
     if (-not $sshOk) { Write-Host "[ERROR] SSH timeout."; return $false }
 
-    # Version gate: v4 TPUs run Python 3.8 which has no compatible TPU jaxlib wheel.
-    # jaxlib==0.4.13 is not available for v4 TPUs at all (neither PyPI nor TPU index).
-    # Skip immediately -- do NOT attempt install which causes infinite retry loop.
-    Write-Host "[SETUP] Checking Python version..."
-    $pyVer = "y" | gcloud compute tpus tpu-vm ssh $c.NodeId --project=$Project --zone=$($c.Zone) `
-                --command="python3 -c 'import sys; print(sys.version_info.minor)'" 2>$null
-    $pyMinor = if ($pyVer -is [array]) { [int]($pyVer[-1].Trim()) } else { [int]($pyVer.Trim()) }
-    if ($pyMinor -lt 10) {
-        Write-Host "[SKIP] Python 3.$pyMinor on $($c.Zone) -- no compatible TPU jaxlib wheel. Waiting for v6e zone."
-        return $false
+    # Single atomic command: Python check + deps + echo marker -- one SSH round trip
+    Write-Host "[SETUP] Atomic setup (Python check + JAX install)..."
+    $atomicCmd = @"
+PY=`$(python3 -c 'import sys; print(sys.version_info.minor)') && \
+if [ "`$PY" -lt "10" ]; then echo "PYTHON_38_SKIP"; exit 1; fi && \
+echo "PYTHON_OK `$PY" && \
+mkdir -p $RemoteDir && \
+pip install -q -U 'jax[tpu]' scipy numpy -f https://storage.googleapis.com/jax-releases/libtpu_releases.html && \
+python3 -c 'import jax; print(jax.default_backend()); print(jax.devices())' && \
+echo DEPS_OK
+"@
+    $result = gcloud compute tpus tpu-vm ssh $c.NodeId --project=$Project --zone=$($c.Zone) `
+        --ssh-flag="-o StrictHostKeyChecking=no" --ssh-flag="-o ConnectTimeout=30" `
+        --command=$atomicCmd 2>&1
+    $result | ForEach-Object { Write-Host "  $_" }
+    if ($result -match "PYTHON_38_SKIP") {
+        Write-Host "[SKIP] Python 3.8 on $($c.Zone) -- no compatible TPU jaxlib. Waiting for v6e."; return $false
     }
-    Write-Host "[OK] Python 3.$pyMinor -- v6e compatible."
+    if ($LASTEXITCODE -ne 0 -or -not ($result -match "DEPS_OK")) {
+        Write-Host "[ERROR] Atomic setup failed."; return $false
+    }
 
-    # Install deps (Python 3.10+, v6e only)
-    Write-Host "[SETUP] Installing JAX/TPU deps..."
-    $depCmd = "mkdir -p $RemoteDir && pip install -q -U 'jax[tpu]' scipy numpy -f https://storage.googleapis.com/jax-releases/libtpu_releases.html && python3 -c 'import jax; print(jax.default_backend()); print(jax.devices())' && echo DEPS_OK"
-    "y" | gcloud compute tpus tpu-vm ssh $c.NodeId --project=$Project --zone=$($c.Zone) --command=$depCmd
-    if ($LASTEXITCODE -ne 0) { Write-Host "[ERROR] Deps failed."; return $false }
-
-    # Upload files (always include program_l_tpu.py as dependency; add script if different)
+    # SCP all files with StrictHostKeyChecking=no
     Write-Host "[SCP] Uploading..."
     $uploadFiles = @("program_l_tpu.py", "analyze_program_l.py")
     if ($Script -ne "program_l_tpu.py" -and $Script -ne "") { $uploadFiles += $Script }
     foreach ($f in $uploadFiles) {
-        $local  = Join-Path $SrcDir $f
-        if (-not (Test-Path $local)) { Write-Host "[WARN] $f not found locally, skipping."; continue }
+        $local = Join-Path $SrcDir $f
+        if (-not (Test-Path $local)) { Write-Host "[WARN] $f not found, skipping."; continue }
         $remote = $c.NodeId + ':' + $RemoteDir + '/' + $f
-        gcloud compute tpus tpu-vm scp $local $remote --project=$Project --zone=$($c.Zone)
+        gcloud compute tpus tpu-vm scp $local $remote --project=$Project --zone=$($c.Zone) `
+            --scp-flag="-o StrictHostKeyChecking=no" 2>$null
         if ($LASTEXITCODE -ne 0) { Write-Host "[ERROR] SCP failed: $f"; return $false }
     }
     Write-Host "[SCP] Upload complete."
