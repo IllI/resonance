@@ -6,18 +6,22 @@
   to next ACTIVE zone without re-queueing. Bible-compliant.
 #>
 param(
-    [string]$N           = "10",
-    [string]$Models      = "XXZ DisorderedXXZ_W1 DisorderedXXZ_W3 OAT Ising TiltedIsing",
-    [string]$Controllers = "static haware agnostic",
-    [string]$TMax        = "6.0",
-    [string]$NSteps      = "30",
-    [string]$B           = "3",
-    [string]$Seed        = "42",
-    [int]   $QueueMaxMin = 35,
-    [int]   $MaxMin      = 240,
-    [string]$OutDir      = "program_l_results",
+    [string]$N             = "10",
+    [string]$Models        = "XXZ DisorderedXXZ_W1 DisorderedXXZ_W3 OAT Ising TiltedIsing",
+    [string]$Controllers   = "static haware agnostic",
+    [string]$TMax          = "6.0",
+    [string]$NSteps        = "30",
+    [string]$B             = "3",
+    [string]$Seed          = "42",
+    [int]   $QueueMaxMin   = 35,
+    [int]   $MaxMin        = 240,
+    [string]$OutDir        = "program_l_results",
     [switch]$StoreObs,
-    [string]$Adversarial = "none"
+    [string]$Adversarial   = "none",
+    # Program O extensions
+    [string]$Script        = "program_l_tpu.py",   # or program_o_tpu.py
+    [string]$ProbeFamilies = "",                    # e.g. "neel x_basis equatorial"
+    [switch]$RunChirp                               # Phase 1 chirp probe
 )
 
 $Project     = "time-emission"
@@ -98,10 +102,13 @@ function Launch-Experiment([hashtable]$c) {
     "y" | gcloud compute tpus tpu-vm ssh $c.NodeId --project=$Project --zone=$($c.Zone) --command=$depCmd
     if ($LASTEXITCODE -ne 0) { Write-Host "[ERROR] Deps failed."; return $false }
 
-    # Upload files
+    # Upload files (always include program_l_tpu.py as dependency; add script if different)
     Write-Host "[SCP] Uploading..."
-    foreach ($f in @("program_l_tpu.py","analyze_program_l.py")) {
+    $uploadFiles = @("program_l_tpu.py", "analyze_program_l.py")
+    if ($Script -ne "program_l_tpu.py" -and $Script -ne "") { $uploadFiles += $Script }
+    foreach ($f in $uploadFiles) {
         $local  = Join-Path $SrcDir $f
+        if (-not (Test-Path $local)) { Write-Host "[WARN] $f not found locally, skipping."; continue }
         $remote = $c.NodeId + ':' + $RemoteDir + '/' + $f
         gcloud compute tpus tpu-vm scp $local $remote --project=$Project --zone=$($c.Zone)
         if ($LASTEXITCODE -ne 0) { Write-Host "[ERROR] SCP failed: $f"; return $false }
@@ -131,13 +138,25 @@ foreach ($c in $Candidates) {
 }
 
 # ── 3. Build experiment command ───────────────────────────────────────────────
-$obsFlag = if ($StoreObs) { " --store-obs" } else { "" }
-$RunCmd  = "nohup python3 $RemoteDir/program_l_tpu.py" +
-           " --N $N --T-max $TMax --n-steps $NSteps --B $B --seed $Seed" +
-           " --models $Models --out-dir $RemoteDir/$OutDir" +
-           " --backend jax --require-tpu --controllers $Controllers" +
-           " --adversarial $Adversarial" + $obsFlag +
-           " > $RemoteDir/$LogFile 2>&1 &"
+$obsFlag    = if ($StoreObs)  { " --store-obs" } else { "" }
+$chirpFlag  = if ($RunChirp)  { " --run-chirp" } else { "" }
+$probeFlag  = if ($ProbeFamilies -ne "") { " --probe-families $ProbeFamilies" } else { "" }
+
+if ($Script -eq "program_o_tpu.py") {
+    $RunCmd = "nohup python3 $RemoteDir/program_o_tpu.py" +
+              " --N $N --T-max $TMax --n-steps $NSteps --B $B --seed $Seed" +
+              " --models $Models --out-dir $RemoteDir/$OutDir" +
+              " --backend jax --require-tpu --controllers $Controllers" +
+              $probeFlag + $chirpFlag + $obsFlag +
+              " > $RemoteDir/$LogFile 2>&1 &"
+} else {
+    $RunCmd = "nohup python3 $RemoteDir/program_l_tpu.py" +
+              " --N $N --T-max $TMax --n-steps $NSteps --B $B --seed $Seed" +
+              " --models $Models --out-dir $RemoteDir/$OutDir" +
+              " --backend jax --require-tpu --controllers $Controllers" +
+              " --adversarial $Adversarial" + $obsFlag +
+              " > $RemoteDir/$LogFile 2>&1 &"
+}
 
 # ── 4. Wait for a winner; experiment loop with fallback ───────────────────────
 Write-Host "[POLL] Waiting for first zone to go ACTIVE (all others remain queued as standbys)..."
