@@ -155,20 +155,20 @@ $chirpFlag  = if ($RunChirp)  { " --run-chirp" } else { "" }
 $probeFlag  = if ($ProbeFamilies -ne "") { " --probe-families $ProbeFamilies" } else { "" }
 
 if ($Script -eq "program_o_tpu.py") {
-    $RunCmd = "nohup python3 $RemoteDir/program_o_tpu.py" +
+    $RunCmd = "nohup python3 -u $RemoteDir/program_o_tpu.py" +
               " --N $N --T-max $TMax --n-steps $NSteps --B $B --seed $Seed" +
               " --models $Models --out-dir $RemoteDir/$OutDir" +
               " --backend jax --require-tpu --controllers $Controllers" +
               $probeFlag + $chirpFlag + $obsFlag +
               " $ExtraArgs > $RemoteDir/$LogFile 2>&1 &"
 } elseif ($Script -eq "program_p_tpu.py") {
-    $RunCmd = "nohup python3 $RemoteDir/program_p_tpu.py" +
+    $RunCmd = "nohup python3 -u $RemoteDir/program_p_tpu.py" +
               " --N $N --T-max $TMax --n-steps $NSteps --B $B --seed $Seed" +
               " --models $Models --out-dir $RemoteDir/$OutDir" +
               " --backend jax --require-tpu --controllers $Controllers" +
               $chirpFlag + " $ExtraArgs > $RemoteDir/$LogFile 2>&1 &"
 } else {
-    $RunCmd = "nohup python3 $RemoteDir/program_l_tpu.py" +
+    $RunCmd = "nohup python3 -u $RemoteDir/program_l_tpu.py" +
               " --N $N --T-max $TMax --n-steps $NSteps --B $B --seed $Seed" +
               " --models $Models --out-dir $RemoteDir/$OutDir" +
               " --backend jax --require-tpu --controllers $Controllers" +
