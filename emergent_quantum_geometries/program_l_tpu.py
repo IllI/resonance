@@ -1277,9 +1277,9 @@ def run_experiment(args):
         recs = [r for r in results if r["model"] == model]
         taus = {c: [r["tau_transport"] for r in recs if r["controller"] == c]
                 for c in controllers}
-        tau_s = float(np.mean(taus["static"]))   if taus["static"]   else 0.0
-        tau_h = float(np.mean(taus["haware"]))   if taus["haware"]   else 0.0
-        tau_a = float(np.mean(taus["agnostic"])) if taus["agnostic"] else 0.0
+        tau_s = float(np.mean(taus.get("static",  []))) if taus.get("static")  else 0.0
+        tau_h = float(np.mean(taus.get("haware",  []))) if taus.get("haware")  else 0.0
+        tau_a = float(np.mean(taus.get("agnostic",[]))) if taus.get("agnostic") else 0.0
         denom = tau_h - tau_s
         gain  = float((tau_a - tau_s) / denom) if abs(denom) > 1e-9 else float("nan")
         summary[model] = {
