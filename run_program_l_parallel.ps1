@@ -57,12 +57,20 @@ $AllZones = @("us-central2-b","europe-west4-a","us-east1-d","us-central1-a","eur
 function Get-QRState([string]$Name, [string]$Zone) {
     $j = gcloud compute tpus queued-resources describe $Name --project=$Project --zone=$Zone --format=json 2>$null
     if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($j)) { return "MISSING" }
+    $state = "UNKNOWN"
     try {
         $d = $j | ConvertFrom-Json
-        if ($d.state -and $d.state.state) { return [string]$d.state.state }
-        if ($d.state) { return [string]$d.state }
+        if ($d.state -and $d.state.state) { $state = [string]$d.state.state }
+        elseif ($d.state) { $state = [string]$d.state }
     } catch {}
-    return "UNKNOWN"
+    if ($state -eq "ACTIVE") {
+        # Double check underlying node health to catch preemptions that haven't updated QR status yet
+        $nodeState = (gcloud compute tpus tpu-vm describe ($Name + "-node") --project=$Project --zone=$Zone --format="value(state)" 2>$null)
+        if ($nodeState -eq "PREEMPTED" -or $nodeState -eq "TERMINATED" -or $nodeState -eq "SUSPENDED") {
+            return $nodeState
+        }
+    }
+    return $state
 }
 
 function Delete-All([array]$cands) {
@@ -201,7 +209,7 @@ while (-not $Succeeded) {
                 $ProvStartTimes.Remove($c.QRName)
                 Write-Host "  [REQUEUE] $($c.Zone) re-queued."
             }
-        } elseif ($st -eq "FAILED" -or $st -eq "SUSPENDED") {
+        } elseif ($st -eq "FAILED" -or $st -eq "SUSPENDED" -or $st -eq "PREEMPTED" -or $st -eq "TERMINATED") {
             # Capacity denied -- delete and re-queue immediately
             Write-Host "  [REQUEUE] $($c.Zone) $st -- re-queuing fresh..."
             gcloud compute tpus queued-resources delete $c.QRName --project=$Project --zone=$($c.Zone) --quiet 2>$null
