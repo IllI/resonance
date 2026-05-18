@@ -197,7 +197,6 @@ while (-not $Succeeded) {
 
         if ($st -eq "PROVISIONING") {
             $anyProgress = $true
-            # Track when this zone first entered PROVISIONING
             if (-not $ProvStartTimes.ContainsKey($c.QRName)) {
                 $ProvStartTimes[$c.QRName] = Get-Date
             }
@@ -206,13 +205,28 @@ while (-not $Succeeded) {
                 Write-Host "  [REQUEUE] $($c.Zone) stuck PROVISIONING ${provMin}min -- deleting and re-queuing fresh..."
                 gcloud compute tpus queued-resources delete $c.QRName --project=$Project --zone=$($c.Zone) --quiet 2>$null
                 Start-Sleep -Seconds 5
-                $reqCmd = "gcloud compute tpus queued-resources create $($c.QRName) --project=$Project --zone=$($c.Zone) --accelerator-type=$($c.AccelType) --runtime-version=$($c.Runtime) --node-id=$($c.NodeId) --spot --quiet 2>&1"
-                Invoke-Expression $reqCmd | Out-Null
+                $qa = @("compute","tpus","queued-resources","create",$c.QRName,
+                        "--node-id=$($c.NodeId)","--project=$Project","--zone=$($c.Zone)",
+                        "--accelerator-type=$($c.Type)","--runtime-version=$($c.Runtime)","--quiet")
+                if ($c.Flag) { $qa += $c.Flag }
+                & gcloud @qa 2>&1 | Out-Null
                 $ProvStartTimes.Remove($c.QRName)
                 Write-Host "  [REQUEUE] $($c.Zone) re-queued."
             }
+        } elseif ($st -eq "FAILED" -or $st -eq "SUSPENDED") {
+            # Capacity denied -- delete and re-queue immediately
+            Write-Host "  [REQUEUE] $($c.Zone) $st -- re-queuing fresh..."
+            gcloud compute tpus queued-resources delete $c.QRName --project=$Project --zone=$($c.Zone) --quiet 2>$null
+            Start-Sleep -Seconds 5
+            $qa = @("compute","tpus","queued-resources","create",$c.QRName,
+                    "--node-id=$($c.NodeId)","--project=$Project","--zone=$($c.Zone)",
+                    "--accelerator-type=$($c.Type)","--runtime-version=$($c.Runtime)","--quiet")
+            if ($c.Flag) { $qa += $c.Flag }
+            & gcloud @qa 2>&1 | Out-Null
+            $ProvStartTimes.Remove($c.QRName)
+            Write-Host "  [REQUEUE] $($c.Zone) re-queued."
+            $anyProgress = $true
         } elseif ($st -eq "WAITING_FOR_RESOURCES") {
-            # Reset PROVISIONING timer if it fell back
             if ($ProvStartTimes.ContainsKey($c.QRName)) { $ProvStartTimes.Remove($c.QRName) }
             $anyProgress = $true
         } elseif ($st -eq "ACTIVE") {
