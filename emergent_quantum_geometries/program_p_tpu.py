@@ -400,7 +400,7 @@ def run_experiment_p(args):
     rng_noise = np.random.default_rng(args.seed)
     dt = args.T_max / args.n_steps
 
-    phi_sweep = np.linspace(0, 2 * np.pi, N_PHASES, endpoint=False).tolist()
+    phi_sweep = np.linspace(0, 2 * np.pi, args.n_phases, endpoint=False).tolist()
     sigmas    = [float(s) for s in args.sigmas]
     channels  = args.channels
     models    = args.models
@@ -414,7 +414,7 @@ def run_experiment_p(args):
     print(f"Controllers:{ctrls}")
     print(f"Channels:   {channels}")
     print(f"Sigmas:     {sigmas}")
-    print(f"N_phases:   {N_PHASES}  B={args.B}")
+    print(f"N_phases:   {args.n_phases}  B={args.B}")
     print(f"Backend:    {backend}  JAX: {backend_info}")
     print()
 
@@ -430,7 +430,7 @@ def run_experiment_p(args):
             print(f"  [Chirp] Running system identification...")
             noise_chirp = sample_noise_params(rng_noise)
             chirp_info = chirp_sweep(model, args.N, noise_chirp.copy(),
-                                     dt, seed=args.seed, K=N_PHASES,
+                                     dt, seed=args.seed, K=args.n_phases,
                                      backend="numpy")
             print(f"  damping={chirp_info['damping_rate']:.3f}  "
                   f"phase_sens={chirp_info['phase_sensitivity']:.3f}  "
@@ -542,6 +542,7 @@ if __name__ == "__main__":
                    choices=DEGRADATION_CHANNELS)
     p.add_argument("--sigmas", nargs="+", type=float,
                    default=[0.0, 0.1, 0.3, 0.5])
+    p.add_argument("--n-phases",  type=int,   default=24,   dest="n_phases")
     p.add_argument("--run-chirp", action="store_true", dest="run_chirp")
     p.add_argument("--out-dir",   default="program_p_results", dest="out_dir")
     p.add_argument("--backend",   choices=["auto", "numpy", "jax"],
