@@ -614,8 +614,17 @@ GRAD_ALPHA_BASE = 0.05
 SUSCEPTIBILITY_SCALE = 0.3
 #
 # LAMBDA_SPARSE: intervention sparsity penalty in ACTIVE transport regimes.
-#   N2 value = 0.02. Kept for non-stable-basin steps.
-LAMBDA_SPARSE = 0.02
+#   N2 value = 0.02.  N9 value = 0.06.
+#   N8 postmortem: W3 fires 15-16 gates at LAMBDA_SPARSE=0.02 vs optimal ~1 gate.
+#   Diagnostic: corr(n_gates, tau) = -0.586 for W3; low-gate tau=5.800 vs
+#   high-gate tau=2.440.  Gate count must drop ~14x.  Lambda is the entry bar:
+#   a gate fires only if strata_score(x_pred) > strata_score(x_cur) + lambda.
+#   At 0.02, the bar is trivially cleared by noise-level fluctuations.
+#   At 0.06, only genuinely high-impact gates clear it.
+#   XXZ check: corr(n_gates, tau) for XXZ is also negative but this is a
+#   selection effect (harder seeds fire more gates AND have lower raw tau);
+#   overall XXZ gain is +2.160 robust across N5-N8 — gate budget is safe.
+LAMBDA_SPARSE = 0.06
 #
 # LAMBDA_STABLE: higher sparsity penalty enforced in STABLE BASINS.
 #   N3 addition: fixes OAT over-firing from N2 (10 gates, tau_a < tau_s).
@@ -648,46 +657,36 @@ DISORDER_BASIS_INVAR_THRESH = 0.15  # kept for CLI compat; no-op in N7+
 # N7 FIX: stable-basin early return (D_eff < 0.08 -> identity).
 #   OAT: D_eff~0 always -> zero gates.
 #
-# N8 FIX: fragility-aware veto (front_v > threshold -> identity).
-#   Diagnostic (N7 W3 runs, 10 seeds):
-#     corr(n_gates, tau) = -0.586  <- monotonic degradation with intervention
-#     gates fire when front_v=0.257 vs idle front_v=0.171  <- 50% higher
-#     post-intervention front_v destabilization ratio = 1.77 (k=1), 1.52 (k=2)
-#     low-gate runs: tau=5.800  high-gate runs: tau=2.440  <- 2.4x difference
-#   Interpretation: controller fires during active transport wavefront (high front_v),
-#   exactly the fragile moment. Intervention perturbs the wavefront, destroying
-#   long-timescale coherence organization.
-#   Fix: veto any intervention when front_v exceeds the wavefront threshold.
-#   Regime-safe: XXX/W1 have low front_v at fired steps (0.307/0.170),
-#   so veto barely fires in constructive regimes.
-FRAGILITY_FRONT_V_THRESH = 0.25   # N8: front_v > this -> force identity
+# N8 FIX (RETIRED N9): fragility-aware veto on front_v.
+#   front_v=0.25 threshold only blocked 1/16 W3 gates (mean fire=0.257).
+#   XXZ also fires at front_v=0.307 so lowering threshold would harm XXZ.
+#   Front_v is not a clean W3/XXZ discriminant. Retired in favor of lambda.
+FRAGILITY_FRONT_V_THRESH = 10.0   # N9: disabled (set to no-op value)
 
 
 def ctrl_agnostic(step, N, rho, obs_history, t_history,
                   dropout_rng, use_dropout=True, **_):
     """
-    D-LinOSS agnostic controller v7 (N8) -- fragility-aware veto.
+    D-LinOSS agnostic controller v8 (N9) -- lambda calibration.
 
     Architecture:  z_t = f(x_{0:t}, u_{0:t}, Dx_{0:t})
 
-    Score function (active, non-fragile transport only):
+    Score function (active transport only):
         score(u) = strata_score(x_pred)
                  + alpha_eff(t) * cos(Dx_pred, Dx_obs)   <- susceptibility-gated
                  - lambda_eff                              <- regime-conditioned penalty
 
-    Early-return hierarchy (checked in order):
-      1. CTRL_INTERVAL gate: only fire every CTRL_INTERVAL steps.
-      2. Stable-basin veto (N7): D_eff < 0.08 -> identity.
-         OAT: D_eff~0 always -> zero gates.
-      3. Fragility veto (N8): front_v > FRAGILITY_FRONT_V_THRESH -> identity.
-         W3 diagnostic: corr(n_gates, tau) = -0.586. Gates fire at front_v=0.257
-         vs idle 0.171 and destabilize front_v with ratio 1.77. Veto fires only
-         during active wavefront transport -> protects W3, safe for XXZ/W1.
+    Early-return hierarchy:
+      1. CTRL_INTERVAL gate
+      2. Stable-basin veto (N7): D_eff < 0.08 -> identity (handles OAT)
+      3. Fragility veto (N8): RETIRED in N9. front_v threshold was not a clean
+         W3/XXZ discriminant. Threshold=10.0 (no-op).
 
-    N6/N7 postmortem embedded in constant block above.
-
-    Perturbation model calibrated from N1 response Jacobian:
-        high-response channels: D_eff, noise_slope, basis_invar, front_v
+    N9 core change: LAMBDA_SPARSE 0.02 -> 0.06.
+      W3 diagnostic: 15 gates fired at 0.02. Optimal is 0-1.
+      Raising lambda to 0.06 forces gates to clear a genuine improvement bar.
+      XXZ is safe: +2.160 gain held across N5-N8 regardless of gate count.
+      W1 is safe: gains driven by regime-specific gradient signal, not noise.
     """
     if step % CTRL_INTERVAL != 0:
         return (0, 0)
