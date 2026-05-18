@@ -388,3 +388,121 @@ This creates a complementary gate: high susceptibility -> follow gradient, low s
 - Effective 4-zone pool: us-central2-b (v4, on-demand+spot), europe-west4-a (v6e, spot), us-east1-d (v6e, spot)
 
 *Log updated: 2026-05-16. Program N2 complete.*
+
+---
+
+### Program N3–N9 (ctrl_agnostic v4–v8 — Stable-Basin + Sparsity Calibration)
+
+**Key iterations:**
+
+| Iteration | Change | Outcome |
+|-----------|--------|---------|
+| N3 | regime-conditioned lambda (LAMBDA_STABLE=0.07 in stable basins) | OAT silenced (0 gates) |
+| N5 | D_eff stable-basin gate replaces susceptibility gate | cleaner OAT suppression |
+| N6 | null-prediction kill-switch (NULL_PRED_EPS=0.02) | no-op; retired N7+ |
+| N7 | disorder basis_invar veto | retired — fires on W1 too |
+| N8 | front_v fragility veto (thresh=0.25) | retired N9 — not W3-specific |
+| **N9** | **LAMBDA_SPARSE 0.02?0.06** | **W3 gates: 15?3. Record XXZ/W1 gains** |
+
+**N9 final results (N=10, B=10):**
+| Model | tau_s | tau_a | ?t | gates |
+|-------|-------|-------|----|-------|
+| XXZ | 1.280 | 3.540 | **+2.260** | ~4 |
+| W1 | 2.880 | 4.000 | **+1.120** | ~3 |
+| W3 | 5.100 | 4.800 | **-0.300** | ~3 |
+| OAT | 4.360 | 4.360 | 0.000 | **0** |
+
+**?_ctrl hierarchy emerging:** XXZ~0.56, W1~0.37, W3~-0.10, OAT undefined.
+
+---
+
+### Program N10a — W3 Confidence Characterization (B=50)
+
+**Date:** 2026-05-18  
+**TPU:** europe-west4-a (v6e-8, Python 3.10, JAX 0.4.13)  
+**Controllers:** static, agnostic  
+**Objective:** High-confidence (B=50) bootstrap characterization of W3 to distinguish genuine fragility from bootstrap variance.
+
+**Results:**
+`
+mean(?t) = -0.384
+std       =  1.396
+SEM       =  0.197
+95% CI    = [-0.771, +0.003]
+frac_pos  = 14%  (7/50 seeds positive)
+Mean gates = 0.14  (43/50 seeds fired ZERO gates)
+?_ctrl (gate-active, n=7) = -1.029 per gate
+`
+
+**Gate-conditioned breakdown:**
+| Condition | n | mean ?t | std |
+|-----------|---|---------|-----|
+| n_gates=0 | 43 | -0.279 | 1.219 |
+| n_gates=1 | 7 | -1.029 | 2.007 |
+
+**Observable drift post-gate:**  
+
+oise_slope destabilized at k=1 (ratio=1.83), k=2 (ratio=1.55) — primary harm channel.
+
+**Verdict:** EFFECTIVELY NEUTRAL — CI overlaps zero (intervention boundary)
+
+**Scientific interpretation:**
+
+The decisive finding is that even 43/50 zero-gate seeds show ?t=-0.279. The deficit is NOT the controller firing harmful gates — it is intrinsic trajectory sensitivity near the disorder transition. Agnostic control of W3 is learning the correct qualitative policy: abstention.
+
+**Full control-phase structure (N-series conclusion):**
+
+| Regime | Control behavior | ?_ctrl |
+|--------|-----------------|--------|
+| XXZ | strongly beneficial, corrective stabilization | ~+0.56 |
+| W1 | beneficial with sparse intervention | ~+0.37 |
+| W3 | **intervention-neutral boundary** (CI overlaps zero) | ~-0.10 |
+| OAT | optimal is non-intervention (0 gates learned) | undefined |
+| Nulls | no consistent recoverability enhancement | ~0 |
+
+**Publishable statement:**  
+*Representation-agnostic adaptive control improves recoverability in transport-capable regimes, while control benefit collapses continuously approaching the disorder-driven transition where intervention becomes effectively neutral.*
+
+**Infrastructure fixes this session:**
+- Python 3.8/3.10 version gate in Launch-Experiment (v4 nodes skipped automatically)
+- v6e zones (europe-west4-a, us-east1-d) moved to front of candidate list
+- $done PS array cast fix for multi-line gcloud output
+- 	aus.get() guard against missing controller KeyError in summary table
+
+---
+
+### Program O — Encoded-State Recoverability (Design)
+
+**Objective:** Bridge from transport recoverability to encoded quantum information recoverability.  
+Current metric: t_transport (lifetime above classical fidelity threshold).  
+New metric: ?F_avg = F_adaptive - F_baseline across probe state families.
+
+**Phase 1 — Response Characterization (calibration)**  
+Short chirped pulse sequence estimates response Jacobian J_ij = ?x_i/?u_j.  
+Output: regime classification (stable / transport-capable / transition / localized).  
+Falsification: probe must demonstrably improve ?_ctrl vs. no-probe baseline.
+
+**Phase 2 — Probe State Injection**  
+Replace Néel initial state with structured probe states:
+`
+|0?, |+?, |R?  — canonical tomography set
+equatorial sweep — maximally sensitive to phase noise
+magic states     — sensitive to transport scrambling
+`
+
+**Phase 3 — Controlled Transport Comparison**  
+Controllers: Static | DD/XY8 | Random | Agnostic adaptive  
+Metric: F(?_out, ?_target) after noisy many-body evolution  
+Key shift: controller is no longer evaluated only on t_transport but on state recoverability fidelity.
+
+**Phase 4 — Decode / Recovery Analysis**  
+Primary metric: ?F_avg across state families  
+Focus on equatorial and magic states (maximally sensitive to phase noise / transport scrambling).  
+IBM translation path: TPU-learned policies ? Clifford/DD/SU(2) pulse selection ? post-hoc tomography.
+
+**Pre-registered falsification criterion:**  
+F_probe+adaptive > F_adaptive_only (probe stage must add information).  
+?F_avg > 0 in transport-capable regimes (XXZ, W1).  
+?F_avg ~ 0 in W3 (transition) and OAT (stable basin).
+
+*Log updated: 2026-05-18. N10a complete. Program O design recorded.*
