@@ -28,14 +28,16 @@ $CloudSdkBin = "$env:USERPROFILE\AppData\Local\Google\Cloud SDK\google-cloud-sdk
 if (Test-Path $CloudSdkBin) { $env:Path = "$CloudSdkBin;$env:Path" }
 $env:CLOUDSDK_CORE_DISABLE_PROMPTS = "1"
 
-# All 6 TRC zones -- on-demand v4 first (never preempted), then spot by win rate
+# Zone priority: v6e first (Python 3.10, jaxlib==0.4.13 compatible).
+# v4 nodes use tpu-vm-v4-base runtime with Python 3.8 -- jaxlib 0.4.13 does NOT
+# support Python 3.8, causing install failure. Keep v4 at the end as last-resort.
 $Candidates = @(
-    @{ QRName="prog-l-v4od"; NodeId="prog-l-v4od-node"; Zone="us-central2-b";  Type="v4-8";  Runtime="tpu-vm-v4-base";  Flag="" },
-    @{ QRName="prog-l-v4s";  NodeId="prog-l-v4s-node";  Zone="us-central2-b";  Type="v4-8";  Runtime="tpu-vm-v4-base";  Flag="--spot" },
     @{ QRName="prog-l-v6e1"; NodeId="prog-l-v6e1-node"; Zone="europe-west4-a"; Type="v6e-8"; Runtime="v2-alpha-tpuv6e"; Flag="--spot" },
     @{ QRName="prog-l-v6e2"; NodeId="prog-l-v6e2-node"; Zone="us-east1-d";     Type="v6e-8"; Runtime="v2-alpha-tpuv6e"; Flag="--spot" },
     @{ QRName="prog-l-v5eb"; NodeId="prog-l-v5eb-node"; Zone="europe-west4-b"; Type="v5e-8"; Runtime="v2-alpha-tpuv5e"; Flag="--spot" },
-    @{ QRName="prog-l-v5ec"; NodeId="prog-l-v5ec-node"; Zone="us-central1-a";  Type="v5e-8"; Runtime="v2-alpha-tpuv5e"; Flag="--spot" }
+    @{ QRName="prog-l-v5ec"; NodeId="prog-l-v5ec-node"; Zone="us-central1-a";  Type="v5e-8"; Runtime="v2-alpha-tpuv5e"; Flag="--spot" },
+    @{ QRName="prog-l-v4od"; NodeId="prog-l-v4od-node"; Zone="us-central2-b";  Type="v4-8";  Runtime="tpu-vm-v4-base";  Flag="" },
+    @{ QRName="prog-l-v4s";  NodeId="prog-l-v4s-node";  Zone="us-central2-b";  Type="v4-8";  Runtime="tpu-vm-v4-base";  Flag="--spot" }
 )
 $AllZones = @("us-central2-b","europe-west4-a","us-east1-d","us-central1-a","europe-west4-b")
 
@@ -78,6 +80,17 @@ function Launch-Experiment([hashtable]$c) {
         if ($LASTEXITCODE -eq 0) { $sshOk = $true } else { Start-Sleep -Seconds 10 }
     }
     if (-not $sshOk) { Write-Host "[ERROR] SSH timeout."; return $false }
+
+    # Gate: require Python >= 3.10 (v4 TPUs have Python 3.8, incompatible with jaxlib 0.4.13)
+    Write-Host "[SETUP] Checking Python version..."
+    $pyVer = "y" | gcloud compute tpus tpu-vm ssh $c.NodeId --project=$Project --zone=$($c.Zone) `
+                --command="python3 -c 'import sys; print(sys.version_info.minor)'" 2>$null
+    $pyMinor = if ($pyVer -is [array]) { [int]($pyVer[-1].Trim()) } else { [int]($pyVer.Trim()) }
+    if ($pyMinor -lt 10) {
+        Write-Host "[SKIP] Python 3.$pyMinor detected on $($c.Zone) -- requires 3.10+ for jaxlib 0.4.13. Skipping."
+        return $false
+    }
+    Write-Host "[OK] Python 3.$pyMinor -- compatible."
 
     # Install deps
     Write-Host "[SETUP] Installing JAX/TPU deps..."
