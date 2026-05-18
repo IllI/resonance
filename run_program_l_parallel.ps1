@@ -18,10 +18,12 @@ param(
     [string]$OutDir        = "program_l_results",
     [switch]$StoreObs,
     [string]$Adversarial   = "none",
-    # Program O extensions
-    [string]$Script        = "program_l_tpu.py",   # or program_o_tpu.py
-    [string]$ProbeFamilies = "",                    # e.g. "neel x_basis equatorial"
-    [switch]$RunChirp                               # Phase 1 chirp probe
+    # Script extensions
+    [string]$Script        = "program_l_tpu.py",
+    [string]$ProbeFamilies = "",
+    [switch]$RunChirp,
+    [string]$ExtraArgs     = "",
+    [switch]$KeepAlive                              # Keep TPU alive after run for follow-up
 )
 
 $Project     = "time-emission"
@@ -94,32 +96,12 @@ function Launch-Experiment([hashtable]$c) {
     }
     if (-not $sshOk) { Write-Host "[ERROR] SSH timeout."; return $false }
 
-    # Single atomic command: Python check, upgrade if needed, install JAX
-    Write-Host "[SETUP] Atomic setup (Python check + JAX install)..."
-    $atomicCmd = @"
-PY=`$(python3 -c 'import sys; print(sys.version_info.minor)') && \
-echo "PYTHON_DETECTED `$PY" && \
-if [ "`$PY" -lt "10" ]; then \
-  echo "PYTHON_UPGRADE: installing 3.10 via deadsnakes..." && \
-  sudo add-apt-repository -y ppa:deadsnakes/ppa 2>/dev/null && \
-  sudo apt-get install -y python3.10 python3.10-distutils 2>/dev/null && \
-  curl -sS https://bootstrap.pypa.io/get-pip.py | python3.10 2>/dev/null && \
-  echo "PYTHON310_READY" || { echo "PYTHON_UPGRADE_FAILED"; exit 1; }; \
-  PY3=python3.10; \
-else \
-  PY3=python3; \
-fi && \
-mkdir -p $RemoteDir && \
-`$PY3 -m pip install -q -U 'jax[tpu]' scipy numpy -f https://storage.googleapis.com/jax-releases/libtpu_releases.html && \
-`$PY3 -c 'import jax; print(jax.default_backend()); print(jax.devices())' && \
-echo DEPS_OK
-"@
+    # Single atomic command: install JAX and verify TPU backend
+    Write-Host "[SETUP] Atomic setup (JAX install + verify)..."
+    $atomicCmd = "mkdir -p $RemoteDir && pip install -q -U 'jax[tpu]' scipy numpy -f https://storage.googleapis.com/jax-releases/libtpu_releases.html && python3 -c 'import jax; print(jax.default_backend()); print(jax.devices())' && echo DEPS_OK"
     $result = "y" | gcloud compute tpus tpu-vm ssh $c.NodeId --project=$Project --zone=$($c.Zone) `
         --command=$atomicCmd 2>&1
     $result | ForEach-Object { Write-Host "  $_" }
-    if ($result -match "PYTHON_UPGRADE_FAILED") {
-        Write-Host "[ERROR] Python 3.10 install failed on $($c.Zone)."; return $false
-    }
     if ($LASTEXITCODE -ne 0 -or -not ($result -match "DEPS_OK")) {
         Write-Host "[ERROR] Atomic setup failed."; return $false
     }
@@ -170,14 +152,20 @@ if ($Script -eq "program_o_tpu.py") {
               " --models $Models --out-dir $RemoteDir/$OutDir" +
               " --backend jax --require-tpu --controllers $Controllers" +
               $probeFlag + $chirpFlag + $obsFlag +
-              " > $RemoteDir/$LogFile 2>&1 &"
+              " $ExtraArgs > $RemoteDir/$LogFile 2>&1 &"
+} elseif ($Script -eq "program_p_tpu.py") {
+    $RunCmd = "nohup python3 $RemoteDir/program_p_tpu.py" +
+              " --N $N --T-max $TMax --n-steps $NSteps --B $B --seed $Seed" +
+              " --models $Models --out-dir $RemoteDir/$OutDir" +
+              " --backend jax --require-tpu --controllers $Controllers" +
+              $chirpFlag + " $ExtraArgs > $RemoteDir/$LogFile 2>&1 &"
 } else {
     $RunCmd = "nohup python3 $RemoteDir/program_l_tpu.py" +
               " --N $N --T-max $TMax --n-steps $NSteps --B $B --seed $Seed" +
               " --models $Models --out-dir $RemoteDir/$OutDir" +
               " --backend jax --require-tpu --controllers $Controllers" +
               " --adversarial $Adversarial" + $obsFlag +
-              " > $RemoteDir/$LogFile 2>&1 &"
+              " $ExtraArgs > $RemoteDir/$LogFile 2>&1 &"
 }
 
 # ── 4. Wait for a winner; experiment loop with fallback ───────────────────────
@@ -272,7 +260,8 @@ while (-not $Succeeded) {
     }
 
     # Launch experiment
-    Write-Host "[RUN] Launching Program L..."
+    $scriptLabel = [System.IO.Path]::GetFileNameWithoutExtension($Script)
+    Write-Host "[RUN] Launching $scriptLabel..."
     "y" | gcloud compute tpus tpu-vm ssh $Winner.NodeId --project=$Project --zone=$($Winner.Zone) --command=$RunCmd
     Write-Host "[RUN] Polling log..."
 
@@ -310,11 +299,12 @@ while (-not $Succeeded) {
 }
 
 # ── 5. Download results ───────────────────────────────────────────────────────
-$remoteResult = $Winner.NodeId + ':' + $RemoteDir + '/' + $OutDir + "/program_l_N${N}_results.json"
+$scriptBase  = [System.IO.Path]::GetFileNameWithoutExtension($Script)
+$remoteResult = $Winner.NodeId + ':' + $RemoteDir + '/' + $OutDir + "/${scriptBase}_N${N}_results.json"
 $remoteLog    = $Winner.NodeId + ':' + $RemoteDir + '/' + $LogFile
 New-Item -ItemType Directory -Force -Path "$SrcDir\$OutDir" | Out-Null
-gcloud compute tpus tpu-vm scp $remoteResult "$SrcDir\$OutDir\program_l_N${N}_results.json" --project=$Project --zone=$($Winner.Zone)
-gcloud compute tpus tpu-vm scp $remoteLog    "$SrcDir\$OutDir\$LogFile"                      --project=$Project --zone=$($Winner.Zone) 2>$null
+gcloud compute tpus tpu-vm scp $remoteResult "$SrcDir\$OutDir\${scriptBase}_N${N}_results.json" --project=$Project --zone=$($Winner.Zone)
+gcloud compute tpus tpu-vm scp $remoteLog    "$SrcDir\$OutDir\$LogFile"                          --project=$Project --zone=$($Winner.Zone) 2>$null
 
 # ── 6. Analyze locally ────────────────────────────────────────────────────────
 $rf = "$SrcDir\$OutDir\program_l_N${N}_results.json"
@@ -323,6 +313,15 @@ if (Test-Path $rf) {
     python "$SrcDir\analyze_program_l.py" $rf
 } else { Write-Host "[WARN] Results file not found." }
 
-# ── 7. Delete ritual ──────────────────────────────────────────────────────────
-Delete-All $Candidates
+# -- 7. Cleanup (skip if -KeepAlive for back-to-back experiments) ---------------
+if ($KeepAlive) {
+    Write-Host "[KEEPALIVE] Node $($Winner.NodeId) in $($Winner.Zone) kept ACTIVE for follow-up."
+    Write-Host "[KEEPALIVE] SSH:  gcloud compute tpus tpu-vm ssh $($Winner.NodeId) --project=$Project --zone=$($Winner.Zone)"
+    Write-Host "[KEEPALIVE] SCP:  gcloud compute tpus tpu-vm scp <file> $($Winner.NodeId):/home/cityz/program_l/ --project=$Project --zone=$($Winner.Zone)"
+    Write-Host "[KEEPALIVE] Delete when done: gcloud compute tpus tpu-vm delete $($Winner.NodeId) --project=$Project --zone=$($Winner.Zone) --quiet"
+    $standbys = $Candidates | Where-Object { $_.QRName -ne $Winner.QRName }
+    if ($standbys) { Delete-All $standbys }
+} else {
+    Delete-All $Candidates
+}
 Write-Host "[COMPLETE] Done. Winner: $($Winner.Zone)"
