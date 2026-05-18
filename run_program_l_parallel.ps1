@@ -85,20 +85,24 @@ function Launch-Experiment([hashtable]$c) {
     }
     if (-not $sshOk) { Write-Host "[ERROR] SSH timeout."; return $false }
 
-    # Gate: require Python >= 3.10 (v4 TPUs have Python 3.8, incompatible with jaxlib 0.4.13)
+    # Version-adaptive JAX install:
+    #   Python 3.10+ (v6e): jax[tpu] 0.4.13 from TPU releases index
+    #   Python 3.8   (v4):  jax==0.4.13 jaxlib==0.4.13 pinned (last py38-compatible)
     Write-Host "[SETUP] Checking Python version..."
     $pyVer = "y" | gcloud compute tpus tpu-vm ssh $c.NodeId --project=$Project --zone=$($c.Zone) `
                 --command="python3 -c 'import sys; print(sys.version_info.minor)'" 2>$null
     $pyMinor = if ($pyVer -is [array]) { [int]($pyVer[-1].Trim()) } else { [int]($pyVer.Trim()) }
-    if ($pyMinor -lt 10) {
-        Write-Host "[SKIP] Python 3.$pyMinor detected on $($c.Zone) -- requires 3.10+ for jaxlib 0.4.13. Skipping."
-        return $false
-    }
-    Write-Host "[OK] Python 3.$pyMinor -- compatible."
+    Write-Host "[OK] Python 3.$pyMinor detected on $($c.Zone)."
 
     # Install deps
-    Write-Host "[SETUP] Installing JAX/TPU deps..."
-    $depCmd = "mkdir -p $RemoteDir && pip install -q -U 'jax[tpu]' scipy numpy -f https://storage.googleapis.com/jax-releases/libtpu_releases.html && python3 -c 'import jax; print(jax.default_backend()); print(jax.devices())' && echo DEPS_OK"
+    Write-Host "[SETUP] Installing JAX/TPU deps (Python 3.$pyMinor)..."
+    if ($pyMinor -ge 10) {
+        # v6e / Python 3.10: standard TPU release index
+        $depCmd = "mkdir -p $RemoteDir && pip install -q -U 'jax[tpu]' scipy numpy -f https://storage.googleapis.com/jax-releases/libtpu_releases.html && python3 -c 'import jax; print(jax.default_backend()); print(jax.devices())' && echo DEPS_OK"
+    } else {
+        # v4 / Python 3.8: last compatible pinned version
+        $depCmd = "mkdir -p $RemoteDir && pip install -q 'jax==0.4.13' 'jaxlib==0.4.13' scipy numpy && python3 -c 'import jax; print(jax.default_backend()); print(jax.devices())' && echo DEPS_OK"
+    }
     "y" | gcloud compute tpus tpu-vm ssh $c.NodeId --project=$Project --zone=$($c.Zone) --command=$depCmd
     if ($LASTEXITCODE -ne 0) { Write-Host "[ERROR] Deps failed."; return $false }
 
