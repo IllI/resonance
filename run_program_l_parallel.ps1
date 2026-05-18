@@ -196,19 +196,10 @@ while (-not $Succeeded) {
             if (-not $ProvStartTimes.ContainsKey($c.QRName)) {
                 $ProvStartTimes[$c.QRName] = Get-Date
             }
-            $provMin = ((Get-Date) - $ProvStartTimes[$c.QRName]).TotalMinutes
-            if ($provMin -gt $ProvTimeoutMin) {
-                Write-Host "  [REQUEUE] $($c.Zone) stuck PROVISIONING ${provMin}min -- deleting and re-queuing fresh..."
-                gcloud compute tpus queued-resources delete $c.QRName --project=$Project --zone=$($c.Zone) --quiet 2>$null
-                Start-Sleep -Seconds 5
-                $qa = @("compute","tpus","queued-resources","create",$c.QRName,
-                        "--node-id=$($c.NodeId)","--project=$Project","--zone=$($c.Zone)",
-                        "--accelerator-type=$($c.Type)","--runtime-version=$($c.Runtime)","--quiet")
-                if ($c.Flag) { $qa += $c.Flag }
-                & gcloud @qa 2>&1 | Out-Null
-                $ProvStartTimes.Remove($c.QRName)
-                Write-Host "  [REQUEUE] $($c.Zone) re-queued."
-            }
+            $provMin = [math]::Round(((Get-Date) - $ProvStartTimes[$c.QRName]).TotalMinutes, 1)
+            # Do NOT requeue -- PROVISIONING means GCP has us in line and is working on it.
+            # Requeuing would put us at the back of the queue. Just wait.
+            Write-Host "  $($c.Zone): PROVISIONING (${provMin}min)"
         } elseif ($st -eq "FAILED" -or $st -eq "SUSPENDED" -or $st -eq "PREEMPTED" -or $st -eq "TERMINATED") {
             # Capacity denied -- delete and re-queue immediately
             Write-Host "  [REQUEUE] $($c.Zone) $st -- re-queuing fresh..."
