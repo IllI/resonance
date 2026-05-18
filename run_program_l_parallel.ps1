@@ -210,7 +210,7 @@ while (-not $Succeeded) {
             # Reset PROVISIONING timer if it fell back
             if ($ProvStartTimes.ContainsKey($c.QRName)) { $ProvStartTimes.Remove($c.QRName) }
             $anyProgress = $true
-        } elseif ($st -eq "ACTIVE" -and $c.QRName -ne ($Winner.QRName)) {
+        } elseif ($st -eq "ACTIVE") {
             $active = $c; break
         }
     }
@@ -248,6 +248,7 @@ while (-not $Succeeded) {
     $ready = Launch-Experiment $Winner
     if (-not $ready) {
         Write-Host "[RETRY] Setup failed on $($Winner.Zone). Checking standbys..."
+        $Winner = $null   # clear so same zone can be re-selected if still ACTIVE
         Start-Sleep -Seconds 15; continue
     }
 
