@@ -28,6 +28,13 @@ $Project     = "time-emission"
 $SrcDir      = "$PSScriptRoot\emergent_quantum_geometries"
 $RemoteDir   = "/home/cityz/program_l"
 $LogFile     = "prog_l_run.log"
+
+# TRC compliance: always clean up QRs on any exit (Ctrl+C, error, normal end)
+trap {
+    Write-Host "[TRAP] Unexpected exit -- running cleanup to free TRC quota..."
+    if ($null -ne $Candidates) { Delete-All $Candidates }
+    break
+}
 $CloudSdkBin = "$env:USERPROFILE\AppData\Local\Google\Cloud SDK\google-cloud-sdk\bin"
 if (Test-Path $CloudSdkBin) { $env:Path = "$CloudSdkBin;$env:Path" }
 $env:CLOUDSDK_CORE_DISABLE_PROMPTS = "1"
