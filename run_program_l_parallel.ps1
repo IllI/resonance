@@ -46,8 +46,8 @@ $Candidates = @(
     @{ QRName="prog-l-v4od"; NodeId="prog-l-v4od-node"; Zone="us-central2-b";  Type="v4-8";         Runtime="tpu-vm-v4-base";     Flag=""       },
     @{ QRName="prog-l-v6e1"; NodeId="prog-l-v6e1-node"; Zone="europe-west4-a"; Type="v6e-8";        Runtime="v2-alpha-tpuv6e";    Flag="--spot" },
     @{ QRName="prog-l-v6e2"; NodeId="prog-l-v6e2-node"; Zone="us-east1-d";     Type="v6e-8";        Runtime="v2-alpha-tpuv6e";    Flag="--spot" },
-    @{ QRName="prog-l-v5eb"; NodeId="prog-l-v5eb-node"; Zone="europe-west4-b"; Type="v5litepod-8";  Runtime="v2-alpha-tpuv5-lite"; Flag="--spot" },
-    @{ QRName="prog-l-v5ec"; NodeId="prog-l-v5ec-node"; Zone="us-central1-a";  Type="v5litepod-8";  Runtime="v2-alpha-tpuv5-lite"; Flag="--spot" },
+    @{ QRName="prog-l-v5eb"; NodeId="prog-l-v5eb-node"; Zone="europe-west4-b"; Type="v5litepod-4";  Runtime="v2-alpha-tpuv5-lite"; Flag="--spot" },
+    @{ QRName="prog-l-v5ec"; NodeId="prog-l-v5ec-node"; Zone="us-central1-a";  Type="v5litepod-4";  Runtime="v2-alpha-tpuv5-lite"; Flag="--spot" },
     @{ QRName="prog-l-v4s";  NodeId="prog-l-v4s-node";  Zone="us-central2-b";  Type="v4-8";         Runtime="tpu-vm-v4-base";     Flag="--spot" }
 )
 $AllZones = @("us-central2-b","europe-west4-a","us-east1-d","us-central1-a","europe-west4-b")
