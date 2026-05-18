@@ -39,16 +39,16 @@ $CloudSdkBin = "$env:USERPROFILE\AppData\Local\Google\Cloud SDK\google-cloud-sdk
 if (Test-Path $CloudSdkBin) { $env:Path = "$CloudSdkBin;$env:Path" }
 $env:CLOUDSDK_CORE_DISABLE_PROMPTS = "1"
 
-# Zone priority: v6e first (Python 3.10, jaxlib==0.4.13 compatible).
-# v4 nodes use tpu-vm-v4-base runtime with Python 3.8 -- jaxlib 0.4.13 does NOT
-# support Python 3.8, causing install failure. Keep v4 at the end as last-resort.
+# TRC guidelines: prefer on-demand before preemptible.
+# v4 on-demand (us-central2-b, 32 chips) goes first -- cannot be preempted.
+# v6e spot next, then v5e spot, then v4 spot as last resort.
 $Candidates = @(
-    @{ QRName="prog-l-v6e1"; NodeId="prog-l-v6e1-node"; Zone="europe-west4-a"; Type="v6e-8"; Runtime="v2-alpha-tpuv6e"; Flag="--spot" },
-    @{ QRName="prog-l-v6e2"; NodeId="prog-l-v6e2-node"; Zone="us-east1-d";     Type="v6e-8"; Runtime="v2-alpha-tpuv6e"; Flag="--spot" },
-    @{ QRName="prog-l-v5eb"; NodeId="prog-l-v5eb-node"; Zone="europe-west4-b"; Type="v5e-8"; Runtime="v2-alpha-tpuv5e"; Flag="--spot" },
-    @{ QRName="prog-l-v5ec"; NodeId="prog-l-v5ec-node"; Zone="us-central1-a";  Type="v5e-8"; Runtime="v2-alpha-tpuv5e"; Flag="--spot" },
-    @{ QRName="prog-l-v4od"; NodeId="prog-l-v4od-node"; Zone="us-central2-b";  Type="v4-8";  Runtime="tpu-vm-v4-base";  Flag="" },
-    @{ QRName="prog-l-v4s";  NodeId="prog-l-v4s-node";  Zone="us-central2-b";  Type="v4-8";  Runtime="tpu-vm-v4-base";  Flag="--spot" }
+    @{ QRName="prog-l-v4od"; NodeId="prog-l-v4od-node"; Zone="us-central2-b";  Type="v4-8";  Runtime="tpu-vm-v4-base";       Flag=""        },
+    @{ QRName="prog-l-v6e1"; NodeId="prog-l-v6e1-node"; Zone="europe-west4-a"; Type="v6e-8"; Runtime="v2-alpha-tpuv6e";       Flag="--spot"  },
+    @{ QRName="prog-l-v6e2"; NodeId="prog-l-v6e2-node"; Zone="us-east1-d";     Type="v6e-8"; Runtime="v2-alpha-tpuv6e";       Flag="--spot"  },
+    @{ QRName="prog-l-v5eb"; NodeId="prog-l-v5eb-node"; Zone="europe-west4-b"; Type="v5e-8"; Runtime="v2-alpha-tpuv5-lite";   Flag="--spot"  },
+    @{ QRName="prog-l-v5ec"; NodeId="prog-l-v5ec-node"; Zone="us-central1-a";  Type="v5e-8"; Runtime="v2-alpha-tpuv5-lite";   Flag="--spot"  },
+    @{ QRName="prog-l-v4s";  NodeId="prog-l-v4s-node";  Zone="us-central2-b";  Type="v4-8";  Runtime="tpu-vm-v4-base";        Flag="--spot"  }
 )
 $AllZones = @("us-central2-b","europe-west4-a","us-east1-d","us-central1-a","europe-west4-b")
 
@@ -84,41 +84,47 @@ function Launch-Experiment([hashtable]$c) {
     # StrictHostKeyChecking=no skips fingerprint prompt -- eliminates that delay.
     Write-Host "[SSH] Connecting to $($c.Zone) ($($c.NodeId))..."
     $sshOk = $false
-    $sshEnd = (Get-Date).AddMinutes(3)
-    $sshFlag = "--ssh-flag=-o StrictHostKeyChecking=no --ssh-flag=-o ConnectTimeout=10"
+    $sshEnd = (Get-Date).AddMinutes(5)
     while (-not $sshOk -and (Get-Date) -lt $sshEnd) {
         $st = Get-QRState $c.QRName $c.Zone
         if ($st -ne "ACTIVE") { Write-Host "[ERROR] Node became $st before SSH."; return $false }
-        gcloud compute tpus tpu-vm ssh $c.NodeId --project=$Project --zone=$($c.Zone) `
-            --ssh-flag="-o StrictHostKeyChecking=no" --ssh-flag="-o ConnectTimeout=10" `
-            --command="echo SSH_READY" 2>$null | Out-Null
-        if ($LASTEXITCODE -eq 0) { $sshOk = $true } else { Start-Sleep -Seconds 8 }
+        "y" | gcloud compute tpus tpu-vm ssh $c.NodeId --project=$Project --zone=$($c.Zone) `
+            --command="echo SSH_READY" 2>&1 | Out-Null
+        if ($LASTEXITCODE -eq 0) { $sshOk = $true } else { Start-Sleep -Seconds 10 }
     }
     if (-not $sshOk) { Write-Host "[ERROR] SSH timeout."; return $false }
 
-    # Single atomic command: Python check + deps + echo marker -- one SSH round trip
+    # Single atomic command: Python check, upgrade if needed, install JAX
     Write-Host "[SETUP] Atomic setup (Python check + JAX install)..."
     $atomicCmd = @"
 PY=`$(python3 -c 'import sys; print(sys.version_info.minor)') && \
-if [ "`$PY" -lt "10" ]; then echo "PYTHON_38_SKIP"; exit 1; fi && \
-echo "PYTHON_OK `$PY" && \
+echo "PYTHON_DETECTED `$PY" && \
+if [ "`$PY" -lt "10" ]; then \
+  echo "PYTHON_UPGRADE: installing 3.10 via deadsnakes..." && \
+  sudo add-apt-repository -y ppa:deadsnakes/ppa 2>/dev/null && \
+  sudo apt-get install -y python3.10 python3.10-distutils 2>/dev/null && \
+  curl -sS https://bootstrap.pypa.io/get-pip.py | python3.10 2>/dev/null && \
+  echo "PYTHON310_READY" || { echo "PYTHON_UPGRADE_FAILED"; exit 1; }; \
+  PY3=python3.10; \
+else \
+  PY3=python3; \
+fi && \
 mkdir -p $RemoteDir && \
-pip install -q -U 'jax[tpu]' scipy numpy -f https://storage.googleapis.com/jax-releases/libtpu_releases.html && \
-python3 -c 'import jax; print(jax.default_backend()); print(jax.devices())' && \
+`$PY3 -m pip install -q -U 'jax[tpu]' scipy numpy -f https://storage.googleapis.com/jax-releases/libtpu_releases.html && \
+`$PY3 -c 'import jax; print(jax.default_backend()); print(jax.devices())' && \
 echo DEPS_OK
 "@
-    $result = gcloud compute tpus tpu-vm ssh $c.NodeId --project=$Project --zone=$($c.Zone) `
-        --ssh-flag="-o StrictHostKeyChecking=no" --ssh-flag="-o ConnectTimeout=30" `
+    $result = "y" | gcloud compute tpus tpu-vm ssh $c.NodeId --project=$Project --zone=$($c.Zone) `
         --command=$atomicCmd 2>&1
     $result | ForEach-Object { Write-Host "  $_" }
-    if ($result -match "PYTHON_38_SKIP") {
-        Write-Host "[SKIP] Python 3.8 on $($c.Zone) -- no compatible TPU jaxlib. Waiting for v6e."; return $false
+    if ($result -match "PYTHON_UPGRADE_FAILED") {
+        Write-Host "[ERROR] Python 3.10 install failed on $($c.Zone)."; return $false
     }
     if ($LASTEXITCODE -ne 0 -or -not ($result -match "DEPS_OK")) {
         Write-Host "[ERROR] Atomic setup failed."; return $false
     }
 
-    # SCP all files with StrictHostKeyChecking=no
+    # SCP all files
     Write-Host "[SCP] Uploading..."
     $uploadFiles = @("program_l_tpu.py", "analyze_program_l.py")
     if ($Script -ne "program_l_tpu.py" -and $Script -ne "") { $uploadFiles += $Script }
@@ -126,8 +132,7 @@ echo DEPS_OK
         $local = Join-Path $SrcDir $f
         if (-not (Test-Path $local)) { Write-Host "[WARN] $f not found, skipping."; continue }
         $remote = $c.NodeId + ':' + $RemoteDir + '/' + $f
-        gcloud compute tpus tpu-vm scp $local $remote --project=$Project --zone=$($c.Zone) `
-            --scp-flag="-o StrictHostKeyChecking=no" 2>$null
+        "y" | gcloud compute tpus tpu-vm scp $local $remote --project=$Project --zone=$($c.Zone) 2>&1 | Out-Null
         if ($LASTEXITCODE -ne 0) { Write-Host "[ERROR] SCP failed: $f"; return $false }
     }
     Write-Host "[SCP] Upload complete."
