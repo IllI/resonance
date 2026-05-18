@@ -285,7 +285,7 @@ while (-not $Succeeded) {
         $doneRaw = "y" | gcloud compute tpus tpu-vm ssh $Winner.NodeId --project=$Project --zone=$($Winner.Zone) `
                     --command="grep -c 'Saved ->' $RemoteDir/$LogFile 2>/dev/null || echo 0" 2>$null
         $doneVal = if ($doneRaw -is [array]) { $doneRaw[-1] } else { $doneRaw }
-        if ([int]($doneVal.Trim()) -gt 0) {
+        if ($doneVal -ne $null -and [int]($doneVal.Trim()) -gt 0) {
             Write-Host "[DONE] Experiment complete on $($Winner.Zone)."
             $Succeeded = $true; break
         }
