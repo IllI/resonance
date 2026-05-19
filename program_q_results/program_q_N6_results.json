@@ -1,0 +1,48 @@
+{
+  "args": {
+    "N": 6,
+    "T_max": 6.0,
+    "n_steps": 15,
+    "tau_thresh": 0.08,
+    "B": 1,
+    "seed": 42,
+    "models": [
+      "OAT"
+    ],
+    "controllers": [
+      "static",
+      "periodic_sweep",
+      "random_sparse",
+      "adaptive_sparse"
+    ],
+    "channels": [
+      "scrambling"
+    ],
+    "sigmas": [
+      0.5
+    ],
+    "n_states": 4,
+    "out_dir": "program_q_results",
+    "require_tpu": false,
+    "smoke_test": true
+  },
+  "summary": {
+    "OAT/scrambling/sig=0.5/static": {
+      "fidelity": 0.9995499849319458,
+      "n": 4
+    },
+    "OAT/scrambling/sig=0.5/periodic_sweep": {
+      "fidelity": 0.0,
+      "n": 4
+    },
+    "OAT/scrambling/sig=0.5/random_sparse": {
+      "fidelity": 0.7501488029956818,
+      "n": 4
+    },
+    "OAT/scrambling/sig=0.5/adaptive_sparse": {
+      "fidelity": 0.5300470665097237,
+      "n": 4
+    }
+  },
+  "runtime_s": 1.3
+}
