@@ -1,0 +1,670 @@
+{
+  "args": {
+    "N": 10,
+    "T_max": 6.0,
+    "n_steps": 30,
+    "tau_thresh": 0.08,
+    "B": 3,
+    "seed": 42,
+    "models": [
+      "XXZ",
+      "W3",
+      "OAT",
+      "Ising"
+    ],
+    "controllers": [
+      "static",
+      "dd",
+      "random_sparse",
+      "sparse_predictive"
+    ],
+    "out_dir": "/home/cityz/program_u/program_u_results",
+    "require_tpu": true,
+    "smoke_test": false
+  },
+  "summary": {
+    "XXZ/static": {
+      "endpoint_fidelity": 0.17824650555849075,
+      "preserve_index": 0.2762156738596285,
+      "F_recover": 0.1782465105255445,
+      "n_interventions": 4.0,
+      "n": 3
+    },
+    "XXZ/dd": {
+      "endpoint_fidelity": 0.08532309780518214,
+      "preserve_index": 0.2798544418939803,
+      "F_recover": 0.0853230965634187,
+      "n_interventions": 8.0,
+      "n": 3
+    },
+    "XXZ/random_sparse": {
+      "endpoint_fidelity": 0.19230488004783788,
+      "preserve_index": 0.1733562931021253,
+      "F_recover": 0.19230486080050468,
+      "n_interventions": 3.0,
+      "n": 3
+    },
+    "XXZ/sparse_predictive": {
+      "endpoint_fidelity": 0.2625112036863963,
+      "preserve_index": 0.12261054728564628,
+      "F_recover": 0.2625111788511276,
+      "n_interventions": 2.6666666666666665,
+      "n": 3
+    },
+    "W3/static": {
+      "endpoint_fidelity": 0.1973368376493454,
+      "preserve_index": 0.22830493837074348,
+      "F_recover": 0.19733683268229166,
+      "n_interventions": 4.0,
+      "n": 3
+    },
+    "W3/dd": {
+      "endpoint_fidelity": 0.14229426781336466,
+      "preserve_index": 0.2879020123468779,
+      "F_recover": 0.1422942578792572,
+      "n_interventions": 8.0,
+      "n": 3
+    },
+    "W3/random_sparse": {
+      "endpoint_fidelity": 0.22652332484722137,
+      "preserve_index": 0.09865479484292428,
+      "F_recover": 0.22652332484722137,
+      "n_interventions": 3.0,
+      "n": 3
+    },
+    "W3/sparse_predictive": {
+      "endpoint_fidelity": 0.28792960693438846,
+      "preserve_index": 0.14180226731679516,
+      "F_recover": 0.28792958458264667,
+      "n_interventions": 0.6666666666666666,
+      "n": 3
+    },
+    "OAT/static": {
+      "endpoint_fidelity": 0.23046691715717316,
+      "preserve_index": 0.15639344532813967,
+      "F_recover": 0.23046691715717316,
+      "n_interventions": 4.0,
+      "n": 3
+    },
+    "OAT/dd": {
+      "endpoint_fidelity": 0.40498974919319153,
+      "preserve_index": 0.0959821683145533,
+      "F_recover": 0.40498974919319153,
+      "n_interventions": 8.0,
+      "n": 3
+    },
+    "OAT/random_sparse": {
+      "endpoint_fidelity": 0.2438952848315239,
+      "preserve_index": 0.07503137822549004,
+      "F_recover": 0.2438952848315239,
+      "n_interventions": 3.0,
+      "n": 3
+    },
+    "OAT/sparse_predictive": {
+      "endpoint_fidelity": 0.4083109200000763,
+      "preserve_index": 0.07835636078510462,
+      "F_recover": 0.4083109200000763,
+      "n_interventions": 0.0,
+      "n": 3
+    },
+    "Ising/static": {
+      "endpoint_fidelity": 0.000582169295133402,
+      "preserve_index": 0.09205090865539971,
+      "F_recover": 0.0005821693339385092,
+      "n_interventions": 4.0,
+      "n": 3
+    },
+    "Ising/dd": {
+      "endpoint_fidelity": 0.0006712375131125251,
+      "preserve_index": 0.07792300398677791,
+      "F_recover": 0.0006712374549048642,
+      "n_interventions": 8.0,
+      "n": 3
+    },
+    "Ising/random_sparse": {
+      "endpoint_fidelity": 0.000765076333967348,
+      "preserve_index": 0.11071993719458006,
+      "F_recover": 0.0007650763145647943,
+      "n_interventions": 3.0,
+      "n": 3
+    },
+    "Ising/sparse_predictive": {
+      "endpoint_fidelity": 0.0010530856282760699,
+      "preserve_index": 0.12337786464445462,
+      "F_recover": 0.0010530856282760699,
+      "n_interventions": 1.0,
+      "n": 3
+    }
+  },
+  "records": [
+    {
+      "model": "XXZ",
+      "controller": "static",
+      "batch": 0,
+      "endpoint_fidelity": 0.10671531409025192,
+      "trace_distance_initial": 0.048849549144506454,
+      "trace_distance_final": 0.00742449751123786,
+      "preserve_index": 0.1519870222163723,
+      "F_recover": 0.10671531409025192,
+      "n_interventions": 4
+    },
+    {
+      "model": "XXZ",
+      "controller": "static",
+      "batch": 1,
+      "endpoint_fidelity": 0.19189228117465973,
+      "trace_distance_initial": 0.06753645837306976,
+      "trace_distance_final": 0.035125598311424255,
+      "preserve_index": 0.5200983166287932,
+      "F_recover": 0.19189228117465973,
+      "n_interventions": 4
+    },
+    {
+      "model": "XXZ",
+      "controller": "static",
+      "batch": 2,
+      "endpoint_fidelity": 0.2361319214105606,
+      "trace_distance_initial": 0.07451590895652771,
+      "trace_distance_final": 0.011666336096823215,
+      "preserve_index": 0.15656168273371995,
+      "F_recover": 0.2361319363117218,
+      "n_interventions": 4
+    },
+    {
+      "model": "XXZ",
+      "controller": "dd",
+      "batch": 0,
+      "endpoint_fidelity": 0.13423070311546326,
+      "trace_distance_initial": 0.048849549144506454,
+      "trace_distance_final": 0.02231806330382824,
+      "preserve_index": 0.45687347568654524,
+      "F_recover": 0.13423068821430206,
+      "n_interventions": 8
+    },
+    {
+      "model": "XXZ",
+      "controller": "dd",
+      "batch": 1,
+      "endpoint_fidelity": 0.05055437237024307,
+      "trace_distance_initial": 0.06753645837306976,
+      "trace_distance_final": 0.010638301260769367,
+      "preserve_index": 0.15751938311372693,
+      "F_recover": 0.05055438354611397,
+      "n_interventions": 8
+    },
+    {
+      "model": "XXZ",
+      "controller": "dd",
+      "batch": 2,
+      "endpoint_fidelity": 0.07118421792984009,
+      "trace_distance_initial": 0.07451590895652771,
+      "trace_distance_final": 0.01677878201007843,
+      "preserve_index": 0.22517046688166864,
+      "F_recover": 0.07118421792984009,
+      "n_interventions": 8
+    },
+    {
+      "model": "XXZ",
+      "controller": "random_sparse",
+      "batch": 0,
+      "endpoint_fidelity": 0.02082931064069271,
+      "trace_distance_initial": 0.048849549144506454,
+      "trace_distance_final": 0.009428875520825386,
+      "preserve_index": 0.19301868053561605,
+      "F_recover": 0.02082930877804756,
+      "n_interventions": 4
+    },
+    {
+      "model": "XXZ",
+      "controller": "random_sparse",
+      "batch": 1,
+      "endpoint_fidelity": 0.5246816873550415,
+      "trace_distance_initial": 0.06753645837306976,
+      "trace_distance_final": 0.010036803781986237,
+      "preserve_index": 0.1486131198410577,
+      "F_recover": 0.5246816277503967,
+      "n_interventions": 2
+    },
+    {
+      "model": "XXZ",
+      "controller": "random_sparse",
+      "batch": 2,
+      "endpoint_fidelity": 0.031403642147779465,
+      "trace_distance_initial": 0.07451590895652771,
+      "trace_distance_final": 0.013296401128172874,
+      "preserve_index": 0.17843707892970218,
+      "F_recover": 0.03140364587306976,
+      "n_interventions": 3
+    },
+    {
+      "model": "XXZ",
+      "controller": "sparse_predictive",
+      "batch": 0,
+      "endpoint_fidelity": 0.04613274335861206,
+      "trace_distance_initial": 0.048849549144506454,
+      "trace_distance_final": 0.006363441236317158,
+      "preserve_index": 0.13026612011018968,
+      "F_recover": 0.04613274335861206,
+      "n_interventions": 2
+    },
+    {
+      "model": "XXZ",
+      "controller": "sparse_predictive",
+      "batch": 1,
+      "endpoint_fidelity": 0.5375354886054993,
+      "trace_distance_initial": 0.06753645837306976,
+      "trace_distance_final": 0.006990623660385609,
+      "preserve_index": 0.10350888732817559,
+      "F_recover": 0.5375354290008545,
+      "n_interventions": 3
+    },
+    {
+      "model": "XXZ",
+      "controller": "sparse_predictive",
+      "batch": 2,
+      "endpoint_fidelity": 0.20386537909507751,
+      "trace_distance_initial": 0.07451590895652771,
+      "trace_distance_final": 0.009989351965487003,
+      "preserve_index": 0.13405663441857354,
+      "F_recover": 0.20386536419391632,
+      "n_interventions": 3
+    },
+    {
+      "model": "W3",
+      "controller": "static",
+      "batch": 0,
+      "endpoint_fidelity": 0.11256693303585052,
+      "trace_distance_initial": 0.048849549144506454,
+      "trace_distance_final": 0.006379261612892151,
+      "preserve_index": 0.13058997932387187,
+      "F_recover": 0.11256693303585052,
+      "n_interventions": 4
+    },
+    {
+      "model": "W3",
+      "controller": "static",
+      "batch": 1,
+      "endpoint_fidelity": 0.1883191168308258,
+      "trace_distance_initial": 0.06753645837306976,
+      "trace_distance_final": 0.027700092643499374,
+      "preserve_index": 0.4101502108694326,
+      "F_recover": 0.188319131731987,
+      "n_interventions": 4
+    },
+    {
+      "model": "W3",
+      "controller": "static",
+      "batch": 2,
+      "endpoint_fidelity": 0.29112446308135986,
+      "trace_distance_initial": 0.07451590895652771,
+      "trace_distance_final": 0.01074330322444439,
+      "preserve_index": 0.1441746249189259,
+      "F_recover": 0.2911244332790375,
+      "n_interventions": 4
+    },
+    {
+      "model": "W3",
+      "controller": "dd",
+      "batch": 0,
+      "endpoint_fidelity": 0.15519675612449646,
+      "trace_distance_initial": 0.048849549144506454,
+      "trace_distance_final": 0.005942155607044697,
+      "preserve_index": 0.12164197440891429,
+      "F_recover": 0.15519675612449646,
+      "n_interventions": 8
+    },
+    {
+      "model": "W3",
+      "controller": "dd",
+      "batch": 1,
+      "endpoint_fidelity": 0.15199947357177734,
+      "trace_distance_initial": 0.06753645837306976,
+      "trace_distance_final": 0.011114513501524925,
+      "preserve_index": 0.16457057075696876,
+      "F_recover": 0.15199944376945496,
+      "n_interventions": 8
+    },
+    {
+      "model": "W3",
+      "controller": "dd",
+      "batch": 2,
+      "endpoint_fidelity": 0.11968657374382019,
+      "trace_distance_initial": 0.07451590895652771,
+      "trace_distance_final": 0.0430324524641037,
+      "preserve_index": 0.5774934918747507,
+      "F_recover": 0.11968657374382019,
+      "n_interventions": 8
+    },
+    {
+      "model": "W3",
+      "controller": "random_sparse",
+      "batch": 0,
+      "endpoint_fidelity": 0.049721553921699524,
+      "trace_distance_initial": 0.048849549144506454,
+      "trace_distance_final": 0.005423993803560734,
+      "preserve_index": 0.11103467480128572,
+      "F_recover": 0.049721553921699524,
+      "n_interventions": 4
+    },
+    {
+      "model": "W3",
+      "controller": "random_sparse",
+      "batch": 1,
+      "endpoint_fidelity": 0.5207577347755432,
+      "trace_distance_initial": 0.06753645837306976,
+      "trace_distance_final": 0.003532949835062027,
+      "preserve_index": 0.05231174272559253,
+      "F_recover": 0.5207577347755432,
+      "n_interventions": 2
+    },
+    {
+      "model": "W3",
+      "controller": "random_sparse",
+      "batch": 2,
+      "endpoint_fidelity": 0.10909068584442139,
+      "trace_distance_initial": 0.07451590895652771,
+      "trace_distance_final": 0.00988214835524559,
+      "preserve_index": 0.13261796700189457,
+      "F_recover": 0.10909068584442139,
+      "n_interventions": 3
+    },
+    {
+      "model": "W3",
+      "controller": "sparse_predictive",
+      "batch": 0,
+      "endpoint_fidelity": 0.08732063323259354,
+      "trace_distance_initial": 0.048849549144506454,
+      "trace_distance_final": 0.005493604112416506,
+      "preserve_index": 0.11245966868707219,
+      "F_recover": 0.08732062578201294,
+      "n_interventions": 1
+    },
+    {
+      "model": "W3",
+      "controller": "sparse_predictive",
+      "batch": 1,
+      "endpoint_fidelity": 0.5694888234138489,
+      "trace_distance_initial": 0.06753645837306976,
+      "trace_distance_final": 0.007630863226950169,
+      "preserve_index": 0.11298879761631081,
+      "F_recover": 0.5694887638092041,
+      "n_interventions": 0
+    },
+    {
+      "model": "W3",
+      "controller": "sparse_predictive",
+      "batch": 2,
+      "endpoint_fidelity": 0.20697936415672302,
+      "trace_distance_initial": 0.07451590895652771,
+      "trace_distance_final": 0.014900077134370804,
+      "preserve_index": 0.19995833564700247,
+      "F_recover": 0.20697936415672302,
+      "n_interventions": 1
+    },
+    {
+      "model": "OAT",
+      "controller": "static",
+      "batch": 0,
+      "endpoint_fidelity": 0.12328580021858215,
+      "trace_distance_initial": 0.048849549144506454,
+      "trace_distance_final": 0.006705297157168388,
+      "preserve_index": 0.1372642588203947,
+      "F_recover": 0.12328580021858215,
+      "n_interventions": 4
+    },
+    {
+      "model": "OAT",
+      "controller": "static",
+      "batch": 1,
+      "endpoint_fidelity": 0.22795800864696503,
+      "trace_distance_initial": 0.06753645837306976,
+      "trace_distance_final": 0.011579437181353569,
+      "preserve_index": 0.17145461074102497,
+      "F_recover": 0.22795800864696503,
+      "n_interventions": 4
+    },
+    {
+      "model": "OAT",
+      "controller": "static",
+      "batch": 2,
+      "endpoint_fidelity": 0.3401569426059723,
+      "trace_distance_initial": 0.07451590895652771,
+      "trace_distance_final": 0.01195693202316761,
+      "preserve_index": 0.16046146642299935,
+      "F_recover": 0.3401569426059723,
+      "n_interventions": 4
+    },
+    {
+      "model": "OAT",
+      "controller": "dd",
+      "batch": 0,
+      "endpoint_fidelity": 0.4469353258609772,
+      "trace_distance_initial": 0.048849549144506454,
+      "trace_distance_final": 0.004888412542641163,
+      "preserve_index": 0.10007078116688894,
+      "F_recover": 0.4469353258609772,
+      "n_interventions": 8
+    },
+    {
+      "model": "OAT",
+      "controller": "dd",
+      "batch": 1,
+      "endpoint_fidelity": 0.3491649031639099,
+      "trace_distance_initial": 0.06753645837306976,
+      "trace_distance_final": 0.005904057994484901,
+      "preserve_index": 0.0874203080324942,
+      "F_recover": 0.3491649031639099,
+      "n_interventions": 8
+    },
+    {
+      "model": "OAT",
+      "controller": "dd",
+      "batch": 2,
+      "endpoint_fidelity": 0.4188690185546875,
+      "trace_distance_initial": 0.07451590895652771,
+      "trace_distance_final": 0.007485526613891125,
+      "preserve_index": 0.10045541574427679,
+      "F_recover": 0.4188690185546875,
+      "n_interventions": 8
+    },
+    {
+      "model": "OAT",
+      "controller": "random_sparse",
+      "batch": 0,
+      "endpoint_fidelity": 0.02014831453561783,
+      "trace_distance_initial": 0.048849549144506454,
+      "trace_distance_final": 0.0019213325576856732,
+      "preserve_index": 0.03933163337828701,
+      "F_recover": 0.02014831453561783,
+      "n_interventions": 4
+    },
+    {
+      "model": "OAT",
+      "controller": "random_sparse",
+      "batch": 1,
+      "endpoint_fidelity": 0.5533154606819153,
+      "trace_distance_initial": 0.06753645837306976,
+      "trace_distance_final": 0.007227365858852863,
+      "preserve_index": 0.10701428580726063,
+      "F_recover": 0.5533154606819153,
+      "n_interventions": 2
+    },
+    {
+      "model": "OAT",
+      "controller": "random_sparse",
+      "batch": 2,
+      "endpoint_fidelity": 0.15822207927703857,
+      "trace_distance_initial": 0.07451590895652771,
+      "trace_distance_final": 0.0058679948560893536,
+      "preserve_index": 0.07874821549092248,
+      "F_recover": 0.15822207927703857,
+      "n_interventions": 3
+    },
+    {
+      "model": "OAT",
+      "controller": "sparse_predictive",
+      "batch": 0,
+      "endpoint_fidelity": 0.2870104908943176,
+      "trace_distance_initial": 0.048849549144506454,
+      "trace_distance_final": 0.006179864518344402,
+      "preserve_index": 0.12650811781162308,
+      "F_recover": 0.2870104908943176,
+      "n_interventions": 0
+    },
+    {
+      "model": "OAT",
+      "controller": "sparse_predictive",
+      "batch": 1,
+      "endpoint_fidelity": 0.6165932416915894,
+      "trace_distance_initial": 0.06753645837306976,
+      "trace_distance_final": 0.00393759785220027,
+      "preserve_index": 0.0583032919847643,
+      "F_recover": 0.6165932416915894,
+      "n_interventions": 0
+    },
+    {
+      "model": "OAT",
+      "controller": "sparse_predictive",
+      "batch": 2,
+      "endpoint_fidelity": 0.3213290274143219,
+      "trace_distance_initial": 0.07451590895652771,
+      "trace_distance_final": 0.003744996152818203,
+      "preserve_index": 0.05025767255892646,
+      "F_recover": 0.3213290274143219,
+      "n_interventions": 0
+    },
+    {
+      "model": "Ising",
+      "controller": "static",
+      "batch": 0,
+      "endpoint_fidelity": 0.0005141296423971653,
+      "trace_distance_initial": 0.048849549144506454,
+      "trace_distance_final": 0.004269167315214872,
+      "preserve_index": 0.08739420096792402,
+      "F_recover": 0.0005141296423971653,
+      "n_interventions": 4
+    },
+    {
+      "model": "Ising",
+      "controller": "static",
+      "batch": 1,
+      "endpoint_fidelity": 0.0005842933314852417,
+      "trace_distance_initial": 0.06753645837306976,
+      "trace_distance_final": 0.005195583216845989,
+      "preserve_index": 0.07693005144079043,
+      "F_recover": 0.0005842934479005635,
+      "n_interventions": 4
+    },
+    {
+      "model": "Ising",
+      "controller": "static",
+      "batch": 2,
+      "endpoint_fidelity": 0.0006480849115177989,
+      "trace_distance_initial": 0.07451590895652771,
+      "trace_distance_final": 0.008333000354468822,
+      "preserve_index": 0.11182847355748465,
+      "F_recover": 0.0006480849115177989,
+      "n_interventions": 4
+    },
+    {
+      "model": "Ising",
+      "controller": "dd",
+      "batch": 0,
+      "endpoint_fidelity": 0.0004949661088176072,
+      "trace_distance_initial": 0.048849549144506454,
+      "trace_distance_final": 0.004276562947779894,
+      "preserve_index": 0.08754559709530675,
+      "F_recover": 0.0004949660506099463,
+      "n_interventions": 8
+    },
+    {
+      "model": "Ising",
+      "controller": "dd",
+      "batch": 1,
+      "endpoint_fidelity": 0.0008002668037079275,
+      "trace_distance_initial": 0.06753645837306976,
+      "trace_distance_final": 0.005597440525889397,
+      "preserve_index": 0.08288027919507401,
+      "F_recover": 0.0008002666290849447,
+      "n_interventions": 8
+    },
+    {
+      "model": "Ising",
+      "controller": "dd",
+      "batch": 2,
+      "endpoint_fidelity": 0.0007184796268120408,
+      "trace_distance_initial": 0.07451590895652771,
+      "trace_distance_final": 0.004720071330666542,
+      "preserve_index": 0.06334313566995298,
+      "F_recover": 0.0007184796850197017,
+      "n_interventions": 8
+    },
+    {
+      "model": "Ising",
+      "controller": "random_sparse",
+      "batch": 0,
+      "endpoint_fidelity": 0.0005214471602812409,
+      "trace_distance_initial": 0.048849549144506454,
+      "trace_distance_final": 0.005932117812335491,
+      "preserve_index": 0.12143649053271093,
+      "F_recover": 0.00052144710207358,
+      "n_interventions": 4
+    },
+    {
+      "model": "Ising",
+      "controller": "random_sparse",
+      "batch": 1,
+      "endpoint_fidelity": 0.0009989904938265681,
+      "trace_distance_initial": 0.06753645837306976,
+      "trace_distance_final": 0.00523271644487977,
+      "preserve_index": 0.07747987636391726,
+      "F_recover": 0.00099899061024189,
+      "n_interventions": 2
+    },
+    {
+      "model": "Ising",
+      "controller": "random_sparse",
+      "batch": 2,
+      "endpoint_fidelity": 0.0007747913477942348,
+      "trace_distance_initial": 0.07451590895652771,
+      "trace_distance_final": 0.009928756393492222,
+      "preserve_index": 0.13324344468711205,
+      "F_recover": 0.0007747912313789129,
+      "n_interventions": 3
+    },
+    {
+      "model": "Ising",
+      "controller": "sparse_predictive",
+      "batch": 0,
+      "endpoint_fidelity": 0.0007762085879221559,
+      "trace_distance_initial": 0.048849549144506454,
+      "trace_distance_final": 0.010200665332376957,
+      "preserve_index": 0.2088180036624819,
+      "F_recover": 0.0007762085879221559,
+      "n_interventions": 1
+    },
+    {
+      "model": "Ising",
+      "controller": "sparse_predictive",
+      "batch": 1,
+      "endpoint_fidelity": 0.0012114433338865638,
+      "trace_distance_initial": 0.06753645837306976,
+      "trace_distance_final": 0.004764196462929249,
+      "preserve_index": 0.07054258659139927,
+      "F_recover": 0.0012114431010559201,
+      "n_interventions": 1
+    },
+    {
+      "model": "Ising",
+      "controller": "sparse_predictive",
+      "batch": 2,
+      "endpoint_fidelity": 0.0011716049630194902,
+      "trace_distance_initial": 0.07451590895652771,
+      "trace_distance_final": 0.006764032877981663,
+      "preserve_index": 0.09077300367948272,
+      "F_recover": 0.001171605195850134,
+      "n_interventions": 1
+    }
+  ],
+  "runtime_s": 400.8
+}

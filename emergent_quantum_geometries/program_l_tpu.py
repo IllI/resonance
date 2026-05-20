@@ -1033,14 +1033,13 @@ def _get_eigh(H, cache_key=None):
     if cache_key is not None and cache_key in _EIGH_CACHE:
         return _EIGH_CACHE[cache_key]
     
-    print("  [TPU] Diagonalizing Hamiltonian on TPU using JAX...")
-    import jax.numpy as jnp
-    # TPU operations are much faster natively; eigh is supported on TPU for complex64
-    evals_j, evecs_j = jnp.linalg.eigh(jnp.array(H, dtype=jnp.complex64))
-    
-    # Block and transfer back to standard numpy for CPU-optimized trajectory steps
-    evals = np.array(evals_j)
-    evecs = np.array(evecs_j)
+    print("  [CPU] Diagonalizing Hamiltonian via scipy (one-shot, then TPU handles trajectories)...")
+    import scipy.linalg
+    # scipy eigh is faster than jnp.linalg.eigh for the one-time diagonalization
+    # The TPU acceleration comes from the jax.lax.scan over trajectories
+    evals, evecs = scipy.linalg.eigh(np.array(H, dtype=np.complex64))
+    evals = evals.astype(np.float32)
+    evecs = evecs.astype(np.complex64)
     
     if cache_key is not None:
         _EIGH_CACHE[cache_key] = (evals, evecs)

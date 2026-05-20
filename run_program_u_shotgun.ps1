@@ -7,7 +7,7 @@
 #>
 
 param(
-    [string]$N           = "10",
+    [int]$N              = 10,
     [string]$Models      = "XXZ W3 OAT Ising",
     [string]$Controllers = "static dd random_sparse sparse_predictive",
     [string]$TMax        = "6.0",
@@ -59,7 +59,7 @@ function Get-QueuedResourceState {
 
 function Delete-All {
     param([array]$candidates)
-    Write-Host "`n[RITUAL] Running Bible delete ritual..."
+    Write-Host "`n[RITUAL] Running Bible delete ritual for Program U..."
     foreach ($c in $candidates) {
         gcloud compute tpus tpu-vm delete $c.NodeId --project=$Project --zone=$($c.Zone) --quiet 2>$null
         gcloud compute tpus queued-resources delete $c.QRName --project=$Project --zone=$($c.Zone) --quiet 2>$null
@@ -81,6 +81,7 @@ if ($curProject -ne $Project) {
 }
 Write-Host "[SETUP] Project: $Project"
 
+# Run clean up first to clear any stale resources from this or other zones
 Delete-All $Candidates
 
 Write-Host "[SHOTGUN] Creating queued resources in all zones..."
@@ -103,7 +104,7 @@ while (-not $Winner -and (Get-Date) -lt $Deadline) {
     Start-Sleep -Seconds 20
     foreach ($c in $Candidates) {
         $state = Get-QueuedResourceState $c.QRName $c.Zone
-        Write-Host "  $($c.Zone): $state"
+        Write-Host "  $ $($c.Zone): $state"
         if ($state -eq "ACTIVE") {
             $Winner = $c
             break
@@ -150,6 +151,7 @@ while (-not $sshReady -and (Get-Date) -lt $sshDeadline) {
         Write-Host "[ERROR] Winner became $stateNow before SSH was ready."
         Delete-All @($Winner); exit 1
     }
+    # Auto confirm SSH keys with "y"
     "y" | gcloud compute tpus tpu-vm ssh $($Winner.NodeId) `
         --project=$Project --zone=$($Winner.Zone) `
         --command="echo SSH_READY" 2>&1 | ForEach-Object { Write-Host $_ }
@@ -157,8 +159,8 @@ while (-not $sshReady -and (Get-Date) -lt $sshDeadline) {
     else { Start-Sleep -Seconds 10 }
 }
 if (-not $sshReady) {
-    Write-Host "[ERROR] SSH did not become ready within 5 minutes."
-    Delete-All @($Winner); exit 1
+    Write-Host "[ERROR] SSH did not become ready within 5 minutes. Keeping TPU alive."
+    exit 1
 }
 
 Write-Host "[SETUP] Installing JAX/TPU deps..."
@@ -166,24 +168,24 @@ Write-Host "[SETUP] Installing JAX/TPU deps..."
     --project=$Project --zone=$($Winner.Zone) `
     --command="mkdir -p $RemoteDir && pip install -q -U 'jax[tpu]' scipy numpy -f https://storage.googleapis.com/jax-releases/libtpu_releases.html && python3 -c 'import jax; print(jax.default_backend()); print(jax.devices())' && echo DEPS_OK"
 if ($LASTEXITCODE -ne 0) {
-    Write-Host "[ERROR] Dependency install failed."
-    Delete-All @($Winner); exit 1
+    Write-Host "[ERROR] Dependency install failed. Keeping TPU alive for inspection."
+    exit 1
 }
 
 Write-Host "[SCP] Uploading program files..."
-foreach ($file in @("program_u_tpu.py", "program_l_tpu.py", "program_s1_tpu.py")) {
+foreach ($file in @("program_u_tpu.py", "program_l_tpu.py")) {
     $localPath  = Join-Path $SrcDir $file
     $remoteDest = $Winner.NodeId + ':' + $RemoteDir + '/' + $file
     Write-Host "  $file -> $remoteDest"
     "y" | gcloud compute tpus tpu-vm scp $localPath $remoteDest --project=$Project --zone=$($Winner.Zone) 2>&1 | Out-Null
     if ($LASTEXITCODE -ne 0) {
-        Write-Host "[ERROR] SCP failed for $file"
-        Delete-All @($Winner); exit 1
+        Write-Host "[ERROR] SCP failed for $file. Keeping TPU alive for inspection."
+        exit 1
     }
 }
 Write-Host "[SCP] Upload complete."
 
-$RunCmd = "nohup python3 $RemoteDir/program_u_tpu.py" +
+$RunCmd = "OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 VECLIB_MAXIMUM_THREADS=1 NUMEXPR_NUM_THREADS=1 nohup python3 -u $RemoteDir/program_u_tpu.py" +
           " --N $N" +
           " --T-max $TMax" +
           " --n-steps $NSteps" +
@@ -228,5 +230,4 @@ New-Item -ItemType Directory -Force -Path "$SrcDir\$OutDir" | Out-Null
 "y" | gcloud compute tpus tpu-vm scp $srcLog "$SrcDir\$OutDir\$LogFile" `
     --project=$Project --zone=$($Winner.Zone) 2>$null
 
-Delete-All @($Winner)
-Write-Host "[COMPLETE] Program U shotgun done."
+Write-Host "[COMPLETE] Program U shotgun done. TPU node $($Winner.NodeId) kept alive in $($Winner.Zone)."

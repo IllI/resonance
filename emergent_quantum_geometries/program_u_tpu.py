@@ -92,24 +92,31 @@ MODEL_BUILDERS_U = {
 # ---------------------------------------------------------------------------
 
 def apply_gate_rho(rho, gate_2x2, qubit, N):
-    """Apply a 2x2 operator to the row-like index 'qubit' of a density matrix rho."""
-    # rho shape is (2,) * (2 * N)
-    axes = list(range(2 * N))
-    axes.remove(qubit)
-    axes = [qubit] + axes
-    rho_transposed = rho.transpose(axes)
-    rho_new = jnp.tensordot(gate_2x2, rho_transposed, axes=([1], [0]))
+    """
+    Apply a 2x2 operator to the row-like (left) or column-like (right) index of rho.
+    Optimized to use 4D tensor operations instead of 20D transposes to keep XLA graph tiny.
+    """
+    dim = 2 ** N
+    rho_matrix = rho.reshape(dim, dim)
     
-    # Transpose back
-    inv_axes = []
-    curr = 1
-    for i in range(2 * N):
-        if i == qubit:
-            inv_axes.append(0)
-        else:
-            inv_axes.append(curr)
-            curr += 1
-    return rho_new.transpose(inv_axes)
+    if qubit < N:
+        # Left action (row index 'qubit')
+        q = qubit
+        r_temp = rho_matrix.reshape(2**q, 2, 2**(N - q - 1), dim)
+        # Contract gate_2x2 (axis 1) with r_temp (axis 1)
+        r_new = jnp.tensordot(gate_2x2, r_temp, axes=([1], [1])) # shape: (2, 2**q, 2**(N-q-1), dim)
+        r_new = r_new.transpose(1, 0, 2, 3) # shape: (2**q, 2, 2**(N-q-1), dim)
+        rho_matrix = r_new.reshape(dim, dim)
+    else:
+        # Right action (column index 'qubit - N')
+        q = qubit - N
+        r_temp = rho_matrix.reshape(dim, 2**q, 2, 2**(N - q - 1))
+        # Contract r_temp (axis 2) with gate_2x2 (axis 1)
+        r_new = jnp.tensordot(r_temp, gate_2x2, axes=([2], [1])) # shape: (dim, 2**q, 2**(N-q-1), 2)
+        r_new = r_new.transpose(0, 1, 3, 2) # shape: (dim, 2**q, 2, 2**(N-q-1))
+        rho_matrix = r_new.reshape(dim, dim)
+        
+    return rho_matrix.reshape((2,) * (2 * N))
 
 def apply_kraus_rho(rho, K_list, qubit, N):
     """Apply a CPTP map defined by Kraus operators K_list to qubit."""
@@ -152,10 +159,26 @@ def compute_trace_distance(rho_A, rho_B, N):
 # Single Step Dynamics & Noise
 # ---------------------------------------------------------------------------
 
+# ---------------------------------------------------------------------------
+# Module-level JAX constants for gates (built once, never inside JIT)
+# ---------------------------------------------------------------------------
+# Deferred initialization: populated in run_experiment_u after JAX is confirmed
+_CLIFFORDS_J = None
+
+def _init_clifford_constants():
+    """Build the Clifford gate JAX array once at experiment start."""
+    global _CLIFFORDS_J
+    if _CLIFFORDS_J is None:
+        cliffords_np = [np.eye(2, dtype=np.complex64)] + \
+                       [np.array(g, dtype=np.complex64) for g in CLIFFORDS[1:]]
+        _CLIFFORDS_J = jnp.array(cliffords_np)
+
+
 def run_step_rho(rho, evals, evecs, N, dt, p1, p2, p_cross, gate_info):
     """
     Evolve rho by dt under H, apply T1 & T2 noise, and spectator crosstalk.
     gate_info is (ci, site) indicating which gate is applied.
+    cliffords_j must be a pre-built JAX array (module-level _CLIFFORDS_J).
     """
     dim = 2 ** N
     # 1. Coherent Evolution: e^{-i H dt} rho e^{i H dt}
@@ -175,21 +198,28 @@ def run_step_rho(rho, evals, evecs, N, dt, p1, p2, p_cross, gate_info):
         rho = apply_kraus_rho(rho, K_t2, q, N)
 
     # 3. Apply Controller / DD Gate
+    # Use the prebuilt module-level JAX array — never rebuild inside JIT
     ci, site = gate_info
-    cliffords_np = [np.eye(2, dtype=np.complex64)] + \
-                   [np.array(g, dtype=np.complex64) for g in CLIFFORDS[1:]]
-    cliffords_j = jnp.array(cliffords_np)
+    cliffords_j = _CLIFFORDS_J
+
+    def apply_control_site_0(r):
+        r = apply_gate_rho(r, cliffords_j[ci], 0, N)
+        r = apply_gate_rho(r, cliffords_j[ci].conj(), 0 + N, N)
+        K_cross = get_dephasing_kraus(p_cross)
+        r = apply_kraus_rho(r, K_cross, 1, N)
+        return r
+
+    def apply_control_site_1(r):
+        r = apply_gate_rho(r, cliffords_j[ci], 1, N)
+        r = apply_gate_rho(r, cliffords_j[ci].conj(), 1 + N, N)
+        K_cross = get_dephasing_kraus(p_cross)
+        r = apply_kraus_rho(r, K_cross, 0, N)
+        if N > 2:
+            r = apply_kraus_rho(r, K_cross, 2, N)
+        return r
 
     def apply_control(r):
-        r = apply_gate_rho(r, cliffords_j[ci], site, N)
-        r = apply_gate_rho(r, cliffords_j[ci].conj(), site + N, N)
-        # Apply Spectator Crosstalk to neighbors
-        K_cross = get_dephasing_kraus(p_cross)
-        if site > 0:
-            r = apply_kraus_rho(r, K_cross, site - 1, N)
-        if site < N - 1:
-            r = apply_kraus_rho(r, K_cross, site + 1, N)
-        return r
+        return jax.lax.cond(site == 0, apply_control_site_0, apply_control_site_1, r)
 
     rho = jax.lax.cond(ci > 0, apply_control, lambda r: r, rho)
     return rho
@@ -197,48 +227,58 @@ def run_step_rho(rho, evals, evecs, N, dt, p1, p2, p_cross, gate_info):
 # ---------------------------------------------------------------------------
 # Local Expectation Values (Causal Observers with Readout Noise)
 # ---------------------------------------------------------------------------
+# Module-level JAX observables — populated once in run_experiment_u
+_OBS_OPS_J = None  # list of 4 JAX arrays: [X0, Z0, X1, Z1]
+
+def _init_obs_constants(N):
+    """Build X and Z observable matrices for Alice's qubits as JAX arrays."""
+    global _OBS_OPS_J
+    _sx = np.array([[0, 1], [1, 0]], dtype=np.complex64)
+    _sz = np.array([[1, 0], [0, -1]], dtype=np.complex64)
+    ops = []
+    for q in [0, 1]:
+        ops.append(jnp.array(kron_site(_sx, q, N), dtype=jnp.complex64))
+        ops.append(jnp.array(kron_site(_sz, q, N), dtype=jnp.complex64))
+    _OBS_OPS_J = ops
+
 
 def get_causal_observables(rho, N, readout_error=0.02):
     """
     Compute local X and Z expectations for Alice's qubits (0 and 1).
     Applies hardware assignment readout error.
+    Observable matrices are precomputed JAX constants (no NumPy kron inside JIT).
     """
     dim = 2 ** N
     rho_flat = rho.reshape(dim, dim)
-    
-    _sx = np.array([[0, 1], [1, 0]], dtype=np.complex64)
-    _sz = np.array([[1, 0], [0, -1]], dtype=np.complex64)
-    
-    obs = []
-    # Row and Column matrices for projection trace
-    for q in [0, 1]:
-        X_op = kron_site(_sx, q, N)
-        Z_op = kron_site(_sz, q, N)
-        
-        val_x = jnp.real(jnp.trace(X_op @ rho_flat))
-        val_z = jnp.real(jnp.trace(Z_op @ rho_flat))
-        
-        # Apply assignment readout error: val -> val * (1 - 2*epsilon)
-        obs.append(val_x * (1.0 - 2.0 * readout_error))
-        obs.append(val_z * (1.0 - 2.0 * readout_error))
-        
-    return jnp.array(obs)
+    scale = 1.0 - 2.0 * readout_error
+    # _OBS_OPS_J = [X0, Z0, X1, Z1] — all pre-built JAX arrays
+    ops = _OBS_OPS_J
+    obs = jnp.stack([
+        jnp.real(jnp.trace(ops[0] @ rho_flat)) * scale,
+        jnp.real(jnp.trace(ops[1] @ rho_flat)) * scale,
+        jnp.real(jnp.trace(ops[2] @ rho_flat)) * scale,
+        jnp.real(jnp.trace(ops[3] @ rho_flat)) * scale,
+    ])
+    return obs
 
 # ---------------------------------------------------------------------------
 # Controllers
 # ---------------------------------------------------------------------------
 
 def ctrl_static_u(step, **_):
-    if step == 0: return (1, 0)
-    if step % 8 == 0: return (3, 0)
-    return (0, 0)
+    is_step_0 = (step == 0)
+    is_step_8 = (step % 8 == 0)
+    ci = jnp.where(is_step_0, 1, jnp.where(is_step_8, 3, 0))
+    return (ci, 0)
 
 def ctrl_dd_u(step, **_):
-    seq = [1, 1, 2, 2] # X, X, Y, Y
-    if step % 4 == 0: return (seq[(step // 4) % 4], 0)
-    return (0, 0)
+    seq = jnp.array([1, 1, 2, 2]) # X, X, Y, Y
+    is_dd_step = (step % 4 == 0)
+    idx = (step // 4) % 4
+    ci = jnp.where(is_dd_step, seq[idx], 0)
+    return (ci, 0)
 
-def ctrl_random_sparse_u(step, rng_key, **_):
+def ctrl_random_sparse_u(step, rng_key=None, **_):
     # Generates a random decision with ~15% gate fire probability
     key1, key2, key3 = jax.random.split(rng_key, 3)
     fire = jax.random.uniform(key1) < 0.15
@@ -246,7 +286,7 @@ def ctrl_random_sparse_u(step, rng_key, **_):
     site = jax.random.randint(key3, (), 0, 2) # Alice's sites (0 or 1)
     return jax.lax.cond(fire, lambda: (ci, site), lambda: (0, 0))
 
-def ctrl_sparse_predictive_u(step, obs_hist, cooldown, tau, **_):
+def ctrl_sparse_predictive_u(step, obs_hist=None, cooldown=None, tau=None, **_):
     """
     Predictive Sparse controller using local Alice-region X/Z expectations.
     """
@@ -263,9 +303,11 @@ def ctrl_sparse_predictive_u(step, obs_hist, cooldown, tau, **_):
 # ---------------------------------------------------------------------------
 
 def run_trajectory_u(rho0, evals, evecs, N, dt, n_steps, p1, p2, p_cross,
-                     ctrl_name, tau, rng_key):
+                     ctrl_fn, tau, rng_key):
     """
     Runs dynamic CPTP density matrix evolution.
+    ctrl_fn must be a resolved Python callable (not a string) so that JAX
+    only traces one branch during JIT compilation.
     """
     dim = 2 ** N
     initial_obs = get_causal_observables(rho0, N)
@@ -281,17 +323,9 @@ def run_trajectory_u(rho0, evals, evecs, N, dt, n_steps, p1, p2, p_cross,
         # Split JAX key for stochastic controller choices
         key_next, key_ctrl = jax.random.split(key)
         
-        # 1. Controller Decisions
-        if ctrl_name == "static":
-            ci, site = ctrl_static_u(step_idx)
-        elif ctrl_name == "dd":
-            ci, site = ctrl_dd_u(step_idx)
-        elif ctrl_name == "random_sparse":
-            ci, site = ctrl_random_sparse_u(step_idx, key_ctrl)
-        elif ctrl_name == "sparse_predictive":
-            ci, site = ctrl_sparse_predictive_u(step_idx, obs_hist, cooldown, tau)
-        else:
-            ci, site = 0, 0
+        # 1. Controller Decision: resolved outside JIT, so only ONE branch is traced
+        ci, site = ctrl_fn(step_idx, rng_key=key_ctrl, obs_hist=obs_hist,
+                           cooldown=cooldown, tau=tau)
             
         gate_info = (ci, site)
         
@@ -345,12 +379,25 @@ def run_experiment_u(args):
     summary = {}
     all_records = []
 
-    # Compile the trajectory loop for swift deployment
-    if HAS_JAX:
-        run_trajectory_jit = jax.jit(run_trajectory_u, static_argnums=(4, 9))
-    else:
+    # Map controller names to callables — resolved BEFORE JIT so only one branch
+    # is ever traced per compilation, keeping XLA graph small and fast.
+    CTRL_MAP = {
+        "static":           ctrl_static_u,
+        "dd":               ctrl_dd_u,
+        "random_sparse":    ctrl_random_sparse_u,
+        "sparse_predictive": ctrl_sparse_predictive_u,
+    }
+
+    if not HAS_JAX:
         print("[ERROR] JAX is required to execute density matrix sweeps in Program U.")
         sys.exit(1)
+
+    # Pre-build all JAX constants (Clifford gates, observable operators)
+    # so they are never reconstructed inside the JIT-compiled scan loop.
+    print("[INIT] Building JAX gate/observable constants on TPU...")
+    _init_clifford_constants()
+    _init_obs_constants(args.N)
+    print("[INIT] Constants ready.")
 
     for model_name in args.models:
         print(f"\n== Model: {model_name} ==")
@@ -361,6 +408,9 @@ def run_experiment_u(args):
         evecs = jnp.array(evecs_np, dtype=jnp.complex64)
 
         for ctrl_name in args.controllers:
+            ctrl_fn = CTRL_MAP.get(ctrl_name, lambda step, **kw: (0, 0))
+            # JIT-compile once per controller (ctrl_fn is a static callable)
+            run_traj_ctrl = jax.jit(run_trajectory_u, static_argnums=(3, 5, 9))
             ctrl_records = []
             
             for b in range(args.B):
@@ -389,17 +439,17 @@ def run_experiment_u(args):
                 rho_B0 = jnp.array(make_rho(psi_B_1q))
                 
                 # Evolve Trajectory A
-                rho_Af, n_gates = run_trajectory_jit(
+                rho_Af, n_gates = run_traj_ctrl(
                     rho_A0, evals, evecs, args.N, jnp.float32(dt), args.n_steps,
                     jnp.float32(p1), jnp.float32(p2), jnp.float32(p_cross),
-                    ctrl_name, jnp.float32(args.tau_thresh), b_key
+                    ctrl_fn, jnp.float32(args.tau_thresh), b_key
                 )
                 
                 # Evolve Trajectory B
-                rho_Bf, _ = run_trajectory_jit(
+                rho_Bf, _ = run_traj_ctrl(
                     rho_B0, evals, evecs, args.N, jnp.float32(dt), args.n_steps,
                     jnp.float32(p1), jnp.float32(p2), jnp.float32(p_cross),
-                    ctrl_name, jnp.float32(args.tau_thresh), b_key
+                    ctrl_fn, jnp.float32(args.tau_thresh), b_key
                 )
                 
                 # --- Metrics Computations ---

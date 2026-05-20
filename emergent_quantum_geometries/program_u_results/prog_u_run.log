@@ -1,0 +1,38 @@
+======================================================================
+Program U -- Hardware-Realistic Sparse Predictive Recovery
+======================================================================
+Backend: tpu  Devices: ['TPU_0(process=0,(0,0,0,0))', 'TPU_1(process=0,(1,0,0,0))', 'TPU_2(process=0,(0,1,0,0))', 'TPU_3(process=0,(1,1,0,0))', 'TPU_4(process=0,(0,2,0,0))', 'TPU_5(process=0,(1,2,0,0))', 'TPU_6(process=0,(0,3,0,0))', 'TPU_7(process=0,(1,3,0,0))']
+N=10  T_max=6.0  n_steps=30  B=3
+Physical Noise Parameters: T1=15.0 (p1=0.0132), T2=10.0 (p2=0.0198), Crosstalk=0.04
+[INIT] Building JAX gate/observable constants on TPU...
+[INIT] Constants ready.
+
+== Model: XXZ ==
+  [CPU] Diagonalizing Hamiltonian via scipy (one-shot, then TPU handles trajectories)...
+    [static              ] Average: Fid=0.1782  PresIndex=0.2762  F_rec=0.1782  Gates=4.0
+    [dd                  ] Average: Fid=0.0853  PresIndex=0.2799  F_rec=0.0853  Gates=8.0
+    [random_sparse       ] Average: Fid=0.1923  PresIndex=0.1734  F_rec=0.1923  Gates=3.0
+    [sparse_predictive   ] Average: Fid=0.2625  PresIndex=0.1226  F_rec=0.2625  Gates=2.7
+
+== Model: W3 ==
+  [CPU] Diagonalizing Hamiltonian via scipy (one-shot, then TPU handles trajectories)...
+    [static              ] Average: Fid=0.1973  PresIndex=0.2283  F_rec=0.1973  Gates=4.0
+    [dd                  ] Average: Fid=0.1423  PresIndex=0.2879  F_rec=0.1423  Gates=8.0
+    [random_sparse       ] Average: Fid=0.2265  PresIndex=0.0987  F_rec=0.2265  Gates=3.0
+    [sparse_predictive   ] Average: Fid=0.2879  PresIndex=0.1418  F_rec=0.2879  Gates=0.7
+
+== Model: OAT ==
+  [CPU] Diagonalizing Hamiltonian via scipy (one-shot, then TPU handles trajectories)...
+    [static              ] Average: Fid=0.2305  PresIndex=0.1564  F_rec=0.2305  Gates=4.0
+    [dd                  ] Average: Fid=0.4050  PresIndex=0.0960  F_rec=0.4050  Gates=8.0
+    [random_sparse       ] Average: Fid=0.2439  PresIndex=0.0750  F_rec=0.2439  Gates=3.0
+    [sparse_predictive   ] Average: Fid=0.4083  PresIndex=0.0784  F_rec=0.4083  Gates=0.0
+
+== Model: Ising ==
+  [CPU] Diagonalizing Hamiltonian via scipy (one-shot, then TPU handles trajectories)...
+    [static              ] Average: Fid=0.0006  PresIndex=0.0921  F_rec=0.0006  Gates=4.0
+    [dd                  ] Average: Fid=0.0007  PresIndex=0.0779  F_rec=0.0007  Gates=8.0
+    [random_sparse       ] Average: Fid=0.0008  PresIndex=0.1107  F_rec=0.0008  Gates=3.0
+    [sparse_predictive   ] Average: Fid=0.0011  PresIndex=0.1234  F_rec=0.0011  Gates=1.0
+
+Saved -> /home/cityz/program_u/program_u_results/program_u_N10_results.json (400.8s)
