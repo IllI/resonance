@@ -981,13 +981,70 @@ def apply_noise_psi(psi, N, params, dt, rng):
     return psi_r.reshape(-1)
 
 
+def apply_noise_psi(psi, N, params, dt, rng):
+    """Quantum-trajectory (stochastic jump) noise.
+    Equivalent to Lindblad in expectation; O(N * 2^N) per step.
+    """
+    g1 = params.get("T1_rate", 0.0) * dt
+    g2 = params.get("T2_rate", 0.0) * dt
+    psi_r = psi.reshape([2] * N).copy()
+
+    for site in range(N):
+        # T1 amplitude damping: jump |1>→|0> with prob ≈ g1
+        if g1 > 0:
+            p = min(g1, 1.0)
+            idx1 = [slice(None)] * N; idx1[site] = 1
+            idx0 = [slice(None)] * N; idx0[site] = 0
+            if rng.random() < p:
+                psi_r[tuple(idx0)] = psi_r[tuple(idx1)]
+                psi_r[tuple(idx1)] = 0.0
+                n = np.linalg.norm(psi_r)
+                if n > 1e-12: psi_r /= n
+            else:
+                psi_r[tuple(idx1)] *= np.sqrt(max(1 - p, 0))
+                n = np.linalg.norm(psi_r)
+                if n > 1e-12: psi_r /= n
+
+        # T2 dephasing: Z jump with prob ≈ g2/2
+        if g2 > 0:
+            p = min(g2 / 2, 0.5)
+            if rng.random() < p:
+                idx1 = [slice(None)] * N; idx1[site] = 1
+                psi_r[tuple(idx1)] *= -1.0   # Z|1> = -|1>
+
+    # Coherent drift: exp(-i*angle*Z) on site 0
+    drift_amp  = params.get("drift_amp",  0.0)
+    drift_freq = params.get("drift_freq", 0.1)
+    t_cur      = params.get("_t_cur",     0.0)
+    if drift_amp > 0:
+        angle = drift_amp * np.sin(drift_freq * t_cur) * dt
+        idx0 = [slice(None)] * N; idx0[0] = 0
+        idx1 = [slice(None)] * N; idx1[0] = 1
+        psi_r[tuple(idx0)] *= np.exp(-1j * angle)
+        psi_r[tuple(idx1)] *= np.exp( 1j * angle)
+
+    return psi_r.reshape(-1)
+
+
 # ── eigh-based U cache (exact, no expm) ───────────────────────────────────────
 _EIGH_CACHE: dict = {}   # model_key -> (evals, evecs)
 
-def _get_eigh(H, model_key):
-    if model_key not in _EIGH_CACHE:
-        _EIGH_CACHE[model_key] = np.linalg.eigh(H)
-    return _EIGH_CACHE[model_key]
+def _get_eigh(H, cache_key=None):
+    if cache_key is not None and cache_key in _EIGH_CACHE:
+        return _EIGH_CACHE[cache_key]
+    
+    print("  [TPU] Diagonalizing Hamiltonian on TPU using JAX...")
+    import jax.numpy as jnp
+    # TPU operations are much faster natively; eigh is supported on TPU for complex64
+    evals_j, evecs_j = jnp.linalg.eigh(jnp.array(H, dtype=jnp.complex64))
+    
+    # Block and transfer back to standard numpy for CPU-optimized trajectory steps
+    evals = np.array(evals_j)
+    evecs = np.array(evecs_j)
+    
+    if cache_key is not None:
+        _EIGH_CACHE[cache_key] = (evals, evecs)
+    return evals, evecs
 
 def apply_U_psi(psi, evals, evecs, dt):
     """Exact unitary evolution via eigh: O(2^N * 2^N) but no expm."""

@@ -74,10 +74,10 @@ function Get-QRState([string]$Name, [string]$Zone) {
 }
 
 function Delete-All([array]$cands) {
-    Write-Host "[RITUAL] Running Bible delete ritual..."
+    Write-Host "[RITUAL] Running Bible delete ritual (asynchronous)..."
     foreach ($c in $cands) {
-        gcloud compute tpus tpu-vm delete $c.NodeId --project=$Project --zone=$($c.Zone) --quiet 2>$null
-        gcloud compute tpus queued-resources delete $c.QRName --project=$Project --zone=$($c.Zone) --quiet 2>$null
+        gcloud compute tpus tpu-vm delete $c.NodeId --project=$Project --zone=$($c.Zone) --quiet --async 2>$null
+        gcloud compute tpus queued-resources delete $c.QRName --project=$Project --zone=$($c.Zone) --quiet --async 2>$null
     }
     Start-Sleep -Seconds 10
     Write-Host "[RITUAL] Verifying all resources deleted..."
@@ -167,6 +167,30 @@ if ($Script -eq "program_o_tpu.py") {
               " --models $Models --out-dir $RemoteDir/$OutDir" +
               " --backend jax --require-tpu --controllers $Controllers" +
               $chirpFlag + " $ExtraArgs > $RemoteDir/$LogFile 2>&1 &"
+} elseif ($Script -eq "program_p2_tpu.py") {
+    $RunCmd = "nohup python3 -u $RemoteDir/program_p2_tpu.py" +
+              " --N $N --T-max $TMax --n-steps $NSteps --B $B --seed $Seed" +
+              " --models $Models --out-dir $RemoteDir/$OutDir" +
+              " --controllers $Controllers" +
+              " $ExtraArgs > $RemoteDir/$LogFile 2>&1 &"
+} elseif ($Script -eq "program_q_tpu.py") {
+    $RunCmd = "nohup python3 -u $RemoteDir/program_q_tpu.py" +
+              " --N $N --T-max $TMax --n-steps $NSteps --B $B --seed $Seed" +
+              " --models $Models --out-dir $RemoteDir/$OutDir" +
+              " --controllers $Controllers" +
+              " $ExtraArgs > $RemoteDir/$LogFile 2>&1 &"
+} elseif ($Script -eq "program_r_tpu.py") {
+    $RunCmd = "nohup python3 -u $RemoteDir/program_r_tpu.py" +
+              " --N $N --T-max $TMax --n-steps $NSteps --B $B --seed $Seed" +
+              " --models $Models --out-dir $RemoteDir/$OutDir" +
+              " --controllers $Controllers" +
+              " $ExtraArgs > $RemoteDir/$LogFile 2>&1 &"
+} elseif ($Script -eq "program_s1_tpu.py") {
+    $RunCmd = "nohup python3 -u $RemoteDir/program_s1_tpu.py" +
+              " --N $N --T-max $TMax --n-steps $NSteps --B $B --seed $Seed" +
+              " --models $Models --out-dir $RemoteDir/$OutDir" +
+              " --controllers $Controllers" +
+              " $ExtraArgs > $RemoteDir/$LogFile 2>&1 &"
 } else {
     $RunCmd = "nohup python3 -u $RemoteDir/program_l_tpu.py" +
               " --N $N --T-max $TMax --n-steps $NSteps --B $B --seed $Seed" +
@@ -299,10 +323,11 @@ while (-not $Succeeded) {
 
 # ── 5. Download results ───────────────────────────────────────────────────────
 $scriptBase  = [System.IO.Path]::GetFileNameWithoutExtension($Script)
-$remoteResult = $Winner.NodeId + ':' + $RemoteDir + '/' + $OutDir + "/${scriptBase}_N${N}_results.json"
+$resultBase = if ($Script -eq "program_p2_tpu.py") { "program_p2" } elseif ($Script -eq "program_q_tpu.py") { "program_q" } elseif ($Script -eq "program_r_tpu.py") { "program_r" } elseif ($Script -eq "program_s1_tpu.py") { "program_s1" } elseif ($Script -eq "program_p_tpu.py") { "program_p" } else { $scriptBase }
+$remoteResult = $Winner.NodeId + ':' + $RemoteDir + '/' + $OutDir + "/${resultBase}_N${N}_results.json"
 $remoteLog    = $Winner.NodeId + ':' + $RemoteDir + '/' + $LogFile
 New-Item -ItemType Directory -Force -Path "$SrcDir\$OutDir" | Out-Null
-gcloud compute tpus tpu-vm scp $remoteResult "$SrcDir\$OutDir\${scriptBase}_N${N}_results.json" --project=$Project --zone=$($Winner.Zone)
+gcloud compute tpus tpu-vm scp $remoteResult "$SrcDir\$OutDir\${resultBase}_N${N}_results.json" --project=$Project --zone=$($Winner.Zone)
 gcloud compute tpus tpu-vm scp $remoteLog    "$SrcDir\$OutDir\$LogFile"                          --project=$Project --zone=$($Winner.Zone) 2>$null
 
 # ── 6. Analyze locally ────────────────────────────────────────────────────────

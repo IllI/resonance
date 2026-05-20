@@ -20,8 +20,19 @@ from program_l_tpu import (
 )
 from program_s1_tpu import (
     _apply_U_psi_jax, _apply_site_gate_jax,
-    _apply_site_gate_static_site, _apply_noise_jax, _get_coherence,
+    _apply_noise_jax, _get_coherence,
 )
+
+def _apply_site_gate_static_site(psi, gate_2x2, N, site_val):
+    dim = 2 ** N
+    stride = 2 ** (N - 1 - site_val)
+    psi = psi.reshape(-1, 2 * stride)
+    lo = psi[:, :stride]
+    hi = psi[:, stride:]
+    lo_new = gate_2x2[0, 0] * lo + gate_2x2[0, 1] * hi
+    hi_new = gate_2x2[1, 0] * lo + gate_2x2[1, 1] * hi
+    psi = np.concatenate([lo_new, hi_new], axis=1)
+    return psi.reshape(dim)
 
 import jax
 import jax.numpy as jnp
@@ -36,7 +47,9 @@ def build_grid_hamiltonian(Lx, Ly, J_mean=1.0, J_std=0.0,
     N = Lx * Ly
     dim = 2 ** N
     rng = np.random.default_rng(seed)
-    H = np.zeros((dim, dim), dtype=np.complex64)
+    
+    import jax.numpy as jnp
+    H_j = jnp.zeros((dim, dim), dtype=jnp.complex64)
 
     def site(x, y): return y * Lx + x
 
@@ -57,17 +70,28 @@ def build_grid_hamiltonian(Lx, Ly, J_mean=1.0, J_std=0.0,
         else:
             J = float(rng.normal(J_mean, J_std)) if J_std > 0 else J_mean
         J = max(0.1, J)
-        XX = kron_site(_sx, i, N) @ kron_site(_sx, j, N)
-        YY = kron_site(_sy, i, N) @ kron_site(_sy, j, N)
-        ZZ = kron_site(_sz, i, N) @ kron_site(_sz, j, N)
-        H += J * (XX + YY + ZZ)
+        
+        Xi = jnp.array(kron_site(_sx, i, N))
+        Xj = jnp.array(kron_site(_sx, j, N))
+        XX = Xi @ Xj
+        
+        Yi = jnp.array(kron_site(_sy, i, N))
+        Yj = jnp.array(kron_site(_sy, j, N))
+        YY = Yi @ Yj
+        
+        Zi = jnp.array(kron_site(_sz, i, N))
+        Zj = jnp.array(kron_site(_sz, j, N))
+        ZZ = Zi @ Zj
+        
+        H_j += J * (XX + YY + ZZ)
 
     d_sites = disorder_sites if disorder_sites else []
     for s in d_sites:
         h = float(rng.uniform(-W_disorder, W_disorder))
-        H += h * kron_site(_sz, s, N)
+        Zs = jnp.array(kron_site(_sz, s, N))
+        H_j += h * Zs
 
-    return H.astype(np.complex64)
+    return np.array(H_j).astype(np.complex64)
 
 
 GRID_MODELS = {

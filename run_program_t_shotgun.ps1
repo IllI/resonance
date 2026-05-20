@@ -186,7 +186,7 @@ foreach ($file in @("program_t_tpu.py", "program_l_tpu.py", "program_s1_tpu.py")
 Write-Host "[SCP] Upload complete."
 
 $N = $Lx * $Ly
-$RunCmd = "nohup python3 $RemoteDir/program_t_tpu.py" +
+$RunCmd = "OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 VECLIB_MAXIMUM_THREADS=1 NUMEXPR_NUM_THREADS=1 nohup python3 -u $RemoteDir/program_t_tpu.py" +
           " --Lx $Lx" +
           " --Ly $Ly" +
           " --T-max $TMax" +
