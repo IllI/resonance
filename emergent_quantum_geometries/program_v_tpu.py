@@ -43,21 +43,19 @@ from program_t_tpu import (
 # ---------------------------------------------------------------------------
 
 def apply_gate_psi(psi, gate_2x2, qubit, N):
-    axes = list(range(N))
-    axes.remove(qubit)
-    axes = [qubit] + axes
-    psi_transposed = psi.reshape((2,) * N).transpose(axes)
-    psi_new = jnp.tensordot(gate_2x2, psi_transposed, axes=([1], [0]))
-    
-    inv_axes = []
-    curr = 1
-    for i in range(N):
-        if i == qubit:
-            inv_axes.append(0)
-        else:
-            inv_axes.append(curr)
-            curr += 1
-    return psi_new.transpose(inv_axes).reshape(-1)
+    def apply_static(q, p):
+        r_temp = p.reshape(2**q, 2, 2**(N - q - 1))
+        r_new = jnp.tensordot(gate_2x2, r_temp, axes=([1], [1])) # shape: (2, 2**q, 2**(N-q-1))
+        r_new = r_new.transpose(1, 0, 2) # shape: (2**q, 2, 2**(N-q-1))
+        return r_new.reshape(-1)
+
+    if isinstance(qubit, (int, np.integer)):
+        return apply_static(qubit, psi)
+    else:
+        for q in range(N):
+            psi_q = apply_static(q, psi)
+            psi = jax.lax.cond(q == qubit, lambda _: psi_q, lambda _: psi, None)
+        return psi
 
 def apply_stochastic_dephasing(psi, qubit, N, p2, key):
     r = jax.random.uniform(key)
@@ -179,10 +177,17 @@ def run_step_psi(psi, evals, evecs, N, dt, p1, p2, p_cross, gate_info, key):
     def apply_control(p):
         p = apply_gate_psi(p, cliffords_j[ci], site, N)
         # Spectator Crosstalk
-        for neighbor in [site - 1, site + 1]:
-            if 0 <= neighbor < N:
-                key_cross = jax.random.fold_in(key_b, neighbor)
-                p = apply_stochastic_dephasing(p, neighbor, N, p_cross, key_cross)
+        # Left neighbor: site - 1
+        left_neighbor = site - 1
+        key_left = jax.random.fold_in(key_b, left_neighbor)
+        p_left = apply_stochastic_dephasing(p, left_neighbor, N, p_cross, key_left)
+        p = jax.lax.cond(site > 0, lambda _: p_left, lambda _: p, None)
+
+        # Right neighbor: site + 1
+        right_neighbor = site + 1
+        key_right = jax.random.fold_in(key_b, right_neighbor)
+        p_right = apply_stochastic_dephasing(p, right_neighbor, N, p_cross, key_right)
+        p = jax.lax.cond(site < N - 1, lambda _: p_right, lambda _: p, None)
         return p
 
     psi = jax.lax.cond(ci > 0, apply_control, lambda p: p, psi)

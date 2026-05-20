@@ -83,43 +83,54 @@ if ($curProject -ne $Project) {
 }
 Write-Host "[SETUP] Project: $Project"
 
-Delete-All $Candidates
-
-Write-Host "[SHOTGUN] Creating queued resources in all zones..."
+$Winner = $null
 foreach ($c in $Candidates) {
-    $createArgs = @("compute", "tpus", "queued-resources", "create", $c.QRName,
-        "--node-id=$($c.NodeId)", "--project=$Project", "--zone=$($c.Zone)",
-        "--accelerator-type=$($c.Type)", "--runtime-version=$($c.Runtime)", "--quiet")
-    if ($c.Flag) { $createArgs += $c.Flag }
-    Write-Host "  Creating: $($c.QRName) in $($c.Zone)..."
-    & gcloud @createArgs 2>&1 | ForEach-Object { Write-Host "    $_" }
-    if ($LASTEXITCODE -eq 0) { Write-Host "  Queued: $($c.QRName)" }
-    else { Write-Host "  [WARN] Create failed: $($c.QRName)" }
+    $state = Get-QueuedResourceState $c.QRName $c.Zone
+    if ($state -eq "ACTIVE") {
+        Write-Host "[SETUP] Found already ACTIVE candidate: $($c.QRName) in $($c.Zone). Reusing it."
+        $Winner = $c
+        break
+    }
 }
 
-Write-Host "[POLL] Waiting for first zone to become ACTIVE (up to $QueueMaxMin min)..."
-$Winner    = $null
-$Deadline  = (Get-Date).AddMinutes($QueueMaxMin)
+if (-not $Winner) {
+    Delete-All $Candidates
 
-while (-not $Winner -and (Get-Date) -lt $Deadline) {
-    Start-Sleep -Seconds 20
+    Write-Host "[SHOTGUN] Creating queued resources in all zones..."
     foreach ($c in $Candidates) {
-        $state = Get-QueuedResourceState $c.QRName $c.Zone
-        Write-Host "  $($c.Zone): $state"
-        if ($state -eq "ACTIVE") {
-            $Winner = $c
-            break
-        }
-        if ($state -match "FAILED|SUSPENDED|MISSING") {
-            Write-Host "  [RETRY] $($c.QRName) is $state; re-queueing..."
-            gcloud compute tpus tpu-vm delete $c.NodeId --project=$Project --zone=$($c.Zone) --quiet 2>$null
-            gcloud compute tpus queued-resources delete $c.QRName --project=$Project --zone=$($c.Zone) --quiet 2>$null
-            Start-Sleep -Seconds 5
-            $createArgs = @("compute", "tpus", "queued-resources", "create", $c.QRName,
-                "--node-id=$($c.NodeId)", "--project=$Project", "--zone=$($c.Zone)",
-                "--accelerator-type=$($c.Type)", "--runtime-version=$($c.Runtime)", "--quiet")
-            if ($c.Flag) { $createArgs += $c.Flag }
-            & gcloud @createArgs 2>&1 | ForEach-Object { Write-Host "    $_" }
+        $createArgs = @("compute", "tpus", "queued-resources", "create", $c.QRName,
+            "--node-id=$($c.NodeId)", "--project=$Project", "--zone=$($c.Zone)",
+            "--accelerator-type=$($c.Type)", "--runtime-version=$($c.Runtime)", "--quiet")
+        if ($c.Flag) { $createArgs += $c.Flag }
+        Write-Host "  Creating: $($c.QRName) in $($c.Zone)..."
+        & gcloud @createArgs 2>&1 | ForEach-Object { Write-Host "    $_" }
+        if ($LASTEXITCODE -eq 0) { Write-Host "  Queued: $($c.QRName)" }
+        else { Write-Host "  [WARN] Create failed: $($c.QRName)" }
+    }
+
+    Write-Host "[POLL] Waiting for first zone to become ACTIVE (up to $QueueMaxMin min)..."
+    $Deadline  = (Get-Date).AddMinutes($QueueMaxMin)
+
+    while (-not $Winner -and (Get-Date) -lt $Deadline) {
+        Start-Sleep -Seconds 20
+        foreach ($c in $Candidates) {
+            $state = Get-QueuedResourceState $c.QRName $c.Zone
+            Write-Host "  $($c.Zone): $state"
+            if ($state -eq "ACTIVE") {
+                $Winner = $c
+                break
+            }
+            if ($state -match "FAILED|SUSPENDED|MISSING") {
+                Write-Host "  [RETRY] $($c.QRName) is $state; re-queueing..."
+                gcloud compute tpus tpu-vm delete $c.NodeId --project=$Project --zone=$($c.Zone) --quiet 2>$null
+                gcloud compute tpus queued-resources delete $c.QRName --project=$Project --zone=$($c.Zone) --quiet 2>$null
+                Start-Sleep -Seconds 5
+                $createArgs = @("compute", "tpus", "queued-resources", "create", $c.QRName,
+                    "--node-id=$($c.NodeId)", "--project=$Project", "--zone=$($c.Zone)",
+                    "--accelerator-type=$($c.Type)", "--runtime-version=$($c.Runtime)", "--quiet")
+                if ($c.Flag) { $createArgs += $c.Flag }
+                & gcloud @createArgs 2>&1 | ForEach-Object { Write-Host "    $_" }
+            }
         }
     }
 }
@@ -132,9 +143,12 @@ Write-Host "[WIN] $($Winner.Zone)  node=$($Winner.NodeId)"
 
 foreach ($c in $Candidates) {
     if ($c.QRName -ne $Winner.QRName) {
-        Write-Host "[CANCEL] Deleting loser $($c.QRName)..."
-        gcloud compute tpus tpu-vm delete $c.NodeId --project=$Project --zone=$($c.Zone) --quiet 2>$null
-        gcloud compute tpus queued-resources delete $c.QRName --project=$Project --zone=$($c.Zone) --quiet 2>$null
+        Write-Host "[CANCEL] Initiating deletion of loser $($c.QRName) asynchronously..."
+        Start-Job -ScriptBlock {
+            param($NodeId, $QRName, $Proj, $Zone)
+            gcloud compute tpus tpu-vm delete $NodeId --project=$Proj --zone=$Zone --quiet 2>$null
+            gcloud compute tpus queued-resources delete $QRName --project=$Proj --zone=$Zone --quiet 2>$null
+        } -ArgumentList $c.NodeId, $c.QRName, $Project, $($c.Zone) >$null
     }
 }
 
@@ -149,8 +163,8 @@ $sshDeadline = (Get-Date).AddMinutes(5)
 while (-not $sshReady -and (Get-Date) -lt $sshDeadline) {
     $stateNow = Get-QueuedResourceState $Winner.QRName $Winner.Zone
     if ($stateNow -ne "ACTIVE") {
-        Write-Host "[ERROR] Winner became $stateNow before SSH was ready."
-        Delete-All @($Winner); exit 1
+        Write-Host "[ERROR] Winner became $stateNow before SSH was ready. Keeping TPU alive."
+        exit 1
     }
     "y" | gcloud compute tpus tpu-vm ssh $($Winner.NodeId) `
         --project=$Project --zone=$($Winner.Zone) `
@@ -159,8 +173,8 @@ while (-not $sshReady -and (Get-Date) -lt $sshDeadline) {
     else { Start-Sleep -Seconds 10 }
 }
 if (-not $sshReady) {
-    Write-Host "[ERROR] SSH did not become ready within 5 minutes."
-    Delete-All @($Winner); exit 1
+    Write-Host "[ERROR] SSH did not become ready within 5 minutes. Keeping TPU alive."
+    exit 1
 }
 
 Write-Host "[SETUP] Installing JAX/TPU deps..."
@@ -168,8 +182,8 @@ Write-Host "[SETUP] Installing JAX/TPU deps..."
     --project=$Project --zone=$($Winner.Zone) `
     --command="mkdir -p $RemoteDir && pip install -q -U 'jax[tpu]' scipy numpy -f https://storage.googleapis.com/jax-releases/libtpu_releases.html && python3 -c 'import jax; print(jax.default_backend()); print(jax.devices())' && echo DEPS_OK"
 if ($LASTEXITCODE -ne 0) {
-    Write-Host "[ERROR] Dependency install failed."
-    Delete-All @($Winner); exit 1
+    Write-Host "[ERROR] Dependency install failed. Keeping TPU alive for inspection."
+    exit 1
 }
 
 Write-Host "[SCP] Uploading program files..."
@@ -179,14 +193,14 @@ foreach ($file in @("program_v_tpu.py", "program_t_tpu.py", "program_l_tpu.py", 
     Write-Host "  $file -> $remoteDest"
     "y" | gcloud compute tpus tpu-vm scp $localPath $remoteDest --project=$Project --zone=$($Winner.Zone) 2>&1 | Out-Null
     if ($LASTEXITCODE -ne 0) {
-        Write-Host "[ERROR] SCP failed for $file"
-        Delete-All @($Winner); exit 1
+        Write-Host "[ERROR] SCP failed for $file. Keeping TPU alive for inspection."
+        exit 1
     }
 }
 Write-Host "[SCP] Upload complete."
 
 $N = $Lx * $Ly
-$RunCmd = "nohup python3 $RemoteDir/program_v_tpu.py" +
+$RunCmd = "OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 VECLIB_MAXIMUM_THREADS=1 NUMEXPR_NUM_THREADS=1 nohup python3 -u $RemoteDir/program_v_tpu.py" +
           " --Lx $Lx" +
           " --Ly $Ly" +
           " --T-max $TMax" +
@@ -233,5 +247,5 @@ New-Item -ItemType Directory -Force -Path "$SrcDir\$OutDir" | Out-Null
 "y" | gcloud compute tpus tpu-vm scp $srcLog "$SrcDir\$OutDir\$LogFile" `
     --project=$Project --zone=$($Winner.Zone) 2>$null
 
-Delete-All @($Winner)
-Write-Host "[COMPLETE] Program V shotgun done."
+Write-Host "[COMPLETE] Program V shotgun done. TPU node $($Winner.NodeId) kept alive in $($Winner.Zone)."
+
