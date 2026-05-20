@@ -7,6 +7,8 @@ Vector-trigger predicted error vector projected onto offline susceptibility Jaco
 Phase-sensitive metrics: Entanglement Fidelity, Mutual Information, Bloch angle recovery.
 Tested exclusively on Out-Of-Distribution (OOD) random Haar states.
 CPTP noise modeled via physically rigorous quantum trajectory jumps.
+
+100% JAX-Native Implementation.
 """
 import argparse
 import json
@@ -14,6 +16,7 @@ import os
 import sys
 import time
 import numpy as np
+from functools import partial
 
 # Check for JAX
 try:
@@ -25,7 +28,6 @@ except ImportError:
     jax = None
     jnp = None
 
-# Ensure basic utilities can be loaded from parent files
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from program_l_tpu import (
     _get_eigh, CLIFFORDS, N_CLIFF,
@@ -37,11 +39,10 @@ from program_t_tpu import (
 )
 
 # ---------------------------------------------------------------------------
-# Quantum Trajectory State Vector Logic
+# Quantum Trajectory State Vector Logic (JAX Native)
 # ---------------------------------------------------------------------------
 
 def apply_gate_psi(psi, gate_2x2, qubit, N):
-    """Apply a 2x2 gate to qubit in state vector psi."""
     axes = list(range(N))
     axes.remove(qubit)
     axes = [qubit] + axes
@@ -59,13 +60,11 @@ def apply_gate_psi(psi, gate_2x2, qubit, N):
     return psi_new.transpose(inv_axes).reshape(-1)
 
 def apply_stochastic_dephasing(psi, qubit, N, p2, key):
-    """Apply pure dephasing stochastically."""
     r = jax.random.uniform(key)
     Z_gate = jnp.array([[1.0, 0.0], [0.0, -1.0]], dtype=jnp.complex64)
     return jax.lax.cond(r < p2, lambda p: apply_gate_psi(p, Z_gate, qubit, N), lambda p: p, psi)
 
 def apply_stochastic_amplitude_damping(psi, qubit, N, p1, key):
-    """Apply amplitude damping stochastically using continuous excitation-tracking jumps."""
     r = jax.random.uniform(key)
     
     K1_gate = jnp.array([[0.0, 1.0], [0.0, 0.0]], dtype=jnp.complex64)
@@ -91,17 +90,12 @@ def apply_stochastic_amplitude_damping(psi, qubit, N, p1, key):
 # ---------------------------------------------------------------------------
 
 def make_initial_state(N, bob_site, Haar_c0, Haar_c1):
-    """
-    Prepare initial state vector:
-    Bell pair between Alice 0 and Bob site, plus a random Haar state on Alice 1.
-    """
     dim = 2 ** N
     psi = jnp.zeros(dim, dtype=jnp.complex64)
     
-    # 4 components of (Haar_c0|0> + Haar_c1|1>)_1 x (|00> + |11>)_{0, bob_site}/sqrt(2)
     idx_A = 0
-    idx_B = 1 << (N - 2) # Qubit 1 is at index N-2
-    idx_C = (1 << (N - 1)) | (1 << (N - 1 - bob_site)) # Qubit 0 is N-1, bob_site is N-1-bob_site
+    idx_B = 1 << (N - 2)
+    idx_C = (1 << (N - 1)) | (1 << (N - 1 - bob_site))
     idx_D = (1 << (N - 1)) | (1 << (N - 1 - bob_site)) | (1 << (N - 2))
     
     psi = psi.at[idx_A].set(Haar_c0 / jnp.sqrt(2.0))
@@ -115,114 +109,76 @@ def make_initial_state(N, bob_site, Haar_c0, Haar_c1):
 # ---------------------------------------------------------------------------
 
 def get_causal_observables_psi(psi, N, readout_error=0.02):
-    """Measure local X and Z expectations for Alice's qubits (0 and 1) under readout noise."""
-    _sx = np.array([[0, 1], [1, 0]], dtype=np.complex64)
-    _sz = np.array([[1, 0], [0, -1]], dtype=np.complex64)
+    _sx = jnp.array([[0, 1], [1, 0]], dtype=jnp.complex64)
+    _sz = jnp.array([[1, 0], [0, -1]], dtype=jnp.complex64)
     
-    obs = []
-    for q in [0, 1]:
-        psi_x = apply_gate_psi(psi, _sx, q, N)
-        psi_z = apply_gate_psi(psi, _sz, q, N)
+    def measure_q(q):
+        val_x = jnp.real(jnp.vdot(psi, apply_gate_psi(psi, _sx, q, N)))
+        val_z = jnp.real(jnp.vdot(psi, apply_gate_psi(psi, _sz, q, N)))
+        return jnp.array([val_x, val_z]) * (1.0 - 2.0 * readout_error)
         
-        val_x = jnp.real(jnp.vdot(psi, psi_x))
-        val_z = jnp.real(jnp.vdot(psi, psi_z))
-        
-        # Apply assignment readout error
-        obs.append(val_x * (1.0 - 2.0 * readout_error))
-        obs.append(val_z * (1.0 - 2.0 * readout_error))
-        
-    return jnp.array(obs)
+    return jnp.concatenate([measure_q(0), measure_q(1)])
 
 # ---------------------------------------------------------------------------
-# Offline Phase V0 Probe Tomography (Local Susceptibility Jacobian)
+# Offline Phase V0 Probe Tomography (JIT-Compiled)
 # ---------------------------------------------------------------------------
 
-def run_probe_stage_v(evals_np, evecs_np, N, dt, bob_site):
-    """
-    Run offline characterization of the local Alice response Jacobian.
-    Returns 2x4 matrix mapping the 4 local Alice observables to Bob-site transport.
-    """
+@partial(jax.jit, static_argnums=(2, 4))
+def run_probe_stage_v(evals, evecs, N, dt, bob_site):
     dim = 2 ** N
-    eps_angles = [np.pi/8, np.pi/4, np.pi/2]
+    eps_angles = jnp.array([jnp.pi/8, jnp.pi/4, jnp.pi/2], dtype=jnp.float32)
     
     def evolve_psi(psi, t):
-        p_e = evecs_np.conj().T @ psi
-        p_e = p_e * np.exp(-1j * evals_np * t)
-        return evecs_np @ p_e
+        p_e = evecs.conj().T @ psi
+        p_e = p_e * jnp.exp(-1j * evals * t)
+        return evecs @ p_e
 
-    # Form a local reference state
-    psi_ref = np.zeros(dim, dtype=np.complex64)
-    psi_ref[0] = 1.0
+    psi_ref = jnp.zeros(dim, dtype=jnp.complex64).at[0].set(1.0)
+    O_ref = get_causal_observables_psi(evolve_psi(psi_ref, dt), N, readout_error=0.0)
     
-    # 4 local observables: X0, Z0, X1, Z1
-    def get_obs(p):
-        obs = []
-        _sx = np.array([[0,1],[1,0]], dtype=np.complex64)
-        _sz = np.array([[1,0],[0,-1]], dtype=np.complex64)
-        for q in [0, 1]:
-            # row actions equivalent
-            stride = 2 ** (N - 1 - q)
-            pr = p.reshape(-1, 2*stride)
-            lo, hi = pr[:, :stride], pr[:, stride:]
-            obs.append(float(2.0 * np.real(np.sum(lo * np.conj(hi)))))
-            idx = np.arange(dim)
-            bm = ((idx >> (N - 1 - q)) & 1).astype(float)
-            obs.append(float(np.real(np.sum(p * np.conj(p) * (1 - 2*bm)))))
-        return np.array(obs)
-
-    O_ref = get_obs(evolve_psi(psi_ref, dt))
-    
-    # Jacobian mapping local perturbations to Bob site expectation Z_bob
-    susceptibility = np.zeros((2, 4), dtype=np.float32) # maps [pert_0, pert_1] to [dX0, dZ0, dX1, dZ1]
-    
-    for ai, site in enumerate([0, 1]):
-        resp_sum = np.zeros(4)
-        for eps in eps_angles:
-            rz = np.array([[np.exp(-1j*eps/2), 0],
-                           [0, np.exp(1j*eps/2)]], dtype=np.complex64)
-            stride = 2 ** (N - 1 - site)
-            psi_p = psi_ref.reshape(-1, 2*stride).copy()
-            lo, hi = psi_p[:, :stride].copy(), psi_p[:, stride:].copy()
-            psi_p[:, :stride] = rz[0,0]*lo + rz[0,1]*hi
-            psi_p[:, stride:] = rz[1,0]*lo + rz[1,1]*hi
-            psi_p = psi_p.reshape(dim)
-            
-            O_p = get_obs(evolve_psi(psi_p, dt))
-            resp_sum += np.abs(O_p - O_ref) / (eps + 1e-9)
-        susceptibility[ai] = resp_sum / len(eps_angles)
+    def compute_ai(site):
+        def _scan_eps(carry, eps):
+            rz = jnp.array([[jnp.exp(-1j*eps/2), 0],
+                            [0, jnp.exp(1j*eps/2)]], dtype=jnp.complex64)
+            psi_p = apply_gate_psi(psi_ref, rz, site, N)
+            O_p = get_causal_observables_psi(evolve_psi(psi_p, dt), N, readout_error=0.0)
+            diff = jnp.abs(O_p - O_ref) / (eps + 1e-9)
+            return None, diff
+        _, diffs = jax.lax.scan(_scan_eps, None, eps_angles)
+        return jnp.mean(diffs, axis=0)
         
-    return susceptibility
+    return jnp.stack([compute_ai(0), compute_ai(1)], axis=0)
 
 # ---------------------------------------------------------------------------
 # Single Step Stochastic Dynamics (State Vector)
 # ---------------------------------------------------------------------------
 
 def run_step_psi(psi, evals, evecs, N, dt, p1, p2, p_cross, gate_info, key):
-    """
-    Evolve state vector psi stochastically under continuous Hamiltonian
-    and jump CPTP maps, applying crosstalk and target gate interventions.
-    """
-    # 1. Coherent Evolution
+    # Coherent Evolution
     p_e = evecs.conj().T @ psi
     p_e = p_e * jnp.exp(-1j * evals * dt)
     psi = evecs @ p_e
 
-    # 2. Stochastic Noise channels
+    # Stochastic Noise
     key_a, key_b = jax.random.split(key)
+    
+    def noisy_step(q, p_carry):
+        kq = jax.random.fold_in(key_a, q)
+        p_carry = apply_stochastic_amplitude_damping(p_carry, q, N, p1, kq)
+        p_carry = apply_stochastic_dephasing(p_carry, q, N, p2, kq)
+        return p_carry
+        
     for q in range(N):
-        key_q = jax.random.fold_in(key_a, q)
-        psi = apply_stochastic_amplitude_damping(psi, q, N, p1, key_q)
-        psi = apply_stochastic_dephasing(psi, q, N, p2, key_q)
+        psi = noisy_step(q, psi)
 
-    # 3. Apply Controller Gate
+    # Controller Gate
     ci, site = gate_info
-    cliffords_np = [np.eye(2, dtype=np.complex64)] + \
-                   [np.array(g, dtype=np.complex64) for g in CLIFFORDS[1:]]
-    cliffords_j = jnp.array(cliffords_np)
+    cliffords_j = jnp.array([np.eye(2, dtype=np.complex64)] + \
+                            [np.array(g, dtype=np.complex64) for g in CLIFFORDS[1:]])
 
     def apply_control(p):
         p = apply_gate_psi(p, cliffords_j[ci], site, N)
-        # Apply Spectator Crosstalk
+        # Spectator Crosstalk
         for neighbor in [site - 1, site + 1]:
             if 0 <= neighbor < N:
                 key_cross = jax.random.fold_in(key_b, neighbor)
@@ -237,38 +193,34 @@ def run_step_psi(psi, evals, evecs, N, dt, p1, p2, p_cross, gate_info, key):
 # ---------------------------------------------------------------------------
 
 def ctrl_static_v(step, **_):
-    if step == 0: return (1, 0)
-    if step % 8 == 0: return (3, 0)
-    return (0, 0)
+    return jax.lax.cond(jnp.logical_or(step == 0, step % 8 == 0), 
+                        lambda: jnp.where(step == 0, jnp.array((1, 0)), jnp.array((3, 0))), 
+                        lambda: jnp.array((0, 0)))
 
 def ctrl_dd_v(step, **_):
-    seq = [1, 1, 2, 2] # X, X, Y, Y
-    if step % 4 == 0: return (seq[(step // 4) % 4], 0)
-    return (0, 0)
+    seq = jnp.array([1, 1, 2, 2])
+    trigger = (step % 4 == 0)
+    ci = seq[(step // 4) % 4]
+    return jax.lax.cond(trigger, lambda: jnp.array((ci, 0)), lambda: jnp.array((0, 0)))
 
 def ctrl_random_v(step, rng_key, **_):
     key1, key2, key3 = jax.random.split(rng_key, 3)
     fire = jax.random.uniform(key1) < 0.15
     ci = jax.random.randint(key2, (), 1, N_CLIFF)
     site = jax.random.randint(key3, (), 0, 2)
-    return jax.lax.cond(fire, lambda: (ci, site), lambda: (0, 0))
+    return jax.lax.cond(fire, lambda: jnp.array((ci, site)), lambda: jnp.array((0, 0)))
 
 def ctrl_vector_adaptive_v(step, obs_hist, cooldown, tau_thresh, S_proj, **_):
-    """
-    Project prediction error vector onto susceptibility matrix S_proj
-    to get the Mode-Weighted Instability Score.
-    """
     pred = obs_hist[1] + (obs_hist[1] - obs_hist[0])
-    err_vec = obs_hist[2] - pred # length 4 vector
+    err_vec = obs_hist[2] - pred
     
-    # Project: score = || S_proj @ err_vec ||_2^2
-    proj_err = jnp.dot(S_proj, err_vec) # length 2 vector
+    proj_err = jnp.dot(S_proj, err_vec)
     instability = jnp.sum(proj_err ** 2)
     
     trigger = jnp.logical_and(instability > tau_thresh, cooldown == 0)
     trigger = jnp.logical_and(trigger, step > 2)
     
-    return jax.lax.cond(trigger, lambda: (3, 0), lambda: (0, 0))
+    return jax.lax.cond(trigger, lambda: jnp.array((3, 0)), lambda: jnp.array((0, 0)))
 
 # ---------------------------------------------------------------------------
 # Unified Trajectory Runner (JAX Scan)
@@ -276,36 +228,32 @@ def ctrl_vector_adaptive_v(step, obs_hist, cooldown, tau_thresh, S_proj, **_):
 
 def run_trajectory_v(evals, evecs, N, dt, n_steps, p1, p2, p_cross,
                      ctrl_name, tau_thresh, S_proj, bob_site, Haar_c0, Haar_c1, rng_key):
-    """Evolve a single quantum trajectory state vector."""
     psi0 = make_initial_state(N, bob_site, Haar_c0, Haar_c1)
     obs0 = get_causal_observables_psi(psi0, N)
     
     obs_hist0 = jnp.stack([obs0, obs0, obs0], axis=0)
-    carry0 = (psi0, obs_hist0, 0, 0, rng_key)
+    carry0 = (psi0, obs_hist0, jnp.int32(0), jnp.int32(0), rng_key)
 
     def scan_step(carry, step_idx):
         psi, obs_hist, cooldown, n_gates, key = carry
         key_next, key_ctrl, key_step = jax.random.split(key, 3)
         
-        # 1. Controller decisions
         if ctrl_name == "static":
-            ci, site = ctrl_static_v(step_idx)
+            gate_info = ctrl_static_v(step_idx)
         elif ctrl_name == "dd":
-            ci, site = ctrl_dd_v(step_idx)
+            gate_info = ctrl_dd_v(step_idx)
         elif ctrl_name == "random":
-            ci, site = ctrl_random_v(step_idx, key_ctrl)
+            gate_info = ctrl_random_v(step_idx, key_ctrl)
         elif ctrl_name == "vector_adaptive":
-            ci, site = ctrl_vector_adaptive_v(step_idx, obs_hist, cooldown, tau_thresh, S_proj)
+            gate_info = ctrl_vector_adaptive_v(step_idx, obs_hist, cooldown, tau_thresh, S_proj)
         else:
-            ci, site = 0, 0
+            gate_info = jnp.array((0, 0))
             
-        gate_info = (ci, site)
+        ci, site = gate_info[0], gate_info[1]
         
-        # 2. Step Dynamics
         psi_next = run_step_psi(psi, evals, evecs, N, dt, p1, p2, p_cross, gate_info, key_step)
         
-        # 3. Update carry
-        cooldown_next = jax.lax.cond(ci > 0, lambda: 4, lambda: jnp.maximum(0, cooldown - 1))
+        cooldown_next = jax.lax.cond(ci > 0, lambda: jnp.int32(4), lambda: jnp.maximum(0, cooldown - 1))
         n_gates_next = n_gates + jnp.where(ci > 0, 1, 0)
         
         obs_curr = get_causal_observables_psi(psi_next, N)
@@ -320,14 +268,11 @@ def run_trajectory_v(evals, evecs, N, dt, n_steps, p1, p2, p_cross,
     return psi_final, n_gates_total
 
 # ---------------------------------------------------------------------------
-# Phase-Sensitive Metrics Suite
+# Phase-Sensitive Metrics Suite (JIT-Compiled)
 # ---------------------------------------------------------------------------
 
+@partial(jax.jit, static_argnums=(1, 2))
 def compute_reduced_rho_AB(psi_batch, N, bob_site):
-    """
-    Efficiently trace out spectator qubits from a batch of state vectors
-    to obtain the 4x4 density matrix rho_AB for Alice 0 and Bob.
-    """
     keep = [0, bob_site]
     trace = [i for i in range(N) if i not in keep]
     axes = keep + trace
@@ -339,14 +284,11 @@ def compute_reduced_rho_AB(psi_batch, N, bob_site):
     rhos = jax.vmap(single_rho)(psi_batch)
     return jnp.mean(rhos, axis=0)
 
-def compute_phase_sensitive_metrics(rho_AB, Haar_c0, Haar_c1, N, bob_site):
-    """Evaluate Entanglement Fidelity, Mutual Information, and Bloch angle recovery."""
-    # 1. Entanglement Fidelity (F_ent relative to Phi^+)
-    # Phi^+ = (|00> + |11>)/sqrt(2)
+@jax.jit
+def compute_phase_sensitive_metrics(rho_AB, Haar_c0, Haar_c1):
     F_ent = 0.5 * (rho_AB[0,0] + rho_AB[0,3] + rho_AB[3,0] + rho_AB[3,3])
-    F_ent = float(jnp.real(F_ent))
+    F_ent = jnp.real(F_ent)
     
-    # 2. Von Neumann Mutual Information I(A:B)
     rho_A = jnp.array([[rho_AB[0,0] + rho_AB[1,1], rho_AB[0,2] + rho_AB[1,3]],
                        [rho_AB[2,0] + rho_AB[3,1], rho_AB[2,2] + rho_AB[3,3]]])
                        
@@ -361,29 +303,23 @@ def compute_phase_sensitive_metrics(rho_AB, Haar_c0, Haar_c1, N, bob_site):
     S_A = entropy(rho_A)
     S_B = entropy(rho_B)
     S_AB = entropy(rho_AB)
-    mutual_info = float(S_A + S_B - S_AB)
+    mutual_info = jnp.maximum(0.0, S_A + S_B - S_AB)
     
-    # 3. Bloch Angle Recovery of Haar state (transported on Alice 1 to Bob)
-    # Cosine similarity between final Bob Bloch vector and ideal Haar Bloch vector
-    x_ideal = float(2.0 * np.real(Haar_c0 * np.conj(Haar_c1)))
-    y_ideal = float(2.0 * np.imag(Haar_c1 * np.conj(Haar_c0)))
-    z_ideal = float(np.abs(Haar_c0)**2 - np.abs(Haar_c1)**2)
-    v_ideal = np.array([x_ideal, y_ideal, z_ideal])
+    x_ideal = 2.0 * jnp.real(Haar_c0 * jnp.conj(Haar_c1))
+    y_ideal = 2.0 * jnp.imag(Haar_c1 * jnp.conj(Haar_c0))
+    z_ideal = jnp.abs(Haar_c0)**2 - jnp.abs(Haar_c1)**2
+    v_ideal = jnp.array([x_ideal, y_ideal, z_ideal])
     
     x_act = 2.0 * jnp.real(rho_B[0,1])
     y_act = 2.0 * jnp.imag(rho_B[1,0])
     z_act = jnp.real(rho_B[0,0] - rho_B[1,1])
-    v_act = np.array([x_act, y_act, z_act])
+    v_act = jnp.array([x_act, y_act, z_act])
     
-    nrm_ideal = np.linalg.norm(v_ideal) + 1e-12
-    nrm_act = np.linalg.norm(v_act) + 1e-12
-    bloch_similarity = float(np.dot(v_ideal, v_act) / (nrm_ideal * nrm_act))
+    nrm_ideal = jnp.linalg.norm(v_ideal) + 1e-12
+    nrm_act = jnp.linalg.norm(v_act) + 1e-12
+    bloch_similarity = jnp.dot(v_ideal, v_act) / (nrm_ideal * nrm_act)
     
-    return {
-        "F_ent": max(0.0, min(1.0, F_ent)),
-        "mutual_information": max(0.0, mutual_info),
-        "bloch_similarity": max(-1.0, min(1.0, bloch_similarity))
-    }
+    return jnp.array([F_ent, mutual_info, bloch_similarity])
 
 # ---------------------------------------------------------------------------
 # Main Sweep Coordinator
@@ -394,7 +330,7 @@ def run_experiment_v(args):
     backend, backend_info = select_backend("jax", require_tpu=args.require_tpu)
     
     print("=" * 70)
-    print("Program V -- Adaptive Entanglement-Assisted State Transfer")
+    print("Program V -- Adaptive Entanglement-Assisted State Transfer (JAX)")
     print("=" * 70)
     
     Lx, Ly = args.Lx, args.Ly
@@ -404,22 +340,17 @@ def run_experiment_v(args):
     
     dt = args.T_max / args.n_steps
     
-    # Rigorous CPTP parameters from transmon relaxation times
     T1_phys = 20.0
     T2_phys = 12.0
     p1 = float(1.0 - np.exp(-dt / T1_phys))
     p2 = float(1.0 - np.exp(-dt / T2_phys))
     p_cross = 0.03
     
-    rng = np.random.default_rng(args.seed)
     bob_cands = get_bob_candidates(Lx, Ly)
-    
     summary = {}
     all_records = []
 
-    # JAX Vectorized Trajectory Loop
     if HAS_JAX:
-        # Vmap over the batch of trajectories
         run_trajectories_vmapped = jax.jit(
             jax.vmap(run_trajectory_v, in_axes=(None, None, None, None, None, None, None, None, None, None, None, None, None, None, 0)),
             static_argnums=(2, 4, 8)
@@ -441,10 +372,8 @@ def run_experiment_v(args):
             bob_site, bob_dist = bob_list[len(bob_list)//2]
             print(f"\n  -- distance={dist_class} (Bob=site {bob_site}, dist={bob_dist}) --")
             
-            # Phase V0: Probe Tomography to get susceptibility Jacobian S
             print("    [PROBE] Characterizing response Jacobian...")
-            S = run_probe_stage_v(evals_np, evecs_np, N, dt, bob_site)
-            S_proj = jnp.array(S, dtype=jnp.float32) # size 2x4
+            S_proj = run_probe_stage_v(evals, evecs, N, jnp.float32(dt), bob_site)
 
             for ctrl_name in args.controllers:
                 ctrl_records = []
@@ -453,7 +382,7 @@ def run_experiment_v(args):
                     seed_b = args.seed + b * 1000 + hash(ctrl_name) % 5000
                     b_rng = np.random.default_rng(seed_b)
                     
-                    # 1. Strictly OOD random Haar State Generator
+                    # Strictly OOD random Haar State Generator
                     u = b_rng.uniform(0, 1)
                     v = b_rng.uniform(0, 1)
                     theta = np.arccos(2.0 * u - 1.0)
@@ -461,10 +390,8 @@ def run_experiment_v(args):
                     Haar_c0 = np.cos(theta / 2.0)
                     Haar_c1 = np.exp(1j * phi) * np.sin(theta / 2.0)
                     
-                    # Trajectory keys batch
                     traj_keys = jax.random.split(jax.random.PRNGKey(seed_b), args.n_trajectories)
                     
-                    # Run trajectories in parallel via vmap
                     psi_finals, n_gates_batch = run_trajectories_vmapped(
                         evals, evecs, N, jnp.float32(dt), args.n_steps,
                         jnp.float32(p1), jnp.float32(p2), jnp.float32(p_cross),
@@ -472,28 +399,25 @@ def run_experiment_v(args):
                         jnp.complex64(Haar_c0), jnp.complex64(Haar_c1), traj_keys
                     )
                     
-                    # Form density matrix of subsystem Alice-Bob
                     rho_AB = compute_reduced_rho_AB(psi_finals, N, bob_site)
+                    metrics_arr = compute_phase_sensitive_metrics(rho_AB, jnp.complex64(Haar_c0), jnp.complex64(Haar_c1))
                     
-                    # Compute phase sensitive metrics
-                    metrics = compute_phase_sensitive_metrics(rho_AB, Haar_c0, Haar_c1, N, bob_site)
-                    
-                    avg_gates = float(np.mean(n_gates_batch))
+                    f_ent, mi, b_sim = float(metrics_arr[0]), float(metrics_arr[1]), float(metrics_arr[2])
+                    avg_gates = float(np.mean(np.array(n_gates_batch)))
                     
                     rec = {
                         "model": model_name, "controller": ctrl_name,
                         "dist_class": dist_class, "bob_site": bob_site,
                         "bob_dist": bob_dist, "batch": b,
-                        "F_ent": metrics["F_ent"],
-                        "mutual_information": metrics["mutual_information"],
-                        "bloch_similarity": metrics["bloch_similarity"],
+                        "F_ent": f_ent,
+                        "mutual_information": mi,
+                        "bloch_similarity": b_sim,
                         "n_interventions": avg_gates,
-                        "efficiency": float(metrics["F_ent"] / (avg_gates + 1e-9))
+                        "efficiency": float(f_ent / (avg_gates + 1e-9))
                     }
                     ctrl_records.append(rec)
                     all_records.append(rec)
                     
-                # Summarize
                 avg_fent = np.mean([r["F_ent"] for r in ctrl_records])
                 avg_mi = np.mean([r["mutual_information"] for r in ctrl_records])
                 avg_bloch = np.mean([r["bloch_similarity"] for r in ctrl_records])
@@ -509,7 +433,6 @@ def run_experiment_v(args):
                 }
                 print(f"    [{ctrl_name:20s}] F_ent={avg_fent:.4f}  MutInfo={avg_mi:.4f}  BlochSim={avg_bloch:.4f}  Gates={avg_gates_all:.1f}")
 
-    # Save
     os.makedirs(args.out_dir, exist_ok=True)
     out_path = os.path.join(args.out_dir, f"program_v_N{N}_results.json")
     with open(out_path, "w") as f:
