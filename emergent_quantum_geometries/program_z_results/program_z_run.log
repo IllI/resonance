@@ -1,0 +1,235 @@
+======================================================================
+Program Z — Scale-Resolved MERA Recoverability
+======================================================================
+
+======================================================================
+MERA depth=1
+======================================================================
+  Alice gates=3  Bob gates=3  ZZ pairs=6
+
+  == J_std=0.60 ==
+  [CPU] Diagonalizing Hamiltonian via scipy (one-shot, then TPU handles trajectories)...
+    T2=8.0
+      |00>: free=0.2630 dd=0.2594 rand=0.2633 local=0.2637 ms=0.2641 ΔF_local=+0.0004 ΔF_ms=+0.0008 ILC_L0=+0.473 ILC_ZZ=+0.129
+      |01>: free=0.2434 dd=0.2456 rand=0.2444 local=0.2438 ms=0.2465 ΔF_local=-0.0006 ΔF_ms=+0.0021 ILC_L0=+0.702 ILC_ZZ=+0.204
+      |10>: free=0.2442 dd=0.2355 rand=0.2415 local=0.2408 ms=0.2390 ΔF_local=-0.0007 ΔF_ms=-0.0025 ILC_L0=+0.349 ILC_ZZ=+0.112
+      |11>: free=0.2715 dd=0.2683 rand=0.2717 local=0.2714 ms=0.2701 ΔF_local=-0.0003 ΔF_ms=-0.0016 ILC_L0=+0.590 ILC_ZZ=+0.179
+    → ΔF_local=-0.0003  ΔF_ms=-0.0003  ILC_L0=+0.529  ILC_ZZ=+0.156  local_wins=1/4  ms_wins=2/4  hier=✗
+    T2=12.0
+      |00>: free=0.2647 dd=0.2604 rand=0.2640 local=0.2646 ms=0.2644 ΔF_local=+0.0006 ΔF_ms=+0.0004 ILC_L0=+0.552 ILC_ZZ=+0.149
+      |01>: free=0.2397 dd=0.2444 rand=0.2400 local=0.2406 ms=0.2455 ΔF_local=+0.0006 ΔF_ms=+0.0055 ILC_L0=+0.673 ILC_ZZ=+0.202
+      |10>: free=0.2491 dd=0.2380 rand=0.2465 local=0.2449 ms=0.2422 ΔF_local=-0.0016 ΔF_ms=-0.0043 ILC_L0=+0.410 ILC_ZZ=+0.114
+      |11>: free=0.2727 dd=0.2685 rand=0.2726 local=0.2730 ms=0.2707 ΔF_local=+0.0004 ΔF_ms=-0.0019 ILC_L0=+0.568 ILC_ZZ=+0.182
+    → ΔF_local=-0.0000  ΔF_ms=-0.0001  ILC_L0=+0.551  ILC_ZZ=+0.162  local_wins=3/4  ms_wins=2/4  hier=✗
+
+  == J_std=0.90 ==
+  [CPU] Diagonalizing Hamiltonian via scipy (one-shot, then TPU handles trajectories)...
+    T2=8.0
+      |00>: free=0.2625 dd=0.2599 rand=0.2624 local=0.2630 ms=0.2628 ΔF_local=+0.0006 ΔF_ms=+0.0004 ILC_L0=+0.479 ILC_ZZ=+0.061
+      |01>: free=0.2432 dd=0.2458 rand=0.2438 local=0.2431 ms=0.2470 ΔF_local=-0.0007 ΔF_ms=+0.0033 ILC_L0=+0.575 ILC_ZZ=+0.102
+      |10>: free=0.2409 dd=0.2337 rand=0.2384 local=0.2381 ms=0.2358 ΔF_local=-0.0003 ΔF_ms=-0.0026 ILC_L0=+0.326 ILC_ZZ=-0.005
+      |11>: free=0.2737 dd=0.2697 rand=0.2733 local=0.2726 ms=0.2705 ΔF_local=-0.0007 ΔF_ms=-0.0029 ILC_L0=+0.391 ILC_ZZ=+0.099
+    → ΔF_local=-0.0003  ΔF_ms=-0.0004  ILC_L0=+0.443  ILC_ZZ=+0.064  local_wins=1/4  ms_wins=2/4  hier=✗
+    T2=12.0
+      |00>: free=0.2640 dd=0.2600 rand=0.2643 local=0.2645 ms=0.2635 ΔF_local=+0.0003 ΔF_ms=-0.0007 ILC_L0=+0.547 ILC_ZZ=+0.056
+      |01>: free=0.2373 dd=0.2437 rand=0.2385 local=0.2376 ms=0.2446 ΔF_local=-0.0009 ΔF_ms=+0.0060 ILC_L0=+0.613 ILC_ZZ=+0.096
+      |10>: free=0.2486 dd=0.2389 rand=0.2442 local=0.2436 ms=0.2387 ΔF_local=-0.0006 ΔF_ms=-0.0055 ILC_L0=+0.373 ILC_ZZ=-0.012
+      |11>: free=0.2748 dd=0.2693 rand=0.2749 local=0.2738 ms=0.2709 ΔF_local=-0.0010 ΔF_ms=-0.0040 ILC_L0=+0.431 ILC_ZZ=+0.083
+    → ΔF_local=-0.0006  ΔF_ms=-0.0010  ILC_L0=+0.491  ILC_ZZ=+0.056  local_wins=1/4  ms_wins=1/4  hier=✗
+
+  == J_std=1.20 ==
+  [CPU] Diagonalizing Hamiltonian via scipy (one-shot, then TPU handles trajectories)...
+    T2=8.0
+      |00>: free=0.2633 dd=0.2596 rand=0.2622 local=0.2620 ms=0.2636 ΔF_local=-0.0002 ΔF_ms=+0.0014 ILC_L0=+0.472 ILC_ZZ=+0.041
+      |01>: free=0.2426 dd=0.2456 rand=0.2445 local=0.2444 ms=0.2472 ΔF_local=-0.0001 ΔF_ms=+0.0028 ILC_L0=+0.610 ILC_ZZ=+0.015
+      |10>: free=0.2409 dd=0.2361 rand=0.2387 local=0.2356 ms=0.2349 ΔF_local=-0.0031 ΔF_ms=-0.0038 ILC_L0=+0.278 ILC_ZZ=-0.041
+      |11>: free=0.2723 dd=0.2685 rand=0.2710 local=0.2711 ms=0.2687 ΔF_local=+0.0001 ΔF_ms=-0.0022 ILC_L0=+0.405 ILC_ZZ=+0.035
+    → ΔF_local=-0.0008  ΔF_ms=-0.0005  ILC_L0=+0.441  ILC_ZZ=+0.013  local_wins=1/4  ms_wins=2/4  hier=✗
+    T2=12.0
+      |00>: free=0.2672 dd=0.2635 rand=0.2656 local=0.2661 ms=0.2658 ΔF_local=+0.0006 ΔF_ms=+0.0002 ILC_L0=+0.484 ILC_ZZ=+0.034
+      |01>: free=0.2388 dd=0.2429 rand=0.2416 local=0.2418 ms=0.2463 ΔF_local=+0.0003 ΔF_ms=+0.0047 ILC_L0=+0.625 ILC_ZZ=+0.011
+      |10>: free=0.2423 dd=0.2365 rand=0.2389 local=0.2355 ms=0.2337 ΔF_local=-0.0034 ΔF_ms=-0.0052 ILC_L0=+0.273 ILC_ZZ=-0.040
+      |11>: free=0.2750 dd=0.2698 rand=0.2738 local=0.2718 ms=0.2689 ΔF_local=-0.0020 ΔF_ms=-0.0049 ILC_L0=+0.449 ILC_ZZ=+0.031
+    → ΔF_local=-0.0011  ΔF_ms=-0.0013  ILC_L0=+0.458  ILC_ZZ=+0.009  local_wins=2/4  ms_wins=2/4  hier=✗
+
+======================================================================
+MERA depth=2
+======================================================================
+  Alice gates=5  Bob gates=5  ZZ pairs=10
+
+  == J_std=0.60 ==
+  [CPU] Diagonalizing Hamiltonian via scipy (one-shot, then TPU handles trajectories)...
+    T2=8.0
+      |00>: free=0.2948 dd=0.2761 rand=0.2929 local=0.2928 ms=0.2909 ΔF_local=-0.0001 ΔF_ms=-0.0020 ILC_L0=+0.674 ILC_ZZ=+0.346
+      |01>: free=0.2124 dd=0.2173 rand=0.2125 local=0.2124 ms=0.2129 ΔF_local=-0.0001 ΔF_ms=+0.0003 ILC_L0=+0.781 ILC_ZZ=+0.391
+      |10>: free=0.2489 dd=0.2475 rand=0.2491 local=0.2493 ms=0.2496 ΔF_local=+0.0002 ΔF_ms=+0.0005 ILC_L0=+0.213 ILC_ZZ=+0.417
+      |11>: free=0.2579 dd=0.2538 rand=0.2567 local=0.2551 ms=0.2554 ΔF_local=-0.0015 ΔF_ms=-0.0013 ILC_L0=+0.191 ILC_ZZ=+0.324
+    → ΔF_local=-0.0004  ΔF_ms=-0.0006  ILC_L0=+0.465  ILC_ZZ=+0.369  local_wins=1/4  ms_wins=2/4  hier=✗
+    T2=12.0
+      |00>: free=0.2970 dd=0.2762 rand=0.2965 local=0.2954 ms=0.2922 ΔF_local=-0.0011 ΔF_ms=-0.0042 ILC_L0=+0.715 ILC_ZZ=+0.348
+      |01>: free=0.2146 dd=0.2178 rand=0.2144 local=0.2146 ms=0.2136 ΔF_local=+0.0003 ΔF_ms=-0.0008 ILC_L0=+0.642 ILC_ZZ=+0.411
+      |10>: free=0.2479 dd=0.2476 rand=0.2479 local=0.2487 ms=0.2484 ΔF_local=+0.0008 ΔF_ms=+0.0005 ILC_L0=+0.220 ILC_ZZ=+0.421
+      |11>: free=0.2573 dd=0.2520 rand=0.2564 local=0.2527 ms=0.2541 ΔF_local=-0.0037 ΔF_ms=-0.0023 ILC_L0=+0.196 ILC_ZZ=+0.327
+    → ΔF_local=-0.0009  ΔF_ms=-0.0017  ILC_L0=+0.443  ILC_ZZ=+0.377  local_wins=2/4  ms_wins=1/4  hier=✗
+
+  == J_std=0.90 ==
+  [CPU] Diagonalizing Hamiltonian via scipy (one-shot, then TPU handles trajectories)...
+    T2=8.0
+      |00>: free=0.2945 dd=0.2813 rand=0.2934 local=0.2923 ms=0.2909 ΔF_local=-0.0010 ΔF_ms=-0.0024 ILC_L0=+0.623 ILC_ZZ=+0.150
+      |01>: free=0.2140 dd=0.2152 rand=0.2142 local=0.2139 ms=0.2110 ΔF_local=-0.0002 ΔF_ms=-0.0032 ILC_L0=+0.579 ILC_ZZ=+0.303
+      |10>: free=0.2481 dd=0.2485 rand=0.2481 local=0.2494 ms=0.2479 ΔF_local=+0.0014 ΔF_ms=-0.0002 ILC_L0=+0.117 ILC_ZZ=+0.225
+      |11>: free=0.2573 dd=0.2539 rand=0.2559 local=0.2551 ms=0.2558 ΔF_local=-0.0008 ΔF_ms=-0.0000 ILC_L0=+0.242 ILC_ZZ=+0.163
+    → ΔF_local=-0.0002  ΔF_ms=-0.0015  ILC_L0=+0.390  ILC_ZZ=+0.210  local_wins=1/4  ms_wins=0/4  hier=✗
+    T2=12.0
+      |00>: free=0.2985 dd=0.2838 rand=0.2975 local=0.2953 ms=0.2940 ΔF_local=-0.0023 ΔF_ms=-0.0035 ILC_L0=+0.604 ILC_ZZ=+0.145
+      |01>: free=0.2146 dd=0.2157 rand=0.2146 local=0.2150 ms=0.2114 ΔF_local=+0.0004 ΔF_ms=-0.0032 ILC_L0=+0.584 ILC_ZZ=+0.320
+      |10>: free=0.2472 dd=0.2465 rand=0.2483 local=0.2477 ms=0.2483 ΔF_local=-0.0006 ΔF_ms=+0.0001 ILC_L0=+0.118 ILC_ZZ=+0.225
+      |11>: free=0.2555 dd=0.2524 rand=0.2548 local=0.2536 ms=0.2541 ΔF_local=-0.0012 ΔF_ms=-0.0007 ILC_L0=+0.263 ILC_ZZ=+0.171
+    → ΔF_local=-0.0009  ΔF_ms=-0.0018  ILC_L0=+0.392  ILC_ZZ=+0.215  local_wins=1/4  ms_wins=1/4  hier=✗
+
+  == J_std=1.20 ==
+  [CPU] Diagonalizing Hamiltonian via scipy (one-shot, then TPU handles trajectories)...
+    T2=8.0
+      |00>: free=0.2947 dd=0.2839 rand=0.2936 local=0.2932 ms=0.2923 ΔF_local=-0.0004 ΔF_ms=-0.0013 ILC_L0=+0.431 ILC_ZZ=+0.069
+      |01>: free=0.2144 dd=0.2154 rand=0.2144 local=0.2150 ms=0.2110 ΔF_local=+0.0007 ΔF_ms=-0.0034 ILC_L0=+0.533 ILC_ZZ=+0.221
+      |10>: free=0.2463 dd=0.2470 rand=0.2472 local=0.2469 ms=0.2473 ΔF_local=-0.0002 ΔF_ms=+0.0001 ILC_L0=+0.112 ILC_ZZ=+0.054
+      |11>: free=0.2566 dd=0.2540 rand=0.2559 local=0.2549 ms=0.2549 ΔF_local=-0.0009 ΔF_ms=-0.0009 ILC_L0=+0.290 ILC_ZZ=+0.067
+    → ΔF_local=-0.0002  ΔF_ms=-0.0014  ILC_L0=+0.342  ILC_ZZ=+0.103  local_wins=1/4  ms_wins=1/4  hier=✗
+    T2=12.0
+      |00>: free=0.2984 dd=0.2859 rand=0.2968 local=0.2962 ms=0.2959 ΔF_local=-0.0007 ΔF_ms=-0.0010 ILC_L0=+0.409 ILC_ZZ=+0.057
+      |01>: free=0.2142 dd=0.2137 rand=0.2141 local=0.2148 ms=0.2102 ΔF_local=+0.0007 ΔF_ms=-0.0039 ILC_L0=+0.492 ILC_ZZ=+0.226
+      |10>: free=0.2458 dd=0.2471 rand=0.2471 local=0.2473 ms=0.2473 ΔF_local=+0.0003 ΔF_ms=+0.0002 ILC_L0=+0.077 ILC_ZZ=+0.040
+      |11>: free=0.2573 dd=0.2517 rand=0.2550 local=0.2533 ms=0.2536 ΔF_local=-0.0016 ΔF_ms=-0.0013 ILC_L0=+0.276 ILC_ZZ=+0.056
+    → ΔF_local=-0.0003  ΔF_ms=-0.0015  ILC_L0=+0.314  ILC_ZZ=+0.095  local_wins=2/4  ms_wins=1/4  hier=✗
+
+======================================================================
+MERA depth=3
+======================================================================
+  Alice gates=7  Bob gates=7  ZZ pairs=14
+
+  == J_std=0.60 ==
+  [CPU] Diagonalizing Hamiltonian via scipy (one-shot, then TPU handles trajectories)...
+    T2=8.0
+      |00>: free=0.2466 dd=0.2458 rand=0.2464 local=0.2463 ms=0.2472 ΔF_local=-0.0001 ΔF_ms=+0.0007 ILC_L0=+0.834 ILC_ZZ=+0.198
+      |01>: free=0.2359 dd=0.2401 rand=0.2366 local=0.2358 ms=0.2346 ΔF_local=-0.0008 ΔF_ms=-0.0020 ILC_L0=+0.778 ILC_ZZ=+0.064
+      |10>: free=0.2407 dd=0.2434 rand=0.2410 local=0.2402 ms=0.2413 ΔF_local=-0.0008 ΔF_ms=+0.0003 ILC_L0=+0.735 ILC_ZZ=+0.106
+      |11>: free=0.2763 dd=0.2713 rand=0.2759 local=0.2760 ms=0.2757 ΔF_local=+0.0001 ΔF_ms=-0.0002 ILC_L0=+0.546 ILC_ZZ=+0.078
+    → ΔF_local=-0.0004  ΔF_ms=-0.0003  ILC_L0=+0.723  ILC_ZZ=+0.112  local_wins=1/4  ms_wins=2/4  hier=✗
+    T2=12.0
+      |00>: free=0.2497 dd=0.2476 rand=0.2503 local=0.2497 ms=0.2508 ΔF_local=-0.0006 ΔF_ms=+0.0005 ILC_L0=+0.781 ILC_ZZ=+0.201
+      |01>: free=0.2384 dd=0.2423 rand=0.2382 local=0.2383 ms=0.2364 ΔF_local=+0.0001 ΔF_ms=-0.0018 ILC_L0=+0.768 ILC_ZZ=+0.053
+      |10>: free=0.2414 dd=0.2446 rand=0.2416 local=0.2414 ms=0.2419 ΔF_local=-0.0002 ΔF_ms=+0.0003 ILC_L0=+0.720 ILC_ZZ=+0.100
+      |11>: free=0.2673 dd=0.2643 rand=0.2678 local=0.2702 ms=0.2703 ΔF_local=+0.0024 ΔF_ms=+0.0025 ILC_L0=+0.494 ILC_ZZ=+0.077
+    → ΔF_local=+0.0004  ΔF_ms=+0.0004  ILC_L0=+0.691  ILC_ZZ=+0.108  local_wins=2/4  ms_wins=3/4  hier=✗
+
+  == J_std=0.90 ==
+  [CPU] Diagonalizing Hamiltonian via scipy (one-shot, then TPU handles trajectories)...
+    T2=8.0
+      |00>: free=0.2488 dd=0.2479 rand=0.2491 local=0.2490 ms=0.2498 ΔF_local=-0.0001 ΔF_ms=+0.0006 ILC_L0=+0.703 ILC_ZZ=+0.150
+      |01>: free=0.2370 dd=0.2390 rand=0.2370 local=0.2369 ms=0.2351 ΔF_local=-0.0000 ΔF_ms=-0.0019 ILC_L0=+0.645 ILC_ZZ=+0.079
+      |10>: free=0.2423 dd=0.2449 rand=0.2424 local=0.2426 ms=0.2436 ΔF_local=+0.0002 ΔF_ms=+0.0012 ILC_L0=+0.691 ILC_ZZ=+0.117
+      |11>: free=0.2698 dd=0.2689 rand=0.2705 local=0.2725 ms=0.2726 ΔF_local=+0.0020 ΔF_ms=+0.0021 ILC_L0=+0.332 ILC_ZZ=+0.057
+    → ΔF_local=+0.0005  ΔF_ms=+0.0005  ILC_L0=+0.593  ILC_ZZ=+0.101  local_wins=2/4  ms_wins=3/4  hier=✗
+    T2=12.0
+      |00>: free=0.2506 dd=0.2483 rand=0.2505 local=0.2507 ms=0.2506 ΔF_local=+0.0003 ΔF_ms=+0.0001 ILC_L0=+0.716 ILC_ZZ=+0.148
+      |01>: free=0.2391 dd=0.2402 rand=0.2387 local=0.2386 ms=0.2373 ΔF_local=-0.0001 ΔF_ms=-0.0014 ILC_L0=+0.603 ILC_ZZ=+0.084
+      |10>: free=0.2414 dd=0.2439 rand=0.2417 local=0.2422 ms=0.2421 ΔF_local=+0.0005 ΔF_ms=+0.0004 ILC_L0=+0.635 ILC_ZZ=+0.120
+      |11>: free=0.2681 dd=0.2668 rand=0.2688 local=0.2723 ms=0.2721 ΔF_local=+0.0034 ΔF_ms=+0.0032 ILC_L0=+0.321 ILC_ZZ=+0.059
+    → ΔF_local=+0.0010  ΔF_ms=+0.0006  ILC_L0=+0.569  ILC_ZZ=+0.103  local_wins=3/4  ms_wins=3/4  hier=✓
+
+  == J_std=1.20 ==
+  [CPU] Diagonalizing Hamiltonian via scipy (one-shot, then TPU handles trajectories)...
+    T2=8.0
+      |00>: free=0.2478 dd=0.2484 rand=0.2487 local=0.2483 ms=0.2482 ΔF_local=-0.0004 ΔF_ms=-0.0005 ILC_L0=+0.713 ILC_ZZ=+0.089
+      |01>: free=0.2369 dd=0.2386 rand=0.2362 local=0.2351 ms=0.2356 ΔF_local=-0.0011 ΔF_ms=-0.0007 ILC_L0=+0.518 ILC_ZZ=+0.100
+      |10>: free=0.2414 dd=0.2432 rand=0.2429 local=0.2420 ms=0.2432 ΔF_local=-0.0009 ΔF_ms=+0.0003 ILC_L0=+0.683 ILC_ZZ=+0.108
+      |11>: free=0.2718 dd=0.2698 rand=0.2728 local=0.2740 ms=0.2759 ΔF_local=+0.0012 ΔF_ms=+0.0030 ILC_L0=+0.477 ILC_ZZ=+0.058
+    → ΔF_local=-0.0003  ΔF_ms=+0.0005  ILC_L0=+0.598  ILC_ZZ=+0.089  local_wins=1/4  ms_wins=2/4  hier=✗
+    T2=12.0
+      |00>: free=0.2516 dd=0.2493 rand=0.2508 local=0.2518 ms=0.2510 ΔF_local=+0.0009 ΔF_ms=+0.0001 ILC_L0=+0.655 ILC_ZZ=+0.090
+      |01>: free=0.2376 dd=0.2398 rand=0.2363 local=0.2366 ms=0.2352 ΔF_local=+0.0003 ΔF_ms=-0.0011 ILC_L0=+0.521 ILC_ZZ=+0.112
+      |10>: free=0.2417 dd=0.2435 rand=0.2414 local=0.2418 ms=0.2418 ΔF_local=+0.0003 ΔF_ms=+0.0003 ILC_L0=+0.658 ILC_ZZ=+0.117
+      |11>: free=0.2702 dd=0.2686 rand=0.2704 local=0.2733 ms=0.2750 ΔF_local=+0.0029 ΔF_ms=+0.0045 ILC_L0=+0.478 ILC_ZZ=+0.063
+    → ΔF_local=+0.0011  ΔF_ms=+0.0010  ILC_L0=+0.578  ILC_ZZ=+0.095  local_wins=4/4  ms_wins=3/4  hier=✗
+
+======================================================================
+MERA depth=4
+======================================================================
+  Alice gates=9  Bob gates=9  ZZ pairs=18
+
+  == J_std=0.60 ==
+  [CPU] Diagonalizing Hamiltonian via scipy (one-shot, then TPU handles trajectories)...
+    T2=8.0
+      |00>: free=0.2572 dd=0.2558 rand=0.2563 local=0.2555 ms=0.2547 ΔF_local=-0.0009 ΔF_ms=-0.0016 ILC_L0=+0.376 ILC_ZZ=+0.075
+      |01>: free=0.2454 dd=0.2466 rand=0.2453 local=0.2457 ms=0.2465 ΔF_local=+0.0003 ΔF_ms=+0.0011 ILC_L0=+0.869 ILC_ZZ=+0.168
+      |10>: free=0.2445 dd=0.2458 rand=0.2449 local=0.2446 ms=0.2450 ΔF_local=-0.0002 ΔF_ms=+0.0002 ILC_L0=+0.864 ILC_ZZ=+0.132
+      |11>: free=0.2513 dd=0.2511 rand=0.2512 local=0.2506 ms=0.2512 ΔF_local=-0.0006 ΔF_ms=-0.0000 ILC_L0=+0.704 ILC_ZZ=+0.116
+    → ΔF_local=-0.0003  ΔF_ms=-0.0001  ILC_L0=+0.703  ILC_ZZ=+0.123  local_wins=1/4  ms_wins=2/4  hier=✗
+    T2=12.0
+      |00>: free=0.2588 dd=0.2582 rand=0.2582 local=0.2579 ms=0.2571 ΔF_local=-0.0003 ΔF_ms=-0.0011 ILC_L0=+0.386 ILC_ZZ=+0.077
+      |01>: free=0.2444 dd=0.2452 rand=0.2448 local=0.2448 ms=0.2447 ΔF_local=+0.0000 ΔF_ms=-0.0001 ILC_L0=+0.826 ILC_ZZ=+0.174
+      |10>: free=0.2441 dd=0.2470 rand=0.2445 local=0.2448 ms=0.2451 ΔF_local=+0.0003 ΔF_ms=+0.0007 ILC_L0=+0.797 ILC_ZZ=+0.148
+      |11>: free=0.2510 dd=0.2496 rand=0.2505 local=0.2490 ms=0.2500 ΔF_local=-0.0015 ΔF_ms=-0.0005 ILC_L0=+0.707 ILC_ZZ=+0.133
+    → ΔF_local=-0.0004  ΔF_ms=-0.0003  ILC_L0=+0.679  ILC_ZZ=+0.133  local_wins=2/4  ms_wins=1/4  hier=✗
+
+  == J_std=0.90 ==
+  [CPU] Diagonalizing Hamiltonian via scipy (one-shot, then TPU handles trajectories)...
+    T2=8.0
+      |00>: free=0.2582 dd=0.2580 rand=0.2572 local=0.2584 ms=0.2576 ΔF_local=+0.0012 ΔF_ms=+0.0004 ILC_L0=+0.456 ILC_ZZ=-0.006
+      |01>: free=0.2457 dd=0.2453 rand=0.2451 local=0.2451 ms=0.2451 ΔF_local=+0.0000 ΔF_ms=+0.0000 ILC_L0=+0.704 ILC_ZZ=+0.054
+      |10>: free=0.2455 dd=0.2463 rand=0.2454 local=0.2457 ms=0.2451 ΔF_local=+0.0003 ΔF_ms=-0.0002 ILC_L0=+0.787 ILC_ZZ=+0.081
+      |11>: free=0.2520 dd=0.2507 rand=0.2516 local=0.2506 ms=0.2512 ΔF_local=-0.0010 ΔF_ms=-0.0004 ILC_L0=+0.718 ILC_ZZ=+0.027
+    → ΔF_local=+0.0001  ΔF_ms=-0.0000  ILC_L0=+0.666  ILC_ZZ=+0.039  local_wins=3/4  ms_wins=2/4  hier=✗
+    T2=12.0
+      |00>: free=0.2607 dd=0.2601 rand=0.2611 local=0.2596 ms=0.2598 ΔF_local=-0.0015 ΔF_ms=-0.0013 ILC_L0=+0.501 ILC_ZZ=-0.004
+      |01>: free=0.2428 dd=0.2443 rand=0.2434 local=0.2425 ms=0.2437 ΔF_local=-0.0009 ΔF_ms=+0.0003 ILC_L0=+0.745 ILC_ZZ=+0.060
+      |10>: free=0.2470 dd=0.2482 rand=0.2476 local=0.2471 ms=0.2470 ΔF_local=-0.0004 ΔF_ms=-0.0005 ILC_L0=+0.803 ILC_ZZ=+0.084
+      |11>: free=0.2490 dd=0.2496 rand=0.2488 local=0.2484 ms=0.2492 ΔF_local=-0.0004 ΔF_ms=+0.0003 ILC_L0=+0.722 ILC_ZZ=+0.038
+    → ΔF_local=-0.0008  ΔF_ms=-0.0003  ILC_L0=+0.693  ILC_ZZ=+0.044  local_wins=0/4  ms_wins=2/4  hier=✗
+
+  == J_std=1.20 ==
+  [CPU] Diagonalizing Hamiltonian via scipy (one-shot, then TPU handles trajectories)...
+    T2=8.0
+      |00>: free=0.2582 dd=0.2585 rand=0.2584 local=0.2582 ms=0.2584 ΔF_local=-0.0001 ΔF_ms=+0.0001 ILC_L0=+0.440 ILC_ZZ=-0.040
+      |01>: free=0.2460 dd=0.2465 rand=0.2454 local=0.2460 ms=0.2454 ΔF_local=+0.0006 ΔF_ms=+0.0001 ILC_L0=+0.658 ILC_ZZ=+0.005
+      |10>: free=0.2458 dd=0.2463 rand=0.2463 local=0.2461 ms=0.2456 ΔF_local=-0.0002 ΔF_ms=-0.0007 ILC_L0=+0.653 ILC_ZZ=+0.066
+      |11>: free=0.2503 dd=0.2506 rand=0.2502 local=0.2499 ms=0.2512 ΔF_local=-0.0002 ΔF_ms=+0.0011 ILC_L0=+0.600 ILC_ZZ=-0.024
+    → ΔF_local=+0.0000  ΔF_ms=+0.0001  ILC_L0=+0.588  ILC_ZZ=+0.002  local_wins=1/4  ms_wins=3/4  hier=✗
+    T2=12.0
+      |00>: free=0.2598 dd=0.2606 rand=0.2598 local=0.2598 ms=0.2604 ΔF_local=+0.0000 ΔF_ms=+0.0006 ILC_L0=+0.475 ILC_ZZ=-0.042
+      |01>: free=0.2428 dd=0.2448 rand=0.2428 local=0.2425 ms=0.2437 ΔF_local=-0.0003 ΔF_ms=+0.0009 ILC_L0=+0.671 ILC_ZZ=+0.004
+      |10>: free=0.2470 dd=0.2469 rand=0.2467 local=0.2468 ms=0.2467 ΔF_local=+0.0001 ΔF_ms=+0.0000 ILC_L0=+0.817 ILC_ZZ=+0.069
+      |11>: free=0.2496 dd=0.2499 rand=0.2506 local=0.2488 ms=0.2499 ΔF_local=-0.0018 ΔF_ms=-0.0007 ILC_L0=+0.622 ILC_ZZ=-0.029
+    → ΔF_local=-0.0005  ΔF_ms=+0.0002  ILC_L0=+0.646  ILC_ZZ=+0.000  local_wins=2/4  ms_wins=3/4  hier=✗
+
+Saved -> program_z_results/program_z_summary.json  (1507.8s)
+
+======================================================================
+Scaling Table: ΔF_local and ΔF_ms by (depth, J_std)
+  d     J    T2   ΔF_local     ΔF_ms   ILC_L0   ILC_ZZ  hier
+----------------------------------------------------------------------
+  1  0.60   8.0    -0.0003   -0.0003   +0.529   +0.156     ✗
+  1  0.60  12.0    -0.0000   -0.0001   +0.551   +0.162     ✗
+  1  0.90   8.0    -0.0003   -0.0004   +0.443   +0.064     ✗
+  1  0.90  12.0    -0.0006   -0.0010   +0.491   +0.056     ✗
+  1  1.20   8.0    -0.0008   -0.0005   +0.441   +0.013     ✗
+  1  1.20  12.0    -0.0011   -0.0013   +0.458   +0.009     ✗
+  2  0.60   8.0    -0.0004   -0.0006   +0.465   +0.369     ✗
+  2  0.60  12.0    -0.0009   -0.0017   +0.443   +0.377     ✗
+  2  0.90   8.0    -0.0002   -0.0015   +0.390   +0.210     ✗
+  2  0.90  12.0    -0.0009   -0.0018   +0.392   +0.215     ✗
+  2  1.20   8.0    -0.0002   -0.0014   +0.342   +0.103     ✗
+  2  1.20  12.0    -0.0003   -0.0015   +0.314   +0.095     ✗
+  3  0.60   8.0    -0.0004   -0.0003   +0.723   +0.112     ✗
+  3  0.60  12.0    +0.0004   +0.0004   +0.691   +0.108     ✗
+  3  0.90   8.0    +0.0005   +0.0005   +0.593   +0.101     ✗
+  3  0.90  12.0    +0.0010   +0.0006   +0.569   +0.103     ✓
+  3  1.20   8.0    -0.0003   +0.0005   +0.598   +0.089     ✗
+  3  1.20  12.0    +0.0011   +0.0010   +0.578   +0.095     ✗
+  4  0.60   8.0    -0.0003   -0.0001   +0.703   +0.123     ✗
+  4  0.60  12.0    -0.0004   -0.0003   +0.679   +0.133     ✗
+  4  0.90   8.0    +0.0001   -0.0000   +0.666   +0.039     ✗
+  4  0.90  12.0    -0.0008   -0.0003   +0.693   +0.044     ✗
+  4  1.20   8.0    +0.0000   +0.0001   +0.588   +0.002     ✗
+  4  1.20  12.0    -0.0005   +0.0002   +0.646   +0.000     ✗
+======================================================================
