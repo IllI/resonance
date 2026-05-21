@@ -180,6 +180,7 @@ def run_experiment_v2(args):
                             "n": len(ctrl_records)
                         }
                         print(f"      [{label:22s}] F_ent={avg_fent:.4f}  MutInfo={avg_mi:.4f}  BlochSim={avg_bloch:.4f}  Gates={avg_gates_all:.1f}")
+                        print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] HEARTBEAT: Completed {label} for J={J_std:.2f}, T2={T2:.1f}")
 
     # Save output dataset
     os.makedirs(args.out_dir, exist_ok=True)

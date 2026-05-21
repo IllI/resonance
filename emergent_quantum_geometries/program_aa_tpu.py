@@ -173,7 +173,7 @@ def make_entropy_runner(block_pairs, N, n_steps):
         return psi_f, ng_f, fired, S_vels
 
     return jax.jit(jax.vmap(_run,
-        in_axes=(None, None, None, None, None, None, None, None, None, 0)))
+        in_axes=(None, None, None, None, None, None, None, None, 0, 0)))
 
 
 # ---------------------------------------------------------------------------

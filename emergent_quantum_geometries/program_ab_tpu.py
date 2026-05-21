@@ -60,13 +60,22 @@ def build_bell_alphabet():
 # Classification & confusion matrix
 # ---------------------------------------------------------------------------
 
-def classify_batch(psi_f_batch, bob_gates, bell_arr, N):
+def classify_batch(psi_f_batch, bob_gates, bell_arr, N, logical_sites=(6, 7)):
     """Return (n_traj,) int array of argmax-fidelity classifications."""
+    rest = [s for s in range(N) if s not in logical_sites]
+    perm = list(logical_sites) + rest
+
     def classify_one(psi_f):
         psi_dec = apply_gates_inverse(psi_f, bob_gates, N)
-        fids = jnp.stack([jnp.abs(jnp.dot(bell_arr[k].conj(), psi_dec)) ** 2
-                          for k in range(4)])
+        psi_t = jnp.transpose(psi_dec.reshape((2,) * N), perm).reshape(4, 2 ** (N - 2))
+        
+        # Calculate fidelity for all 4 alphabet states
+        fids = jnp.stack([
+            jnp.real(jnp.sum(jnp.abs(jnp.dot(bell_arr[k].conj(), psi_t)) ** 2))
+            for k in range(4)
+        ])
         return jnp.argmax(fids)
+        
     return jax.jit(jax.vmap(classify_one))(psi_f_batch)
 
 
