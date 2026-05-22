@@ -635,7 +635,7 @@ def run_program_ag(args):
                     std = float(np.std(all_vals))
                     # 95% Confidence interval
                     ci = float(1.96 * std / np.sqrt(len(all_vals))) if len(all_vals) > 1 else 0.0
-                    record["sequence_lengths"][sl][ctrl][m] = {
+                    record["sequence_lengths"][str(sl)][ctrl][m] = {
                         "mean": round(mean, 5),
                         "ci95": round(ci, 5)
                     }
