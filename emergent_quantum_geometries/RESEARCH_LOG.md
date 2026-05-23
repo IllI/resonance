@@ -506,3 +506,9 @@ F_probe+adaptive > F_adaptive_only (probe stage must add information).
 ?F_avg ~ 0 in W3 (transition) and OAT (stable basin).
 
 *Log updated: 2026-05-18. N10a complete. Program O design recorded.*
+
+
+**Phase 5 - JAX TPU Parallelization (Program AH)**
+Primary metric: End-to-end execution speed on Cloud TPU v6e-8.
+Key shift: Refactored Program AH simulation to bypass inefficient `jax.lax.scan` graph compilation bottlenecks. Replaced monolithic trajectory-scan architecture with a native 8-core `jax.pmap` implementation.
+Result: Compilation time reduced from 64 minutes to <8 minutes. Full 5-ablation execution sweep for 480 trajectories across 15 depth-seed combinations completed in 1.3 hours. Data safely collected in `program_ah_results`.

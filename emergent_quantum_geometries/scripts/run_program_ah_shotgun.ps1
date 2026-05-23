@@ -1,108 +1,226 @@
-<#
-.SYNOPSIS
-  Shotgun pipeline for Program AH — Semantic Normal Modes
-.DESCRIPTION
-  Deploys exclusively to the TRC-approved Cloud TPU v6e-8 spot instances.
-  Follows all TRC bible commandments (especially cleanup).
-#>
+# run_program_ah_shotgun.ps1  --  Program AH TPU Orchestrator
+# Project: time-emission
+# Target: emergent_quantum_geometries/program_ah_tpu.py
 
-$ErrorActionPreference = "Continue"
-$Project = "time-emission"
-$WorkDir = "e:\.git\resonance\emergent_quantum_geometries"
-$LogFile = "$WorkDir\shotgun_ah.log"
-$OutDir  = "$WorkDir\program_ah_results"
-if (-not (Test-Path $OutDir)) { New-Item -ItemType Directory -Path $OutDir | Out-Null }
+param(
+    [switch]$SmokeTest
+)
 
-function Log { param([string]$msg)
-    $ts = Get-Date -Format "HH:mm:ss"
-    $line = "[$ts] $msg"
-    Write-Host $line
-    try { Add-Content -Path $LogFile -Value $line -ErrorAction SilentlyContinue } catch {}
+$Project   = "time-emission"
+$SrcDir    = Split-Path $PSScriptRoot -Parent
+$RemoteDir = "/home/cityz/program_ah"
+$LogFile   = "prog_ah_run.log"
+
+$CloudSdkBin = "$env:USERPROFILE\AppData\Local\Google\Cloud SDK\google-cloud-sdk\bin"
+if (Test-Path $CloudSdkBin) {
+    $env:Path = "$CloudSdkBin;$env:Path"
 }
 
-function Check-State { param([string]$Name, [string]$Zone)
-    $s = gcloud compute tpus queued-resources describe $Name `
-         --project=$Project --zone=$Zone --format="value(state.state)" 2>$null
-    if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($s)) { return "MISSING" }
-    return $s.Trim()
-}
+# Auto-confirm gcloud prompts
+$env:CLOUDSDK_CORE_DISABLE_PROMPTS = "1"
 
-function Cleanup-Node { param([string]$NodeId, [string]$Name, [string]$Zone)
-    Log "  Cleaning up $Name ($Zone)..."
-    gcloud compute tpus tpu-vm delete $NodeId --project=$Project --zone=$Zone --quiet 2>&1 | Out-Null
-    Start-Sleep 5
-    gcloud compute tpus queued-resources delete $Name --project=$Project --zone=$Zone --quiet 2>&1 | Out-Null
-}
-
-$QR = "chronos-v6e-ah"
-$NodeId = "chronos-v6e-ah-node"
-$Zone = "us-east1-d"
-$Accel = "v6e-8"
+# Target config (v6e-8 in us-east1-d)
+$QRName  = "chronos-v6e-ah"
+$NodeId  = "chronos-v6e-ah-node"
+$Zone    = "europe-west4-a"
+$Type    = "v6e-8"
 $Runtime = "v2-alpha-tpuv6e"
 
-Log "=== Program AH Shotgun Pipeline ==="
+function Get-QueuedResourceState {
+    $descJson = gcloud compute tpus queued-resources describe $QRName `
+        --project=$Project --zone=$Zone --format=json 2>$null
+    if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($descJson)) { return "MISSING" }
+    try {
+        $desc = $descJson | ConvertFrom-Json
+        if ($desc.state -and $desc.state.state) { return [string]$desc.state.state }
+        if ($desc.state) { return [string]$desc.state }
+    } catch { return "UNKNOWN" }
+    return "UNKNOWN"
+}
 
-Log "--- Phase 1: Launching TPU QR ---"
-$cmd = "gcloud compute tpus queued-resources create $QR " +
-       "--node-id=$NodeId --project=$Project --zone=$Zone " +
-       "--accelerator-type=$Accel --runtime-version=$Runtime " +
-       "--spot --quiet"
-Invoke-Expression $cmd 2>&1 | Out-Null
-Log "    Queued $QR in $Zone"
+function Cleanup-Tpu {
+    Write-Host "[CLEANUP] Cleaning up existing TPU resources..."
+    gcloud compute tpus tpu-vm delete $NodeId --project=$Project --zone=$Zone --quiet 2>$null
+    gcloud compute tpus queued-resources delete $QRName --project=$Project --zone=$Zone --quiet 2>$null
+    Start-Sleep -Seconds 5
+}
 
-Log "--- Phase 2: Wait to become ACTIVE ---"
-$RaceOver = $false
-while (-not $RaceOver) {
-    $s = Check-State $QR $Zone
-    Log "  $QR ($Zone): $s"
-    if ($s -eq "ACTIVE") { 
-        $RaceOver = $true 
-    } elseif ($s -match "FAILED|SUSPENDED") {
-        Log "  $QR failed — retrying..."
-        Cleanup-Node $NodeId $QR $Zone
-        Invoke-Expression $cmd 2>&1 | Out-Null
+# 1. Check existing state
+$state = Get-QueuedResourceState
+if ($state -eq "ACTIVE") {
+    $nodeState = (gcloud compute tpus tpu-vm describe $NodeId --project=$Project --zone=$Zone --format="value(state)" 2>$null)
+    if ($nodeState) { $nodeState = $nodeState.Trim() }
+    if ($nodeState -eq "PREEMPTED" -or $nodeState -eq "TERMINATED") {
+        Write-Host "[SETUP] QR is ACTIVE but Node is $nodeState. Re-creating."
+        Cleanup-Tpu
     } else {
-        Start-Sleep 30
+        Write-Host "[SETUP] Found active TPU VM. Reusing existing resource."
+    }
+} elseif ($state -match "PROVISIONING|ACCEPTED|WAITING_FOR_RESOURCES") {
+    Write-Host "[SETUP] TPU VM already exists and is allocating: $state. Reusing allocation."
+} else {
+    if ($state -ne "MISSING") {
+        Cleanup-Tpu
     }
 }
 
-Log "--- Phase 3: Upload and launch ---"
-$Scripts = Get-ChildItem "$WorkDir\program_*_tpu.py" | Select-Object -ExpandProperty FullName
+# 2. Allocate TPU VM using Queued Resource API
+$currentState = Get-QueuedResourceState
+if ($currentState -eq "MISSING") {
+    Write-Host "[ALLOCATE] Requesting fresh TPU VM ($Type in $Zone)..."
+    gcloud compute tpus queued-resources create $QRName `
+        --node-id=$NodeId `
+        --project=$Project `
+        --zone=$Zone `
+        --accelerator-type=$Type `
+        --runtime-version=$Runtime `
+        --spot `
+        --quiet
 
-foreach ($f in $Scripts) {
-    Log "  Uploading $(Split-Path $f -Leaf)..."
-    $out = gcloud compute tpus tpu-vm scp $f "${NodeId}:/home/cityz/" --project=$Project --zone=$Zone 2>&1
-    if ($out -match "y/n") {
-        $out = echo "y" | gcloud compute tpus tpu-vm scp $f "${NodeId}:/home/cityz/" --project=$Project --zone=$Zone 2>&1
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "[ERROR] Allocation command failed!"
+        exit 1
+    }
+} else {
+    Write-Host "[SETUP] Queued resource already exists in state: $currentState. Polling."
+}
+
+if ((Get-QueuedResourceState) -ne "ACTIVE") {
+    Write-Host "[POLL] Waiting for TPU to become ACTIVE..."
+    $timeout = (Get-Date).AddMinutes(20)
+    while ((Get-Date) -lt $timeout) {
+        $state = Get-QueuedResourceState
+        Write-Host "  State: $state"
+        if ($state -eq "ACTIVE") { break }
+        if ($state -match "FAILED|SUSPENDED|MISSING") {
+            Write-Host "[ERROR] TPU allocation failed or suspended!"
+            exit 1
+        }
+        Start-Sleep -Seconds 20
+    }
+    if ((Get-QueuedResourceState) -ne "ACTIVE") {
+        Write-Host "[ERROR] Timeout waiting for ACTIVE state!"
+        exit 1
     }
 }
 
-$launchCmd = "pip install -q 'jax[tpu]' flax optax && " +
-             "nohup python3 -u ~/program_ah_tpu.py --sequence-lengths 16 32 --depth-sweep 2 3 " +
-             "> ~/program_ah_tpu.log 2>&1 & echo PID:`$!"
+Write-Host "[WIN] TPU VM is active!"
 
-$pid_out = gcloud compute tpus tpu-vm ssh $NodeId --project=$Project --zone=$Zone --command=$launchCmd 2>&1
-Log "  Program AH launched: $pid_out"
+# 3. Wait for SSH to become ready
+Write-Host "[SSH] Probing SSH daemon..."
+$sshReady = $false
+$sshTimeout = (Get-Date).AddMinutes(5)
+while (-not $sshReady -and (Get-Date) -lt $sshTimeout) {
+    "y" | gcloud compute tpus tpu-vm ssh $NodeId `
+        --project=$Project --zone=$Zone `
+        --command="echo SSH_READY" 2>&1 | Out-Null
+    if ($LASTEXITCODE -eq 0) { $sshReady = $true }
+    else { Start-Sleep -Seconds 10 }
+}
+if (-not $sshReady) {
+    Write-Host "[ERROR] SSH failed to connect within 5 minutes!"
+    exit 1
+}
+Write-Host "[SSH] Connection established."
 
-Log "--- Phase 4: Wait for completion ---"
-$WaitMinutes = 20
-Log "  Sleeping $WaitMinutes minutes..."
-Start-Sleep -Seconds ($WaitMinutes * 60)
+# 4. Install Dependencies
+Write-Host "[DEPS] Installing JAX TPU backend..."
+"y" | gcloud compute tpus tpu-vm ssh $NodeId `
+    --project=$Project --zone=$Zone `
+    --command="mkdir -p $RemoteDir/emergent_quantum_geometries && pip install -q -U 'jax[tpu]' scipy numpy -f https://storage.googleapis.com/jax-releases/libtpu_releases.html && python3 -c 'import jax; print(jax.default_backend(), jax.devices())'"
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "[ERROR] Dependency installation failed!"
+    exit 1
+}
 
-Log "--- Phase 5: Harvesting results ---"
-Log "  Checking tail log..."
-$tail = gcloud compute tpus tpu-vm ssh $NodeId --project=$Project --zone=$Zone --command="tail -20 ~/program_ah_tpu.log" 2>&1
-Log $tail
+# 5. SCP Files
+Write-Host "[SCP] Uploading code files..."
+$localPath = Join-Path $SrcDir "*.py"
+$remotePath = "$NodeId`:$RemoteDir`/emergent_quantum_geometries`/"
+"y" | gcloud compute tpus tpu-vm scp $localPath $remotePath --project=$Project --zone=$Zone 2>&1 | Out-Null
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "[ERROR] SCP failed!"
+    exit 1
+}
+Write-Host "[SCP] Upload complete."
 
-Log "  Downloading results..."
-gcloud compute tpus tpu-vm scp "${NodeId}:~/program_ah_results/program_ah_summary.json" "$OutDir\program_ah_summary.json" --project=$Project --zone=$Zone 2>&1 | Out-Null
-gcloud compute tpus tpu-vm scp "${NodeId}:~/program_ah_tpu.log" "$OutDir\program_ah_tpu.log" --project=$Project --zone=$Zone 2>&1 | Out-Null
+# 6. Execute Experiment
+Write-Host "[EXECUTE] Launching Flagship Latent Semantic Normal Modes (Program AH) experiment..."
+$argsStr = "--require-tpu --out-dir $RemoteDir/program_ah_results"
+if ($SmokeTest) {
+    $argsStr += " --smoke-test"
+}
+$RunCmd = "export OMP_NUM_THREADS=64; nohup python3 -u $RemoteDir/emergent_quantum_geometries/program_ah_tpu.py $argsStr > $RemoteDir/$LogFile 2>&1 &"
+"y" | gcloud compute tpus tpu-vm ssh $NodeId `
+    --project=$Project --zone=$Zone `
+    --command=$RunCmd
 
-Log "--- Phase 6: Full cleanup (TRC Bible Commandments 4,5,6) ---"
-Cleanup-Node $NodeId $QR $Zone
+# 7. Monitor execution logs
+Write-Host "[MONITOR] Live stream initialized (refreshing every 30s):"
+$localOutDir = Join-Path $SrcDir "program_ah_results"
+New-Item -ItemType Directory -Force -Path $localOutDir | Out-Null
 
-$listed = gcloud compute tpus queued-resources list --project=$Project --zone=$Zone 2>&1
-Log "  Check $Zone : $listed"
+$StartTime = Get-Date
+$RunTimeout = $StartTime.AddHours(2)
+while ((Get-Date) -lt $RunTimeout) {
+    Start-Sleep -Seconds 30
+    
+    # Sync intermediate results and log files in flight
+    $remoteResult = "$NodeId`:$RemoteDir`/program_ah_results`/program_ah_summary.json"
+    $remoteLog    = "$NodeId`:$RemoteDir`/$LogFile"
+    "y" | gcloud compute tpus tpu-vm scp $remoteResult "$localOutDir\program_ah_summary.json" --project=$Project --zone=$Zone 2>&1 | Out-Null
+    "y" | gcloud compute tpus tpu-vm scp $remoteLog "$localOutDir\program_ah_run.log" --project=$Project --zone=$Zone 2>&1 | Out-Null
+    
+    # Check preemption
+    $nodeState = (gcloud compute tpus tpu-vm describe $NodeId --project=$Project --zone=$Zone --format="value(state)" 2>$null)
+    if ($nodeState -and $nodeState.Trim() -match "PREEMPTED|TERMINATED") {
+        Write-Host "[ERROR] Node was PREEMPTED by Google mid-execution!"
+        exit 1
+    }
 
-Log "=== Shotgun AH Pipeline Complete ==="
-Log "Results in: $OutDir"
+    # Tail the remote log file
+    $tail = "y" | gcloud compute tpus tpu-vm ssh $NodeId `
+        --project=$Project --zone=$Zone `
+        --command="tail -n 8 $RemoteDir/$LogFile 2>/dev/null" 2>$null
+    Write-Host "[$([math]::Round(((Get-Date)-$StartTime).TotalMinutes,1))m] -------------------"
+    Write-Host $tail
+    
+    # Check if complete
+    $doneRaw = "y" | gcloud compute tpus tpu-vm ssh $NodeId `
+        --project=$Project --zone=$Zone `
+        --command="grep -c 'Abl-Phase' $RemoteDir/$LogFile 2>/dev/null || echo 0" 2>$null
+    $doneVal = if ($doneRaw -is [array]) { $doneRaw[-1] } else { $doneRaw }
+    # Look for the final table header to confirm success
+    if ($doneVal -ne $null -and [int]($doneVal.Trim()) -gt 0) {
+        Write-Host "[SUCCESS] Experiment completed successfully!"
+        break
+    }
+    
+    # Check if process is still alive
+    $isRunning = "y" | gcloud compute tpus tpu-vm ssh $NodeId `
+        --project=$Project --zone=$Zone `
+        --command="pgrep -f program_ah_tpu.py >/dev/null && echo 1 || echo 0" 2>$null
+    $isRunningVal = if ($isRunning -is [array]) { $isRunning[-1] } else { $isRunning }
+    if ($isRunningVal -ne $null -and [int]($isRunningVal.Trim()) -eq 0) {
+        Write-Host "[ERROR] Python script crashed silently!"
+        $errorLog = "y" | gcloud compute tpus tpu-vm ssh $NodeId `
+            --project=$Project --zone=$Zone `
+            --command="tail -n 50 $RemoteDir/$LogFile" 2>$null
+        Write-Host $errorLog
+        exit 1
+    }
+}
+
+# 8. Download Results
+Write-Host "[DOWNLOAD] Fetching results to local workspace..."
+$remoteResult = "$NodeId`:$RemoteDir`/program_ah_results`/program_ah_summary.json"
+$remoteLog    = "$NodeId`:$RemoteDir`/$LogFile"
+
+$localOutDir = Join-Path $SrcDir "program_ah_results"
+New-Item -ItemType Directory -Force -Path $localOutDir | Out-Null
+"y" | gcloud compute tpus tpu-vm scp $remoteResult "$localOutDir\program_ah_summary.json" --project=$Project --zone=$Zone
+"y" | gcloud compute tpus tpu-vm scp $remoteLog "$localOutDir\program_ah_run.log" --project=$Project --zone=$Zone
+
+Write-Host "[COMPLETE] Results downloaded successfully! Cleaning up TPU resources..."
+Cleanup-Tpu
+Write-Host "[DONE]"

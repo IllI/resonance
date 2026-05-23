@@ -6,7 +6,6 @@ recurrent sequence decoders, Koopman trajectory rollouts, and a suite
 of ablation controls to confirm the reality of entropy-stabilized transport.
 """
 import argparse, json, os, sys, time
-import numpy as np
 
 try:
     import jax, jax.numpy as jnp
@@ -36,31 +35,31 @@ def compute_dmd_and_gap(z_trajs, dt):
     z_trajs: (n_traj, L, 15)
     Returns: K operator, eigenvalues, growth rates, frequencies, spectral gap
     """
-    z_trajs = jnp.array(z_trajs)
     n_traj, L, d = z_trajs.shape
     X = z_trajs[:, :-1, :].reshape(-1, d).T  # (15, n_traj * (L-1))
     Y = z_trajs[:, 1:, :].reshape(-1, d).T   # (15, n_traj * (L-1))
     
     K = Y @ jnp.linalg.pinv(X)
     
-    evals, evecs = jnp.linalg.eig(K)
+    import numpy as np
+    # Use numpy on the CPU for the one-off eigendecomposition as TPU lacks the MLIR translation rule
+    evals, evecs = np.linalg.eig(np.array(K, dtype=np.complex64))
     
     # Sort eigenvalues by magnitude
-    idx = jnp.argsort(jnp.abs(evals))[::-1]
+    idx = np.argsort(np.abs(evals))[::-1]
     evals = evals[idx]
     
-    Omega = jnp.log(evals + 1e-12j) / dt
-    growth_rates = jnp.real(Omega)
-    frequencies = jnp.imag(Omega) / (2 * jnp.pi)
+    Omega = np.log(evals + 1e-12j) / dt
+    growth_rates = np.real(Omega)
+    frequencies = np.imag(Omega) / (2 * np.pi)
     
-    gap = jnp.abs(evals[0]) - jnp.abs(evals[1]) if len(evals) > 1 else 0.0
-    return K, evals, growth_rates, frequencies, gap
+    gap = np.abs(evals[0]) - np.abs(evals[1]) if len(evals) > 1 else 0.0
+    return K, jnp.array(evals), jnp.array(growth_rates), jnp.array(frequencies), float(gap)
 
 def compute_flow_compressibility(z_trajs):
     """
     Measure effective dimension of the transport flow via Shannon Participation Ratio.
     """
-    z_trajs = jnp.array(z_trajs)
     n_traj, L, d = z_trajs.shape
     Z_mat = z_trajs.reshape(-1, d)
     U, S, Vh = jnp.linalg.svd(Z_mat, full_matrices=False)
@@ -68,7 +67,7 @@ def compute_flow_compressibility(z_trajs):
     S_norm = S / (jnp.sum(S) + 1e-12)
     entropy = -jnp.sum(S_norm * jnp.log(S_norm + 1e-12))
     d_eff = jnp.exp(entropy)
-    return float(d_eff)
+    return d_eff
 
 def rollout_koopman(z_init, K, L):
     """
@@ -129,6 +128,14 @@ def rnn_train_step(params, opt_state, x_batch, y_batch):
     
     return new_params, {"t": t, "m": m, "v": v}, loss
 
+@jax.jit
+def _train_loop(params, opt_state, x_train_j, y_train_j, epochs):
+    def body_fn(i, carry):
+        p, os = carry
+        new_p, new_os, _ = rnn_train_step(p, os, x_train_j, y_train_j)
+        return new_p, new_os
+    return jax.lax.fori_loop(0, epochs, body_fn, (params, opt_state))
+
 def train_rnn_decoder(x_train, y_train, epochs=300):
     key = jax.random.PRNGKey(42)
     d_in = x_train.shape[-1]
@@ -145,14 +152,13 @@ def train_rnn_decoder(x_train, y_train, epochs=300):
     x_train_j = jnp.array(x_train)
     y_train_j = jnp.array(y_train)
     
-    for _ in range(epochs):
-        params, opt_state, _ = rnn_train_step(params, opt_state, x_train_j, y_train_j)
+    params, opt_state = _train_loop(params, opt_state, x_train_j, y_train_j, epochs)
         
     return params
 
 def predict_rnn(params, x_test):
     y_pred_logits = jax.vmap(rnn_forward, in_axes=(None, 0))(params, jnp.array(x_test))
-    return np.asarray(jnp.argmax(y_pred_logits, axis=-1))
+    return jnp.argmax(y_pred_logits, axis=-1)
 
 # ---------------------------------------------------------------------------
 # Master Execution & Ablation Loop
@@ -168,10 +174,11 @@ def run_program_ah(args):
 
     N = 12
     Lx, Ly = 3, 4
+    import math
     dt_step = args.T_max / args.n_steps_per_sym
     T1 = 20.0
-    p1 = float(1 - np.exp(-dt_step / T1))
-    p2 = float(1 - np.exp(-dt_step / args.t2))
+    p1 = float(1 - math.exp(-dt_step / T1))
+    p2 = float(1 - math.exp(-dt_step / args.t2))
     p_cross = 0.03
 
     bell_dict = build_bell_alphabet()
@@ -193,7 +200,7 @@ def run_program_ah(args):
     all_records = []
 
     for depth in args.depth_sweep:
-        gamma = compute_cone_overlap(depth, N)
+        gamma = float(compute_cone_overlap(depth, N))
         print(f"\n{'=' * 80}\nMERA depth={depth}  Gamma={gamma:.3f}\n{'=' * 80}")
 
         layer_pairs = get_mera_layer_pairs(depth, N)
@@ -243,67 +250,85 @@ def run_program_ah(args):
                 sequences = build_compositional_motifs(bell_dict, sl)
 
                 for ctrl in ["free", "entropy_block"]:
-                    for ens_idx in range(n_ensembles):
-                        ens_seed = seed + 100 * ens_idx
-                        traj_keys = jax.random.split(jax.random.PRNGKey(ens_seed), n_traj_per_ens)
+                    ens_seeds = jnp.array([seed + 100 * i for i in range(args.n_ensembles)])
+                    traj_keys_batch = jax.vmap(lambda s: jax.random.split(jax.random.PRNGKey(s), args.n_traj_per_ensemble))(ens_seeds)
 
-                        def run_ensemble(evals_h, evecs_h, use_rand_entropy=False):
-                            true_labels_all = []
-                            rhos_all = []
-                            
-                            for seq_name, seq_labels in sequences.items():
-                                true_idx = np.array([bell_labels.index(lbl) for lbl in seq_labels])
-                                true_traj = np.tile(true_idx[None, :], (n_traj_per_ens, 1))
+                    def run_ensembles_parallel(evals_h, evecs_h, use_rand_entropy=False):
+                        true_labels_all = []
+                        rhos_all = []
+                        
+                        for seq_name, seq_labels in sequences.items():
+                            true_idx = jnp.array([bell_labels.index(lbl) for lbl in seq_labels])
+                            true_traj = jnp.tile(true_idx[None, None, :], (args.n_ensembles, args.n_traj_per_ensemble, 1))
 
-                                alice_logical_0 = bell_dict[seq_labels[0]]
-                                psi0_0 = _make_initial_y(N, alice_logical_0, alice_gates, bob_gates)
-                                psi_batch = jnp.tile(psi0_0[None, :], (n_traj_per_ens, 1))
+                            alice_logical_0 = bell_dict[seq_labels[0]]
+                            psi0_0 = _make_initial_y(N, alice_logical_0, alice_gates, bob_gates)
+                            psi_batch = jnp.tile(psi0_0[None, None, :], (args.n_ensembles, args.n_traj_per_ensemble, 1))
 
-                                psi_finals = []
-                                alice_matrices = jnp.stack([g[0] for g in alice_gates])
-                                alice_indices = tuple((int(g[1]), int(g[2])) for g in alice_gates)
+                            alice_matrices = jnp.stack([g[0] for g in alice_gates])
+                            alice_indices = tuple((int(g[1]), int(g[2])) for g in alice_gates)
 
-                                for sym_t in range(sl):
-                                    if sym_t > 0:
-                                        new_logical = bell_dict[seq_labels[sym_t]]
-                                        psi_batch = vmap_reinject_global(psi_batch, new_logical, alice_matrices, alice_indices, N)
+                            pmap_reinject = jax.pmap(vmap_reinject_global, in_axes=(0, None, None, None, None), static_broadcasted_argnums=(3, 4))
+                            pmap_free = jax.pmap(vmap_free_global, in_axes=(None, None, None, None, None, None, None, None, 0, 0), static_broadcasted_argnums=(2, 4))
+                            pmap_entropy = jax.pmap(vmap_entropy, in_axes=(None, None, None, None, None, None, None, None, 0, 0))
+                            pmap_rand_entropy = jax.pmap(vmap_rand_entropy, in_axes=(None, None, None, None, None, None, None, None, 0, 0))
 
-                                    if ctrl == "free":
-                                        psi_batch = vmap_free_global(
-                                            evals_h, evecs_h, N, jnp.float32(dt_step),
-                                            args.n_steps_per_sym,
+                            psi_finals = []
+                            for sym_t in range(sl):
+                                if sym_t > 0:
+                                    new_logical = bell_dict[seq_labels[sym_t]]
+                                    psi_batch = pmap_reinject(psi_batch, new_logical, alice_matrices, alice_indices, N)
+
+                                if ctrl == "free":
+                                    psi_batch = pmap_free(
+                                        evals_h, evecs_h, N, jnp.float32(dt_step),
+                                        args.n_steps_per_sym,
+                                        jnp.float32(p1), jnp.float32(p2), jnp.float32(p_cross),
+                                        psi_batch, traj_keys_batch)
+                                elif ctrl == "entropy_block":
+                                    if use_rand_entropy:
+                                        psi_batch, *_ = pmap_rand_entropy(
+                                            evals_h, evecs_h, jnp.float32(dt_step),
                                             jnp.float32(p1), jnp.float32(p2), jnp.float32(p_cross),
-                                            psi_batch, traj_keys)
-                                    elif ctrl == "entropy_block":
-                                        if use_rand_entropy:
-                                            psi_batch, *_ = vmap_rand_entropy(
-                                                evals_h, evecs_h, jnp.float32(dt_step),
-                                                jnp.float32(p1), jnp.float32(p2), jnp.float32(p_cross),
-                                                jnp.int32(args.T_quiet), jnp.float32(args.eps_entropy),
-                                                psi_batch, traj_keys)
-                                        else:
-                                            psi_batch, *_ = vmap_entropy(
-                                                evals_h, evecs_h, jnp.float32(dt_step),
-                                                jnp.float32(p1), jnp.float32(p2), jnp.float32(p_cross),
-                                                jnp.int32(args.T_quiet), jnp.float32(args.eps_entropy),
-                                                psi_batch, traj_keys)
-                                    psi_finals.append(psi_batch)
+                                            jnp.int32(args.T_quiet), jnp.float32(args.eps_entropy),
+                                            psi_batch, traj_keys_batch)
+                                    else:
+                                        psi_batch, *_ = pmap_entropy(
+                                            evals_h, evecs_h, jnp.float32(dt_step),
+                                            jnp.float32(p1), jnp.float32(p2), jnp.float32(p_cross),
+                                            jnp.int32(args.T_quiet), jnp.float32(args.eps_entropy),
+                                            psi_batch, traj_keys_batch)
+                                psi_finals.append(psi_batch)
 
-                                psi_seq_batch = jnp.stack(psi_finals, axis=1)
-                                rhos_seq = np.asarray(extract_logical_density_matrices(psi_seq_batch, bob_gates, bell_arr, N))
+                            psi_seq_batch = jnp.stack(psi_finals, axis=2)
+                            
+                            vmap_extract = jax.vmap(extract_logical_density_matrices, in_axes=(0, None, None, None))
+                            rhos_seq_batch = vmap_extract(psi_seq_batch, bob_gates, bell_arr, N)
 
-                                true_labels_all.append(true_traj)
-                                rhos_all.append(rhos_seq)
+                            true_labels_all.append(true_traj)
+                            rhos_all.append(rhos_seq_batch)
 
-                            return np.vstack(true_labels_all), np.vstack(rhos_all)
+                        return jnp.concatenate(true_labels_all, axis=1), jnp.concatenate(rhos_all, axis=1)
 
-                        # Core Runs
-                        train_true, train_rhos = run_ensemble(evals_train, evecs_train)
-                        test_true, test_rhos = run_ensemble(evals_test, evecs_test)
+                    print(f"  [JAX/TPU] Running {args.n_ensembles} ensembles in parallel via pmap...")
+                    test_true_batch, test_rhos_batch = run_ensembles_parallel(evals_test_noisy, evecs_test)
+                    
+                    test_true_batch_rand_ent, test_rhos_batch_rand_ent = run_ensembles_parallel(evals_test, evecs_test, use_rand_entropy=True)
+                    test_true_batch_noisy, test_rhos_batch_noisy = run_ensembles_parallel(evals_test_noisy, evecs_test)
+                    train_true_batch, train_rhos_batch = run_ensembles_parallel(evals_train, evecs_train)
+
+                    for ens_idx in range(args.n_ensembles):
+                        test_true = test_true_batch[ens_idx]
+                        test_rhos = test_rhos_batch[ens_idx]
+                        train_true = train_true_batch[ens_idx]
+                        train_rhos = train_rhos_batch[ens_idx]
+                        test_rhos_rand_ent = test_rhos_batch_rand_ent[ens_idx]
+                        test_true_noisy = test_true_batch_noisy[ens_idx]
+                        test_rhos_noisy = test_rhos_batch_noisy[ens_idx]
                         
                         # Extract continuous Bloch vectors
-                        z_train = np.asarray(density_to_bloch(jnp.array(train_rhos), lambdas_j))
-                        z_test = np.asarray(density_to_bloch(jnp.array(test_rhos), lambdas_j))
+                        z_train = density_to_bloch(jnp.array(train_rhos), lambdas_j)
+                        z_test = density_to_bloch(jnp.array(test_rhos), lambdas_j)
 
                         # 1. DMD & Compressibility
                         K, evals_k, growth, freqs, gap = compute_dmd_and_gap(z_test, dt_step * args.n_steps_per_sym)
@@ -318,50 +343,53 @@ def run_program_ah(args):
                         # Rollout Koopman & Decode
                         z_test_hat = rollout_koopman(jnp.array(z_test[:, 0, :]), K, sl)
                         pred_koopman = predict_rnn(rnn_params, z_test_hat)
-                        base_acc = float(np.mean(test_true == pred_koopman))
+                        base_acc = float(jnp.mean(test_true == pred_koopman))
                         depth_results[ctrl][sl]["koopman_acc"].append(base_acc)
 
                         # --- Ablation 1: Shuffled Latent Order ---
-                        z_shuffled = np.zeros_like(z_test_hat)
-                        for i in range(z_shuffled.shape[0]):
-                            z_shuffled[i] = z_test_hat[i, np.random.permutation(sl), :]
-                        depth_results[ctrl][sl]["ablation_shuffled"].append(float(np.mean(test_true == predict_rnn(rnn_params, z_shuffled))))
+                        key_shuf = jax.random.PRNGKey(seed + 456)
+                        def permute_seq(z, key):
+                            return z[jax.random.permutation(key, sl), :]
+                        shuf_keys = jax.random.split(key_shuf, z_test_hat.shape[0])
+                        z_shuffled = jax.vmap(permute_seq)(z_test_hat, shuf_keys)
+                        depth_results[ctrl][sl]["ablation_shuffled"].append(float(jnp.mean(test_true == predict_rnn(rnn_params, z_shuffled))))
 
                         # --- Ablation 2: Randomized Entropy Controller ---
                         if ctrl == "entropy_block":
-                            _, rhos_rand_ent = run_ensemble(evals_test, evecs_test, use_rand_entropy=True)
+                            rhos_rand_ent = test_rhos_rand_ent
                             z_rand_ent = density_to_bloch(jnp.array(rhos_rand_ent), lambdas_j)
-                            depth_results[ctrl][sl]["ablation_rand_entropy"].append(float(np.mean(test_true == predict_rnn(rnn_params, z_rand_ent))))
+                            depth_results[ctrl][sl]["ablation_rand_entropy"].append(float(jnp.mean(test_true == predict_rnn(rnn_params, z_rand_ent))))
                         else:
                             depth_results[ctrl][sl]["ablation_rand_entropy"].append(base_acc)
 
                         # --- Ablation 3: Destroy Temporal Correlations ---
-                        train_true_decorr = np.random.permutation(train_true.flatten()).reshape(train_true.shape)
+                        key_decorr = jax.random.PRNGKey(seed + 789)
+                        train_true_decorr = jax.random.permutation(key_decorr, train_true.flatten()).reshape(train_true.shape)
                         rnn_params_decorr = train_rnn_decoder(z_train, train_true_decorr)
-                        depth_results[ctrl][sl]["ablation_decorr"].append(float(np.mean(test_true == predict_rnn(rnn_params_decorr, z_test_hat))))
+                        depth_results[ctrl][sl]["ablation_decorr"].append(float(jnp.mean(test_true == predict_rnn(rnn_params_decorr, z_test_hat))))
 
                         # --- Ablation 4: Random Embeddings ---
                         def embed_random(rhos):
                             flat_rhos = rhos.reshape(-1, 16)
-                            return (flat_rhos @ random_embedding_proj).reshape(rhos.shape[0], rhos.shape[1], 15).real
-                        z_train_emb = np.asarray(embed_random(train_rhos))
-                        z_test_emb = np.asarray(embed_random(test_rhos))
+                            return jnp.real((flat_rhos @ random_embedding_proj).reshape(rhos.shape[0], rhos.shape[1], 15))
+                        z_train_emb = embed_random(train_rhos)
+                        z_test_emb = embed_random(test_rhos)
                         K_emb, _, _, _, _ = compute_dmd_and_gap(z_test_emb, dt_step * args.n_steps_per_sym)
                         rnn_params_emb = train_rnn_decoder(z_train_emb, train_true)
                         z_test_hat_emb = rollout_koopman(jnp.array(z_test_emb[:, 0, :]), K_emb, sl)
-                        depth_results[ctrl][sl]["ablation_rand_emb"].append(float(np.mean(test_true == predict_rnn(rnn_params_emb, z_test_hat_emb))))
+                        depth_results[ctrl][sl]["ablation_rand_emb"].append(float(jnp.mean(test_true == predict_rnn(rnn_params_emb, z_test_hat_emb))))
 
                         # --- Ablation 5: Random Hamiltonian Phases ---
-                        test_true_noisy, test_rhos_noisy = run_ensemble(evals_test_noisy, evecs_test)
-                        z_test_noisy = density_to_bloch(jnp.array(test_rhos_noisy), lambdas_j)
-                        K_noisy, _, _, _, _ = compute_dmd_and_gap(z_test_noisy, dt_step * args.n_steps_per_sym)
-                        z_test_hat_noisy = rollout_koopman(jnp.array(z_test_noisy[:, 0, :]), K_noisy, sl)
-                        depth_results[ctrl][sl]["ablation_phase_noise"].append(float(np.mean(test_true_noisy == predict_rnn(rnn_params, z_test_hat_noisy))))
+                        test_rhos_noisy = test_rhos_noisy
+                        z_noisy = density_to_bloch(jnp.array(test_rhos_noisy), lambdas_j)
+                        K_noisy, _, _, _, _ = compute_dmd_and_gap(z_noisy, dt_step * args.n_steps_per_sym)
+                        z_test_hat_noisy = rollout_koopman(jnp.array(z_noisy[:, 0, :]), K_noisy, sl)
+                        depth_results[ctrl][sl]["ablation_phase_noise"].append(float(jnp.mean(test_true_noisy == predict_rnn(rnn_params, z_test_hat_noisy))))
 
-                    print(f"    {ctrl:>15} -> Gap:{np.mean(depth_results[ctrl][sl]['spectral_gap']):.4f} "
-                          f"  d_eff:{np.mean(depth_results[ctrl][sl]['flow_dim']):.2f} "
-                          f"  Acc:{np.mean(depth_results[ctrl][sl]['koopman_acc']):.3f} "
-                          f"  Abl-Shuffle:{np.mean(depth_results[ctrl][sl]['ablation_shuffled']):.3f}")
+                    print(f"    {ctrl:>15} -> Gap:{float(jnp.mean(jnp.array(depth_results[ctrl][sl]['spectral_gap']))):.4f} "
+                          f"  d_eff:{float(jnp.mean(jnp.array(depth_results[ctrl][sl]['flow_dim']))):.2f} "
+                          f"  Acc:{float(jnp.mean(jnp.array(depth_results[ctrl][sl]['koopman_acc']))):.3f} "
+                          f"  Abl-Shuffle:{float(jnp.mean(jnp.array(depth_results[ctrl][sl]['ablation_shuffled']))):.3f}")
 
         # Compile final depth record
         record = {"mera_depth": depth, "gamma": gamma, "seq_lengths": {}}
@@ -370,9 +398,13 @@ def run_program_ah(args):
             for ctrl in ["free", "entropy_block"]:
                 record["seq_lengths"][str(sl)][ctrl] = {}
                 for metric, vals in depth_results[ctrl][sl].items():
+                    vals_j = jnp.array(vals)
+                    mean_val = float(jnp.mean(vals_j))
+                    std_val = float(jnp.std(vals_j))
+                    ci95_val = float(1.96 * std_val / jnp.sqrt(len(vals))) if len(vals) > 1 else 0.0
                     record["seq_lengths"][str(sl)][ctrl][metric] = {
-                        "mean": float(np.mean(vals)),
-                        "ci95": float(1.96 * np.std(vals) / np.sqrt(len(vals))) if len(vals) > 1 else 0.0
+                        "mean": mean_val,
+                        "ci95": ci95_val
                     }
         all_records.append(record)
 
@@ -403,8 +435,8 @@ if __name__ == "__main__":
     p = argparse.ArgumentParser()
     p.add_argument("--T-max", type=float, default=4.5)
     p.add_argument("--n-steps-per-sym", type=int, default=40)
-    p.add_argument("--n-ensembles", type=int, default=5)
-    p.add_argument("--n-traj-per-ensemble", type=int, default=100)
+    p.add_argument("--n-ensembles", type=int, default=8)
+    p.add_argument("--n-traj-per-ensemble", type=int, default=60)
     p.add_argument("--j-std-train", type=float, default=0.9)
     p.add_argument("--j-std-test", type=float, default=1.1)
     p.add_argument("--t2", type=float, default=12.0)
@@ -419,8 +451,8 @@ if __name__ == "__main__":
 
     if args.smoke_test:
         args.n_steps_per_sym = 10
-        args.n_ensembles = 1
-        args.n_traj_per_ensemble = 20
+        args.n_ensembles = 8
+        args.n_traj_per_ensemble = 60
         args.sequence_lengths = [8]
         args.depth_sweep = [2]
         print("[SMOKE TEST]")
