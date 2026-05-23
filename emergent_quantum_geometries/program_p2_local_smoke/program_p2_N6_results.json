@@ -1,0 +1,44 @@
+{
+  "args": {
+    "N": 6,
+    "T_max": 6.0,
+    "n_steps": 15,
+    "w0": 2.0,
+    "alpha": 0.5,
+    "B": 1,
+    "seed": 42,
+    "models": [
+      "OAT"
+    ],
+    "controllers": [
+      "static",
+      "agnostic",
+      "probe_conditioned"
+    ],
+    "channels": [
+      "scrambling"
+    ],
+    "sigmas": [
+      0.5
+    ],
+    "n_phases": 4,
+    "out_dir": "C:\\Users\\cityz\\IllI\\newer_all\\emergent_quantum_geometries\\program_p2_local_smoke",
+    "require_tpu": false,
+    "smoke_test": true
+  },
+  "summary": {
+    "OAT/scrambling/sig=0.5/static": {
+      "r2_traj": 0.8656033130730298,
+      "n": 4
+    },
+    "OAT/scrambling/sig=0.5/agnostic": {
+      "r2_traj": 0.8822727371345108,
+      "n": 4
+    },
+    "OAT/scrambling/sig=0.5/probe_conditioned": {
+      "r2_traj": -0.49477223875634346,
+      "n": 4
+    }
+  },
+  "runtime_s": 2.6
+}

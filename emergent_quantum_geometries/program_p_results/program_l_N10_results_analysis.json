@@ -1,0 +1,249 @@
+{
+  "stats": {
+    "DisorderedXXZ_W1": {
+      "tau_static": 2.8000000000000003,
+      "tau_haware": 0.0,
+      "tau_agnostic": 4.16,
+      "tau_dd": NaN,
+      "tau_random": NaN,
+      "tau_static_std": 2.112818023399081,
+      "tau_agnostic_std": 2.076150283577757,
+      "tau_dd_std": NaN,
+      "tau_random_std": NaN,
+      "delta_tau": 1.3599999999999999,
+      "delta_tau_vs_dd": NaN,
+      "delta_tau_vs_random": NaN,
+      "norm_gain": NaN,
+      "aar": NaN,
+      "random_aar": NaN,
+      "oracle_valid": false,
+      "beats_oracle": 1,
+      "beats_dd": null,
+      "beats_random": null,
+      "n_boots": 5,
+      "dd_ctrl": null,
+      "has_random": false
+    },
+    "DisorderedXXZ_W3": {
+      "tau_static": 5.48,
+      "tau_haware": 0.0,
+      "tau_agnostic": 5.5200000000000005,
+      "tau_dd": NaN,
+      "tau_random": NaN,
+      "tau_static_std": 0.6400000000000002,
+      "tau_agnostic_std": 0.3487119154832542,
+      "tau_dd_std": NaN,
+      "tau_random_std": NaN,
+      "delta_tau": 0.040000000000000036,
+      "delta_tau_vs_dd": NaN,
+      "delta_tau_vs_random": NaN,
+      "norm_gain": NaN,
+      "aar": NaN,
+      "random_aar": NaN,
+      "oracle_valid": false,
+      "beats_oracle": 1,
+      "beats_dd": null,
+      "beats_random": null,
+      "n_boots": 5,
+      "dd_ctrl": null,
+      "has_random": false
+    },
+    "OAT": {
+      "tau_static": 4.360000000000001,
+      "tau_haware": 0.0,
+      "tau_agnostic": 3.16,
+      "tau_dd": NaN,
+      "tau_random": NaN,
+      "tau_static_std": 2.033322404342214,
+      "tau_agnostic_std": 1.759090674183682,
+      "tau_dd_std": NaN,
+      "tau_random_std": NaN,
+      "delta_tau": -1.200000000000001,
+      "delta_tau_vs_dd": NaN,
+      "delta_tau_vs_random": NaN,
+      "norm_gain": NaN,
+      "aar": NaN,
+      "random_aar": NaN,
+      "oracle_valid": false,
+      "beats_oracle": 1,
+      "beats_dd": null,
+      "beats_random": null,
+      "n_boots": 5,
+      "dd_ctrl": null,
+      "has_random": false
+    },
+    "XXZ": {
+      "tau_static": 1.4800000000000002,
+      "tau_haware": 0.0,
+      "tau_agnostic": 4.2,
+      "tau_dd": NaN,
+      "tau_random": NaN,
+      "tau_static_std": 2.1599999999999997,
+      "tau_agnostic_std": 1.3564659966250538,
+      "tau_dd_std": NaN,
+      "tau_random_std": NaN,
+      "delta_tau": 2.7199999999999998,
+      "delta_tau_vs_dd": NaN,
+      "delta_tau_vs_random": NaN,
+      "norm_gain": NaN,
+      "aar": NaN,
+      "random_aar": NaN,
+      "oracle_valid": false,
+      "beats_oracle": 1,
+      "beats_dd": null,
+      "beats_random": null,
+      "n_boots": 5,
+      "dd_ctrl": null,
+      "has_random": false
+    }
+  },
+  "cv_latent": 0.19679147338150021,
+  "falsification_passed": false,
+  "falsification_lines": [
+    "  [FAIL] Metric A: delta_tau > 0 in 3/4 non-null models",
+    "  [PASS] CV_latent=0.197 (threshold < 0.3)",
+    "  [PASS] Null models: |delta_tau| ~ 0 (operationally null)",
+    "  [FAIL] agnostic > static in 3/4 non-null models",
+    "  [INFO] Metric B: oracle underperforms static in all non-null models \u2014 Metric A is the only valid criterion this run",
+    "  [INFO] agnostic beats myopic oracle in 4/4 non-null models (expected: oracle 1-step greedy, agnostic long-horizon)"
+  ],
+  "delta_tau_hist": {
+    "DisorderedXXZ_W1": {
+      "deltas": [
+        -5.6000000000000005,
+        2.4000000000000004,
+        0.0,
+        4.8,
+        5.2
+      ],
+      "mean": 1.3599999999999999,
+      "std": 3.948468057360982,
+      "min": -5.6000000000000005,
+      "max": 5.2,
+      "frac_positive": 0.6
+    },
+    "DisorderedXXZ_W3": {
+      "deltas": [
+        -0.6000000000000005,
+        0.7999999999999998,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "mean": 0.039999999999999855,
+      "std": 0.44542114902640184,
+      "min": -0.6000000000000005,
+      "max": 0.7999999999999998,
+      "frac_positive": 0.2
+    },
+    "OAT": {
+      "deltas": [
+        0.0,
+        -3.8000000000000007,
+        0.0,
+        0.0,
+        -2.2000000000000006
+      ],
+      "mean": -1.2000000000000004,
+      "std": 1.5543487382180363,
+      "min": -3.8000000000000007,
+      "max": 0.0,
+      "frac_positive": 0.0
+    },
+    "XXZ": {
+      "deltas": [
+        3.4000000000000004,
+        2.4000000000000004,
+        2.4000000000000004,
+        0.0,
+        5.4
+      ],
+      "mean": 2.72,
+      "std": 1.746310396235446,
+      "min": 0.0,
+      "max": 5.4,
+      "frac_positive": 0.8
+    }
+  },
+  "ctrl_entropy": {
+    "DisorderedXXZ_W1": {
+      "static": {
+        "entropy": 0.9182958340544867,
+        "n_actions": 15,
+        "dist": {
+          "1": 5,
+          "3": 10
+        }
+      },
+      "haware": {
+        "entropy": 0.0,
+        "n_actions": 0
+      },
+      "agnostic": {
+        "entropy": -1.601713251907458e-15,
+        "n_actions": 2,
+        "dist": {
+          "3": 2
+        }
+      }
+    },
+    "DisorderedXXZ_W3": {
+      "static": {
+        "entropy": 0.9182958340544867,
+        "n_actions": 15,
+        "dist": {
+          "1": 5,
+          "3": 10
+        }
+      },
+      "haware": {
+        "entropy": 0.0,
+        "n_actions": 0
+      },
+      "agnostic": {
+        "entropy": 0.0,
+        "n_actions": 0
+      }
+    },
+    "OAT": {
+      "static": {
+        "entropy": 0.9182958340544867,
+        "n_actions": 15,
+        "dist": {
+          "1": 5,
+          "3": 10
+        }
+      },
+      "haware": {
+        "entropy": 0.0,
+        "n_actions": 0
+      },
+      "agnostic": {
+        "entropy": 0.0,
+        "n_actions": 0
+      }
+    },
+    "XXZ": {
+      "static": {
+        "entropy": 0.9182958340544867,
+        "n_actions": 15,
+        "dist": {
+          "1": 5,
+          "3": 10
+        }
+      },
+      "haware": {
+        "entropy": 0.0,
+        "n_actions": 0
+      },
+      "agnostic": {
+        "entropy": -1.601713251907458e-15,
+        "n_actions": 4,
+        "dist": {
+          "3": 4
+        }
+      }
+    }
+  },
+  "pred_matrix": null
+}

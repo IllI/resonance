@@ -1,0 +1,22 @@
+{
+  "DisorderedXXZ_W3": {
+    "noise_slope_thresh": -0.35345710020743093,
+    "basis_invar_thresh": 0.017754834390932284,
+    "median_tau": 5.800000000000001
+  },
+  "XXZ": {
+    "noise_slope_thresh": 0.02043710544304175,
+    "basis_invar_thresh": 0.13109365438800322,
+    "median_tau": 3.0
+  },
+  "DisorderedXXZ_W1": {
+    "noise_slope_thresh": -0.2439068352317415,
+    "basis_invar_thresh": 0.09059157965282985,
+    "median_tau": 4.4
+  },
+  "OAT": {
+    "noise_slope_thresh": 0.0,
+    "basis_invar_thresh": 0.0002235889434814452,
+    "median_tau": 4.800000000000001
+  }
+}

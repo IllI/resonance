@@ -1,0 +1,224 @@
+{
+  "args": {
+    "N": 6,
+    "T_max": 4.0,
+    "n_steps": 15,
+    "B": 1,
+    "seed": 42,
+    "models": [
+      "XXZ",
+      "Ising"
+    ],
+    "out_dir": "program_l_results",
+    "smoke_test": true
+  },
+  "summary": {
+    "XXZ": {
+      "tau_static": 0.26666666666666666,
+      "tau_haware": 1.6,
+      "tau_agnostic": 3.7333333333333334,
+      "gain": 2.5999999999999996
+    },
+    "Ising": {
+      "tau_static": 1.8666666666666667,
+      "tau_haware": 1.8666666666666667,
+      "tau_agnostic": 1.8666666666666667,
+      "gain": NaN
+    }
+  },
+  "results": [
+    {
+      "model": "XXZ",
+      "controller": "static",
+      "N": 6,
+      "seed": 42,
+      "tau_transport": 0.26666666666666666,
+      "in_transport": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "T_max": 4.0,
+      "n_steps": 15,
+      "noise_params": {
+        "T1_rate": 0.03982802218501835,
+        "T2_rate": 0.04669345177644497,
+        "drift_amp": 0.04292989599556912,
+        "drift_freq": 0.36381561307671373
+      }
+    },
+    {
+      "model": "XXZ",
+      "controller": "haware",
+      "N": 6,
+      "seed": 42,
+      "tau_transport": 1.6,
+      "in_transport": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "T_max": 4.0,
+      "n_steps": 15,
+      "noise_params": {
+        "T1_rate": 0.03982802218501835,
+        "T2_rate": 0.04669345177644497,
+        "drift_amp": 0.04292989599556912,
+        "drift_freq": 0.36381561307671373
+      }
+    },
+    {
+      "model": "XXZ",
+      "controller": "agnostic",
+      "N": 6,
+      "seed": 42,
+      "tau_transport": 3.7333333333333334,
+      "in_transport": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "T_max": 4.0,
+      "n_steps": 15,
+      "noise_params": {
+        "T1_rate": 0.03982802218501835,
+        "T2_rate": 0.04669345177644497,
+        "drift_amp": 0.04292989599556912,
+        "drift_freq": 0.36381561307671373
+      }
+    },
+    {
+      "model": "Ising",
+      "controller": "static",
+      "N": 6,
+      "seed": 42,
+      "tau_transport": 1.8666666666666667,
+      "in_transport": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "T_max": 4.0,
+      "n_steps": 15,
+      "noise_params": {
+        "T1_rate": 0.00923798065494423,
+        "T2_rate": 0.09768412340549182,
+        "drift_amp": 0.03805698509951765,
+        "drift_freq": 0.4037289373746292
+      }
+    },
+    {
+      "model": "Ising",
+      "controller": "haware",
+      "N": 6,
+      "seed": 42,
+      "tau_transport": 1.8666666666666667,
+      "in_transport": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "T_max": 4.0,
+      "n_steps": 15,
+      "noise_params": {
+        "T1_rate": 0.00923798065494423,
+        "T2_rate": 0.09768412340549182,
+        "drift_amp": 0.03805698509951765,
+        "drift_freq": 0.4037289373746292
+      }
+    },
+    {
+      "model": "Ising",
+      "controller": "agnostic",
+      "N": 6,
+      "seed": 42,
+      "tau_transport": 1.8666666666666667,
+      "in_transport": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "T_max": 4.0,
+      "n_steps": 15,
+      "noise_params": {
+        "T1_rate": 0.00923798065494423,
+        "T2_rate": 0.09768412340549182,
+        "drift_amp": 0.03805698509951765,
+        "drift_freq": 0.4037289373746292
+      }
+    }
+  ],
+  "runtime_s": 1.6
+}

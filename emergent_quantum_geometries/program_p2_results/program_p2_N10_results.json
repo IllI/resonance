@@ -1,0 +1,181 @@
+{
+  "args": {
+    "N": 10,
+    "T_max": 6.0,
+    "n_steps": 30,
+    "w0": 2.0,
+    "alpha": 0.5,
+    "B": 2,
+    "seed": 42,
+    "models": [
+      "XXZ",
+      "DisorderedXXZ_W3",
+      "OAT"
+    ],
+    "controllers": [
+      "static",
+      "agnostic",
+      "probe_conditioned"
+    ],
+    "channels": [
+      "none",
+      "dephasing",
+      "scrambling"
+    ],
+    "sigmas": [
+      0.0,
+      0.5
+    ],
+    "n_phases": 12,
+    "out_dir": "/home/cityz/program_l/program_p2_results",
+    "require_tpu": true,
+    "smoke_test": false
+  },
+  "summary": {
+    "XXZ/none/sig=0.0/static": {
+      "r2_traj": 0.6028200566856046,
+      "n": 24
+    },
+    "XXZ/none/sig=0.0/agnostic": {
+      "r2_traj": 0.9306254196081465,
+      "n": 24
+    },
+    "XXZ/none/sig=0.0/probe_conditioned": {
+      "r2_traj": -2.6921465783372334,
+      "n": 24
+    },
+    "XXZ/none/sig=0.5/static": {
+      "r2_traj": 0.6028200566856046,
+      "n": 24
+    },
+    "XXZ/none/sig=0.5/agnostic": {
+      "r2_traj": 0.9306254196081465,
+      "n": 24
+    },
+    "XXZ/none/sig=0.5/probe_conditioned": {
+      "r2_traj": -2.6921465783372334,
+      "n": 24
+    },
+    "XXZ/dephasing/sig=0.5/static": {
+      "r2_traj": 0.6388194907017403,
+      "n": 24
+    },
+    "XXZ/dephasing/sig=0.5/agnostic": {
+      "r2_traj": 0.8967554599485119,
+      "n": 24
+    },
+    "XXZ/dephasing/sig=0.5/probe_conditioned": {
+      "r2_traj": -2.2769160990323454,
+      "n": 24
+    },
+    "XXZ/scrambling/sig=0.5/static": {
+      "r2_traj": 0.6225742925327177,
+      "n": 24
+    },
+    "XXZ/scrambling/sig=0.5/agnostic": {
+      "r2_traj": 0.9169242382493752,
+      "n": 24
+    },
+    "XXZ/scrambling/sig=0.5/probe_conditioned": {
+      "r2_traj": -2.6506860982605738,
+      "n": 24
+    },
+    "DisorderedXXZ_W3/none/sig=0.0/static": {
+      "r2_traj": 0.6957599818786161,
+      "n": 24
+    },
+    "DisorderedXXZ_W3/none/sig=0.0/agnostic": {
+      "r2_traj": 0.9285479637917574,
+      "n": 24
+    },
+    "DisorderedXXZ_W3/none/sig=0.0/probe_conditioned": {
+      "r2_traj": -2.1368161269517856,
+      "n": 24
+    },
+    "DisorderedXXZ_W3/none/sig=0.5/static": {
+      "r2_traj": 0.6957599818786161,
+      "n": 24
+    },
+    "DisorderedXXZ_W3/none/sig=0.5/agnostic": {
+      "r2_traj": 0.9285479637917574,
+      "n": 24
+    },
+    "DisorderedXXZ_W3/none/sig=0.5/probe_conditioned": {
+      "r2_traj": -2.1368161269517856,
+      "n": 24
+    },
+    "DisorderedXXZ_W3/dephasing/sig=0.5/static": {
+      "r2_traj": 0.6310652052969524,
+      "n": 24
+    },
+    "DisorderedXXZ_W3/dephasing/sig=0.5/agnostic": {
+      "r2_traj": 0.8925704019614406,
+      "n": 24
+    },
+    "DisorderedXXZ_W3/dephasing/sig=0.5/probe_conditioned": {
+      "r2_traj": -1.29138533087814,
+      "n": 24
+    },
+    "DisorderedXXZ_W3/scrambling/sig=0.5/static": {
+      "r2_traj": 0.7108321198951919,
+      "n": 24
+    },
+    "DisorderedXXZ_W3/scrambling/sig=0.5/agnostic": {
+      "r2_traj": 0.9252270542448496,
+      "n": 24
+    },
+    "DisorderedXXZ_W3/scrambling/sig=0.5/probe_conditioned": {
+      "r2_traj": -2.3146559938176288,
+      "n": 24
+    },
+    "OAT/none/sig=0.0/static": {
+      "r2_traj": 0.8264583161055183,
+      "n": 24
+    },
+    "OAT/none/sig=0.0/agnostic": {
+      "r2_traj": 0.7692789798406899,
+      "n": 24
+    },
+    "OAT/none/sig=0.0/probe_conditioned": {
+      "r2_traj": -0.9088534821943158,
+      "n": 24
+    },
+    "OAT/none/sig=0.5/static": {
+      "r2_traj": 0.8264583161055183,
+      "n": 24
+    },
+    "OAT/none/sig=0.5/agnostic": {
+      "r2_traj": 0.7692789798406899,
+      "n": 24
+    },
+    "OAT/none/sig=0.5/probe_conditioned": {
+      "r2_traj": -0.9088534821943158,
+      "n": 24
+    },
+    "OAT/dephasing/sig=0.5/static": {
+      "r2_traj": 0.8083241450117947,
+      "n": 24
+    },
+    "OAT/dephasing/sig=0.5/agnostic": {
+      "r2_traj": 0.736905327497681,
+      "n": 24
+    },
+    "OAT/dephasing/sig=0.5/probe_conditioned": {
+      "r2_traj": -1.3268212365101342,
+      "n": 24
+    },
+    "OAT/scrambling/sig=0.5/static": {
+      "r2_traj": 0.8231232623433115,
+      "n": 24
+    },
+    "OAT/scrambling/sig=0.5/agnostic": {
+      "r2_traj": 0.7801938272520426,
+      "n": 24
+    },
+    "OAT/scrambling/sig=0.5/probe_conditioned": {
+      "r2_traj": -0.7823106744949647,
+      "n": 24
+    }
+  },
+  "runtime_s": 12.8
+}

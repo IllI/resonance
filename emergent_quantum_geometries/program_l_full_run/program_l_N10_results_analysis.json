@@ -1,0 +1,75 @@
+{
+  "stats": {
+    "DisorderedXXZ_W1": {
+      "tau_static": 3.0,
+      "tau_haware": 3.3333333333333335,
+      "tau_agnostic": 3.6666666666666665,
+      "tau_static_std": 1.451436070471816,
+      "tau_agnostic_std": 2.4729649321321876,
+      "normalized_gain": 1.9999999999999987,
+      "beats_oracle": 1,
+      "n_boots": 3
+    },
+    "DisorderedXXZ_W3": {
+      "tau_static": 4.000000000000001,
+      "tau_haware": 4.000000000000001,
+      "tau_agnostic": 4.000000000000001,
+      "tau_static_std": 2.5455844122715714,
+      "tau_agnostic_std": 2.5455844122715714,
+      "normalized_gain": 0.0,
+      "beats_oracle": 0,
+      "n_boots": 3
+    },
+    "Ising": {
+      "tau_static": 5.666666666666668,
+      "tau_haware": 4.333333333333334,
+      "tau_agnostic": 5.733333333333334,
+      "tau_static_std": 0.09428090415820643,
+      "tau_agnostic_std": 0.09428090415820643,
+      "normalized_gain": 66.66666666666643,
+      "beats_oracle": 1,
+      "n_boots": 3
+    },
+    "OAT": {
+      "tau_static": 5.800000000000001,
+      "tau_haware": 5.000000000000001,
+      "tau_agnostic": 5.800000000000001,
+      "tau_static_std": 0.0,
+      "tau_agnostic_std": 0.0,
+      "normalized_gain": 0.0,
+      "beats_oracle": 1,
+      "n_boots": 3
+    },
+    "TiltedIsing": {
+      "tau_static": 4.066666666666666,
+      "tau_haware": 4.0,
+      "tau_agnostic": 5.2,
+      "tau_static_std": 0.8993825042154694,
+      "tau_agnostic_std": 0.43204937989385733,
+      "normalized_gain": 1133.3333333333337,
+      "beats_oracle": 1,
+      "n_boots": 3
+    },
+    "XXZ": {
+      "tau_static": 0.4000000000000001,
+      "tau_haware": 3.5333333333333337,
+      "tau_agnostic": 3.8000000000000007,
+      "tau_static_std": 5.551115123125783e-17,
+      "tau_agnostic_std": 1.4142135623730951,
+      "normalized_gain": 1.0851063829787235,
+      "beats_oracle": 1,
+      "n_boots": 3
+    }
+  },
+  "cv_latent": 0.20028899381219975,
+  "falsification_passed": false,
+  "falsification_lines": [
+    "  [FAIL] normalized_gain >= 0.5 in 2/4 non-null models",
+    "  [PASS] CV_latent=0.200 (threshold < 0.3)",
+    "  [FAIL] Null model violation: TiltedIsing: normalized_gain=1133.333 (expected ~0)",
+    "  [FAIL] Null model violation: Ising: normalized_gain=66.667 (expected ~0)",
+    "  [FAIL] agnostic > static in 2/4 non-null models",
+    "  [INFO] agnostic beats myopic oracle in 3/4 non-null models (expected: oracle is 1-step greedy, agnostic is long-horizon via strata score)"
+  ],
+  "pred_matrix": null
+}
