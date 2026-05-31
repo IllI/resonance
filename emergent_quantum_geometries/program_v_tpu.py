@@ -153,9 +153,12 @@ def run_probe_stage_v(evals, evecs, N, dt, bob_site):
 
 def run_step_psi(psi, evals, evecs, N, dt, p1, p2, p_cross, gate_info, key):
     # Coherent Evolution
-    p_e = evecs.conj().T @ psi
-    p_e = p_e * jnp.exp(-1j * evals * dt)
-    psi = evecs @ p_e
+    if evals is None:
+        psi = evecs @ psi
+    else:
+        p_e = evecs.conj().T @ psi
+        p_e = p_e * jnp.exp(-1j * evals * dt)
+        psi = evecs @ p_e
 
     # Stochastic Noise
     key_a, key_b = jax.random.split(key)

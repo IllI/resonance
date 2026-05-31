@@ -1,0 +1,288 @@
+{
+  "experiment": "tunnel_eigen_guided_folded_recovery",
+  "motifs": [
+    "cyclic_with_MIRROR_TIME",
+    "cyclic_with_ROTATE_PHASE",
+    "cyclic_with_SYMBOL_SHIFT",
+    "cyclic_with_SWAP_ATTRACTOR",
+    "fractal_nested_with_MIRROR_TIME",
+    "fractal_nested_with_ROTATE_PHASE",
+    "fractal_nested_with_SYMBOL_SHIFT",
+    "fractal_nested_with_SWAP_ATTRACTOR",
+    "palindrome_with_MIRROR_TIME",
+    "palindrome_with_ROTATE_PHASE",
+    "palindrome_with_SYMBOL_SHIFT",
+    "palindrome_with_SWAP_ATTRACTOR",
+    "sparse_with_MIRROR_TIME",
+    "sparse_with_ROTATE_PHASE",
+    "sparse_with_SYMBOL_SHIFT",
+    "sparse_with_SWAP_ATTRACTOR"
+  ],
+  "controls": [
+    "structured",
+    "markov_shuffle",
+    "block_permute_size2",
+    "block_permute_size2_within_random",
+    "phase_scramble",
+    "random_crofton"
+  ],
+  "records": [
+    {
+      "mera_depth": 2,
+      "max_span": 8,
+      "n_kinematic_nodes": 36,
+      "mean_barrier": 12.609853744506836,
+      "trials": [
+        {
+          "seed": 11,
+          "control": "structured",
+          "motif_weights": {
+            "cyclic_with_MIRROR_TIME": 0.0624881312251091,
+            "cyclic_with_ROTATE_PHASE": 0.07125856727361679,
+            "cyclic_with_SYMBOL_SHIFT": 0.05642780289053917,
+            "cyclic_with_SWAP_ATTRACTOR": 0.06109302118420601,
+            "fractal_nested_with_MIRROR_TIME": 0.06187943369150162,
+            "fractal_nested_with_ROTATE_PHASE": 0.07064802944660187,
+            "fractal_nested_with_SYMBOL_SHIFT": 0.05582043528556824,
+            "fractal_nested_with_SWAP_ATTRACTOR": 0.06048468127846718,
+            "palindrome_with_MIRROR_TIME": 0.06167642027139664,
+            "palindrome_with_ROTATE_PHASE": 0.07044443488121033,
+            "palindrome_with_SYMBOL_SHIFT": 0.055617835372686386,
+            "palindrome_with_SWAP_ATTRACTOR": 0.06028178334236145,
+            "sparse_with_MIRROR_TIME": 0.06264109909534454,
+            "sparse_with_ROTATE_PHASE": 0.07141199707984924,
+            "sparse_with_SYMBOL_SHIFT": 0.05658045783638954,
+            "sparse_with_SWAP_ATTRACTOR": 0.06124591454863548
+          },
+          "controllers": {
+            "free": {
+              "phase_spread_final": 1.2288777828216553,
+              "phase_spread_slope": 0.05888814106583595,
+              "filament_rt_overlap": 1.0,
+              "semantic_reconstruction_cosine": 0.9931766390800476,
+              "structured_target_cosine": 0.9931766390800476,
+              "structured_transition_graph_cosine": 0.9911502599716187,
+              "structured_transition_graph_l1": 0.008199096657335758,
+              "crofton_baseline_cosine": 0.9935293793678284,
+              "crofton_baseline_structured_cosine": 0.9935293793678284,
+              "crofton_baseline_graph_cosine": 0.9916937351226807,
+              "dlinoss_lift_over_crofton": -0.0003527402877807617,
+              "dlinoss_graph_lift_over_crofton": -0.0005434751510620117,
+              "filament_crofton_bound": 0.5561321973800659,
+              "compression_ratio": 0.19444444444444445,
+              "dlinoss_K_eff": 1
+            }
+          }
+        },
+        {
+          "seed": 11,
+          "control": "markov_shuffle",
+          "motif_weights": {
+            "cyclic_with_MIRROR_TIME": 0.0624881312251091,
+            "cyclic_with_ROTATE_PHASE": 0.07125856727361679,
+            "cyclic_with_SYMBOL_SHIFT": 0.05642780289053917,
+            "cyclic_with_SWAP_ATTRACTOR": 0.06109302118420601,
+            "fractal_nested_with_MIRROR_TIME": 0.06187943369150162,
+            "fractal_nested_with_ROTATE_PHASE": 0.07064802944660187,
+            "fractal_nested_with_SYMBOL_SHIFT": 0.05582043528556824,
+            "fractal_nested_with_SWAP_ATTRACTOR": 0.06048468127846718,
+            "palindrome_with_MIRROR_TIME": 0.06167642027139664,
+            "palindrome_with_ROTATE_PHASE": 0.07044443488121033,
+            "palindrome_with_SYMBOL_SHIFT": 0.055617835372686386,
+            "palindrome_with_SWAP_ATTRACTOR": 0.06028178334236145,
+            "sparse_with_MIRROR_TIME": 0.06264109909534454,
+            "sparse_with_ROTATE_PHASE": 0.07141199707984924,
+            "sparse_with_SYMBOL_SHIFT": 0.05658045783638954,
+            "sparse_with_SWAP_ATTRACTOR": 0.06124591454863548
+          },
+          "controllers": {
+            "free": {
+              "phase_spread_final": 1.1958119869232178,
+              "phase_spread_slope": 0.05037003010511398,
+              "filament_rt_overlap": 1.0,
+              "semantic_reconstruction_cosine": 0.9907642602920532,
+              "structured_target_cosine": 0.9907642602920532,
+              "structured_transition_graph_cosine": 0.987312376499176,
+              "structured_transition_graph_l1": 0.009657232090830803,
+              "crofton_baseline_cosine": 0.9913588166236877,
+              "crofton_baseline_structured_cosine": 0.9913588166236877,
+              "crofton_baseline_graph_cosine": 0.9882654547691345,
+              "dlinoss_lift_over_crofton": -0.0005945563316345215,
+              "dlinoss_graph_lift_over_crofton": -0.0009530782699584961,
+              "filament_crofton_bound": 0.5618883371353149,
+              "compression_ratio": 0.19444444444444445,
+              "dlinoss_K_eff": 1
+            }
+          }
+        },
+        {
+          "seed": 11,
+          "control": "block_permute_size2",
+          "motif_weights": {
+            "cyclic_with_MIRROR_TIME": 0.0624881312251091,
+            "cyclic_with_ROTATE_PHASE": 0.07125856727361679,
+            "cyclic_with_SYMBOL_SHIFT": 0.05642780289053917,
+            "cyclic_with_SWAP_ATTRACTOR": 0.06109302118420601,
+            "fractal_nested_with_MIRROR_TIME": 0.06187943369150162,
+            "fractal_nested_with_ROTATE_PHASE": 0.07064802944660187,
+            "fractal_nested_with_SYMBOL_SHIFT": 0.05582043528556824,
+            "fractal_nested_with_SWAP_ATTRACTOR": 0.06048468127846718,
+            "palindrome_with_MIRROR_TIME": 0.06167642027139664,
+            "palindrome_with_ROTATE_PHASE": 0.07044443488121033,
+            "palindrome_with_SYMBOL_SHIFT": 0.055617835372686386,
+            "palindrome_with_SWAP_ATTRACTOR": 0.06028178334236145,
+            "sparse_with_MIRROR_TIME": 0.06264109909534454,
+            "sparse_with_ROTATE_PHASE": 0.07141199707984924,
+            "sparse_with_SYMBOL_SHIFT": 0.05658045783638954,
+            "sparse_with_SWAP_ATTRACTOR": 0.06124591454863548
+          },
+          "controllers": {
+            "free": {
+              "phase_spread_final": 1.1982738971710205,
+              "phase_spread_slope": 0.05107734352350235,
+              "filament_rt_overlap": 1.0,
+              "semantic_reconstruction_cosine": 0.9930328130722046,
+              "structured_target_cosine": 0.9930328130722046,
+              "structured_transition_graph_cosine": 0.9917577505111694,
+              "structured_transition_graph_l1": 0.008096365258097649,
+              "crofton_baseline_cosine": 0.9934019446372986,
+              "crofton_baseline_structured_cosine": 0.9934019446372986,
+              "crofton_baseline_graph_cosine": 0.992314875125885,
+              "dlinoss_lift_over_crofton": -0.00036913156509399414,
+              "dlinoss_graph_lift_over_crofton": -0.0005571246147155762,
+              "filament_crofton_bound": 0.5621376037597656,
+              "compression_ratio": 0.19444444444444445,
+              "dlinoss_K_eff": 1
+            }
+          }
+        },
+        {
+          "seed": 11,
+          "control": "block_permute_size2_within_random",
+          "motif_weights": {
+            "cyclic_with_MIRROR_TIME": 0.0624881312251091,
+            "cyclic_with_ROTATE_PHASE": 0.07125856727361679,
+            "cyclic_with_SYMBOL_SHIFT": 0.05642780289053917,
+            "cyclic_with_SWAP_ATTRACTOR": 0.06109302118420601,
+            "fractal_nested_with_MIRROR_TIME": 0.06187943369150162,
+            "fractal_nested_with_ROTATE_PHASE": 0.07064802944660187,
+            "fractal_nested_with_SYMBOL_SHIFT": 0.05582043528556824,
+            "fractal_nested_with_SWAP_ATTRACTOR": 0.06048468127846718,
+            "palindrome_with_MIRROR_TIME": 0.06167642027139664,
+            "palindrome_with_ROTATE_PHASE": 0.07044443488121033,
+            "palindrome_with_SYMBOL_SHIFT": 0.055617835372686386,
+            "palindrome_with_SWAP_ATTRACTOR": 0.06028178334236145,
+            "sparse_with_MIRROR_TIME": 0.06264109909534454,
+            "sparse_with_ROTATE_PHASE": 0.07141199707984924,
+            "sparse_with_SYMBOL_SHIFT": 0.05658045783638954,
+            "sparse_with_SWAP_ATTRACTOR": 0.06124591454863548
+          },
+          "controllers": {
+            "free": {
+              "phase_spread_final": 1.1879950761795044,
+              "phase_spread_slope": 0.048470389097929,
+              "filament_rt_overlap": 1.0,
+              "semantic_reconstruction_cosine": 0.9952963590621948,
+              "structured_target_cosine": 0.9952963590621948,
+              "structured_transition_graph_cosine": 0.994281530380249,
+              "structured_transition_graph_l1": 0.006513513624668121,
+              "crofton_baseline_cosine": 0.9955520033836365,
+              "crofton_baseline_structured_cosine": 0.9955520033836365,
+              "crofton_baseline_graph_cosine": 0.9947057962417603,
+              "dlinoss_lift_over_crofton": -0.0002556443214416504,
+              "dlinoss_graph_lift_over_crofton": -0.00042426586151123047,
+              "filament_crofton_bound": 0.5652182102203369,
+              "compression_ratio": 0.19444444444444445,
+              "dlinoss_K_eff": 1
+            }
+          }
+        },
+        {
+          "seed": 11,
+          "control": "phase_scramble",
+          "motif_weights": {
+            "cyclic_with_MIRROR_TIME": 0.0624881312251091,
+            "cyclic_with_ROTATE_PHASE": 0.07125856727361679,
+            "cyclic_with_SYMBOL_SHIFT": 0.05642780289053917,
+            "cyclic_with_SWAP_ATTRACTOR": 0.06109302118420601,
+            "fractal_nested_with_MIRROR_TIME": 0.06187943369150162,
+            "fractal_nested_with_ROTATE_PHASE": 0.07064802944660187,
+            "fractal_nested_with_SYMBOL_SHIFT": 0.05582043528556824,
+            "fractal_nested_with_SWAP_ATTRACTOR": 0.06048468127846718,
+            "palindrome_with_MIRROR_TIME": 0.06167642027139664,
+            "palindrome_with_ROTATE_PHASE": 0.07044443488121033,
+            "palindrome_with_SYMBOL_SHIFT": 0.055617835372686386,
+            "palindrome_with_SWAP_ATTRACTOR": 0.06028178334236145,
+            "sparse_with_MIRROR_TIME": 0.06264109909534454,
+            "sparse_with_ROTATE_PHASE": 0.07141199707984924,
+            "sparse_with_SYMBOL_SHIFT": 0.05658045783638954,
+            "sparse_with_SWAP_ATTRACTOR": 0.06124591454863548
+          },
+          "controllers": {
+            "free": {
+              "phase_spread_final": 1.2288777828216553,
+              "phase_spread_slope": 0.05888814106583595,
+              "filament_rt_overlap": 1.0,
+              "semantic_reconstruction_cosine": 0.9931766390800476,
+              "structured_target_cosine": 0.9931766390800476,
+              "structured_transition_graph_cosine": 0.9911502599716187,
+              "structured_transition_graph_l1": 0.008199096657335758,
+              "crofton_baseline_cosine": 0.9935293793678284,
+              "crofton_baseline_structured_cosine": 0.9935293793678284,
+              "crofton_baseline_graph_cosine": 0.9916937351226807,
+              "dlinoss_lift_over_crofton": -0.0003527402877807617,
+              "dlinoss_graph_lift_over_crofton": -0.0005434751510620117,
+              "filament_crofton_bound": 0.5561321973800659,
+              "compression_ratio": 0.19444444444444445,
+              "dlinoss_K_eff": 1
+            }
+          }
+        },
+        {
+          "seed": 11,
+          "control": "random_crofton",
+          "motif_weights": {
+            "cyclic_with_MIRROR_TIME": 0.0624881312251091,
+            "cyclic_with_ROTATE_PHASE": 0.07125856727361679,
+            "cyclic_with_SYMBOL_SHIFT": 0.05642780289053917,
+            "cyclic_with_SWAP_ATTRACTOR": 0.06109302118420601,
+            "fractal_nested_with_MIRROR_TIME": 0.06187943369150162,
+            "fractal_nested_with_ROTATE_PHASE": 0.07064802944660187,
+            "fractal_nested_with_SYMBOL_SHIFT": 0.05582043528556824,
+            "fractal_nested_with_SWAP_ATTRACTOR": 0.06048468127846718,
+            "palindrome_with_MIRROR_TIME": 0.06167642027139664,
+            "palindrome_with_ROTATE_PHASE": 0.07044443488121033,
+            "palindrome_with_SYMBOL_SHIFT": 0.055617835372686386,
+            "palindrome_with_SWAP_ATTRACTOR": 0.06028178334236145,
+            "sparse_with_MIRROR_TIME": 0.06264109909534454,
+            "sparse_with_ROTATE_PHASE": 0.07141199707984924,
+            "sparse_with_SYMBOL_SHIFT": 0.05658045783638954,
+            "sparse_with_SWAP_ATTRACTOR": 0.06124591454863548
+          },
+          "controllers": {
+            "free": {
+              "phase_spread_final": 1.047640085220337,
+              "phase_spread_slope": 0.013474165461957455,
+              "filament_rt_overlap": 1.0,
+              "semantic_reconstruction_cosine": 0.9834664463996887,
+              "structured_target_cosine": 0.9834664463996887,
+              "structured_transition_graph_cosine": 0.9778838753700256,
+              "structured_transition_graph_l1": 0.011749869212508202,
+              "crofton_baseline_cosine": 0.9838123917579651,
+              "crofton_baseline_structured_cosine": 0.9838123917579651,
+              "crofton_baseline_graph_cosine": 0.9785504341125488,
+              "dlinoss_lift_over_crofton": -0.0003459453582763672,
+              "dlinoss_graph_lift_over_crofton": -0.0006665587425231934,
+              "filament_crofton_bound": 0.5561322569847107,
+              "compression_ratio": 0.19444444444444445,
+              "dlinoss_K_eff": 1
+            }
+          }
+        }
+      ],
+      "heldout_transport": {},
+      "semantic_recovery": {}
+    }
+  ],
+  "runtime_s": 126.3
+}

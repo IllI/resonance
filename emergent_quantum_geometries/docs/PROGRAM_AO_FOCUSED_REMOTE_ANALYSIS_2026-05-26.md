@@ -12,9 +12,9 @@
 - Experiment: `folded_field_recovery_hard_controls`
 - Mode: `--ao-focused` (semantic recovery only, depth fixed to 3)
 - Backend: TPU (`jax` on `tpu`)
-- Runtime: `2713.6 s` (~45.2 minutes)
+- Runtime: `1832.8 s` (~30.5 minutes)
 - Records: `1` depth record (`depth=3`)
-- Recovery sweep completed for noise: `0.18`, `0.30`, `0.45`
+- Recovery sweep completed for noise: `0.30`, `0.45`
 
 ## Key outcomes
 
@@ -25,52 +25,45 @@ The success condition for AO was directional:
 
 Observed summary:
 
-1. `ibm_lite_folded` was strongest at low noise (`0.18`) and remained competitive.
-2. `free` stayed unexpectedly strong at all noise levels, often matching or beating `folded_decoder` on score.
-3. `folded_decoder` improved at high noise (`0.45`) and achieved positive minimum hard-control lift there.
-4. `filament_stabilized` underperformed with negative minimum hard-control lift at all three noise points.
-5. The hardest adversary was typically `block_permute` (minimum margin often set by block-permute gap).
+1. `free` remained competitive, but the new scoring made its wins much smaller and easier to interpret.
+2. `ibm_lite_folded` was strongest at `noise=0.30`, which is the cleanest hardware-path signal in the run.
+3. `filament_stabilized` improved versus the earlier AO pass, suggesting the tunnel-affinity coupling change helped.
+4. `folded_decoder` improved at `noise=0.45` and achieved a small positive minimum hard-control lift there.
+5. `block_permute` remained the hardest adversary and is the control to keep sharpening.
 
 ## Detailed metrics (remote summary)
 
-`noise=0.18`
-
-- `free`: score `0.6099`, noisy cosine `0.9109`, min hard-control lift `+0.0000`
-- `filament_stabilized`: score `0.5303`, noisy cosine `0.8151`, min lift `-0.0502`
-- `folded_decoder`: score `0.5758`, noisy cosine `0.9000`, min lift `-0.0187`
-- `ibm_lite_folded`: score `0.6210`, noisy cosine `0.9430`, min lift `+0.0158`
-
 `noise=0.30`
 
-- `free`: score `0.6397`, noisy cosine `0.9772`, min lift `+0.0000`
-- `filament_stabilized`: score `0.5690`, noisy cosine `0.8989`, min lift `-0.0437`
-- `folded_decoder`: score `0.5574`, noisy cosine `0.8835`, min lift `-0.0347`
-- `ibm_lite_folded`: score `0.5849`, noisy cosine `0.8920`, min lift `-0.0153`
+- `free`: score `0.3599`, noisy cosine `0.9109`, min hard-control lift `+0.0616`
+- `filament_stabilized`: score `0.2841`, noisy cosine `0.8230`, min lift `-0.0012`
+- `folded_decoder`: score `0.2681`, noisy cosine `0.8759`, min lift `-0.0279`
+- `ibm_lite_folded`: score `0.3475`, noisy cosine `0.9430`, min lift `+0.0585`
 
 `noise=0.45`
 
-- `free`: score `0.6053`, noisy cosine `0.8999`, min lift `+0.0030`
-- `filament_stabilized`: score `0.5414`, noisy cosine `0.8652`, min lift `-0.0804`
-- `folded_decoder`: score `0.5924`, noisy cosine `0.9225`, min lift `+0.0063`
-- `ibm_lite_folded`: score `0.5704`, noisy cosine `0.8606`, min lift `-0.0212`
+- `free`: score `0.3450`, noisy cosine `0.9772`, min hard-control lift `+0.0281`
+- `filament_stabilized`: score `0.3332`, noisy cosine `0.8964`, min lift `+0.0686`
+- `folded_decoder`: score `0.2903`, noisy cosine `0.9169`, min lift `+0.0026`
+- `ibm_lite_folded`: score `0.2759`, noisy cosine `0.8858`, min lift `-0.0402`
 
 ## Interpretation versus research objective
 
 This focused AO run is a **mixed but useful negative/diagnostic result**:
 
-- Evidence for robust structured-recovery superiority is not yet established because `free` remained very strong.
-- `folded_decoder` shows promising behavior at high noise (`0.45`) where it recovered a positive minimum hard-control margin.
-- `ibm_lite_folded` being strongest at `0.18` supports hardware-constrained feasibility, but consistency across noise is not yet there.
-- `filament_stabilized` likely needs retuning (feedback/damping/tunnel coupling or gate-cost weight).
+- Evidence for robust structured-recovery superiority is not yet established because `free` still remains competitive under the tighter score.
+- `ibm_lite_folded` is the clearest hardware-constrained signal at `noise=0.30`, so that path looks worth preserving.
+- `filament_stabilized` improved relative to the prior AO pass, which supports the tunnel-affinity coupling fix.
+- `folded_decoder` is still not dominant, but it now has a small positive margin at `noise=0.45`, so it is not dead; it just needs a stronger adversary and better mode guidance.
 
 ## Practical course-correction
 
 1. Rebalance the folded score to penalize trivial/free wins:
-   - increase hard-control margin weight (`beta`) and reduce raw noisy-cosine dominance (`alpha`).
+   - keep `alpha` low and keep `beta` dominant.
 2. Strengthen controls further in recovery:
-   - keep `block_permute` as primary adversary (it is the hardest control in this run).
+   - keep `block_permute` as primary adversary and add a stricter `block_size=2` / within-block-randomization variant.
 3. Add per-control confidence intervals across more seeds in focused mode:
-   - current focused run used no trial sweep; add a lightweight 2-3 seed recovery-only repeat.
+   - current focused run used no trial sweep; add a lightweight 2-3 seed recovery-only repeat once the adversary is sharpened.
 4. Keep `ibm_lite_folded` path:
    - it is already competitive and likely the most publishable bridge to constrained hardware claims.
 
@@ -79,16 +72,16 @@ This focused AO run is a **mixed but useful negative/diagnostic result**:
 - Earlier programs established that relational/geometry-aware control outperforms naive symbol-level decoding under several perturbations.
 - AO-focused now tests hard controls directly in the recovery decoder.
 - Current result: partial support for folded-topology recovery under noise, but not yet a decisive dominance result over free baseline.
-- Next milestone: show repeated positive **minimum hard-control lift** for `folded_decoder` across seeds and at least one moderate/high noise regime while keeping IBM-lite constraints.
+- Next milestone: show repeated positive **minimum hard-control lift** for a tunnel-guided decoder across seeds and at least one moderate/high noise regime while keeping IBM-lite constraints.
 
 ## Current decoding problem (why folded recovery is still unstable)
 
 The central issue is that the current decoder can still win via shallow geometric/statistical shortcuts instead of true manifold unfolding. In practice:
 
 1. `free` baseline remains too competitive, meaning the reconstruction target is still partially recoverable without a strong topology-preserving observer.
-2. `filament_stabilized` often collapses on the hardest control (`block_permute`), indicating insufficient sensitivity to higher-order recurrence structure.
+2. `filament_stabilized` is better after the tunnel-affinity fix, but it still does not fully dominate the hardest control.
 3. `folded_decoder` improves at higher noise but does not consistently dominate all hard controls, so the latent-to-semantic inverse map is not yet robust.
-4. The current folded score can reward high noisy cosine even when one hard control margin is negative, which permits brittle decoding wins.
+4. The current folded score is much harder to game than before, but it still needs an even sharper adversary to expose the weakest path.
 
 Interpretation: D-LinOSS currently behaves like a good geometric smoother, but not yet like a full semantic-topology observer/inverter for compressed folded manifolds.
 
@@ -114,7 +107,7 @@ Proposed D-LinOSS upgrade path:
    - Cycle loss: folded -> unfolded -> refolded should preserve topology class.
    - Mode occupancy regularizer: semantic decode must depend on stable transport modes, not a single shallow statistic.
 5. Tighten success metric:
-   - Require positive margin against each hard control (`markov`, `block`, `phase`, `crofton`) per noise level.
+   - Require positive margin against the strongest hard control, then report the full control table as a secondary diagnostic.
    - Report worst-control margin as primary KPI; noisy cosine becomes secondary.
 
 ## Concrete next-run spec (fast, TPU-safe)
@@ -124,8 +117,8 @@ Use a recovery-only focused run with minimal compile churn:
 - Depth: `3`
 - Noise: `0.30`, `0.45`
 - Controllers: `free`, `folded_decoder`, `ibm_lite_folded`, `tunnel_eigen_unfolded` (new)
-- Seeds: `11`, `29`, `47` (recovery-only; skip full trial sweep)
-- Hard controls in decoder path: `markov_shuffle`, `block_permute`, `phase_scramble`, `random_crofton`
+- Seeds: `11`, `29`, `47` for a lightweight recovery-only repeat
+- Hard controls in decoder path: `block_permute` as the primary adversary, with the other controls kept for diagnostics
 - Primary endpoint: positive worst-control margin for `tunnel_eigen_unfolded` at `0.45` with reproducibility across seeds
 
 If this holds, we get a stronger claim: recovery is being driven by stable transport geometry (tunnel eigenstructure), not symbol leakage or shallow recurrence artifacts.

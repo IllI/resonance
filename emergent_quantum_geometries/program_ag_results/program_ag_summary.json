@@ -1,86 +1,150 @@
 {
-  "experiment": "latent_semantic_flow_fields_partial",
-  "mera_depth": 2,
-  "sequence_lengths": {
-    "8": {
-      "free": {
-        "latent_diff": {
-          "mean": 0.00822,
-          "ci95": 0.0016
-        },
-        "latent_curv": {
-          "mean": 0.1191,
-          "ci95": 0.01277
-        },
-        "mean_sep": {
-          "mean": 0.13096,
-          "ci95": 0.01534
-        },
-        "koopman_err": {
-          "mean": 0.00606,
-          "ci95": 0.00116
-        },
-        "forecast_acc": {
-          "mean": 0.24824,
-          "ci95": 0.06289
-        },
-        "adv_shuffled_acc": {
-          "mean": 0.2076,
-          "ci95": 0.0517
-        }
-      },
-      "local_Z": {
-        "latent_diff": {
-          "mean": 0.00824,
-          "ci95": 0.00177
-        },
-        "latent_curv": {
-          "mean": 0.121,
-          "ci95": 0.01675
-        },
-        "mean_sep": {
-          "mean": 0.13072,
-          "ci95": 0.01644
-        },
-        "koopman_err": {
-          "mean": 0.00644,
-          "ci95": 0.00133
-        },
-        "forecast_acc": {
-          "mean": 0.2636,
-          "ci95": 0.07761
-        },
-        "adv_shuffled_acc": {
-          "mean": 0.1988,
-          "ci95": 0.03334
-        }
-      },
-      "entropy_block": {
-        "latent_diff": {
-          "mean": 0.00658,
-          "ci95": 0.00165
-        },
-        "latent_curv": {
-          "mean": 0.1058,
-          "ci95": 0.01039
-        },
-        "mean_sep": {
-          "mean": 0.12288,
-          "ci95": 0.02039
-        },
-        "koopman_err": {
-          "mean": 0.00582,
-          "ci95": 0.00112
-        },
-        "forecast_acc": {
-          "mean": 0.24436,
-          "ci95": 0.06872
-        },
-        "adv_shuffled_acc": {
-          "mean": 0.2152,
-          "ci95": 0.07705
+  "experiment": "latent_semantic_flow_fields",
+  "seed_suite": [
+    11,
+    29,
+    47,
+    83,
+    101
+  ],
+  "sequence_lengths": [
+    8
+  ],
+  "records": [
+    {
+      "mera_depth": 2,
+      "cone_overlap_gamma": 0.09090909090909091,
+      "sequence_lengths": {
+        "8": {
+          "free": {
+            "raw_acc": {
+              "mean": 0.12898,
+              "ci95": 0.00547
+            },
+            "retro_acc": {
+              "mean": 0.26327,
+              "ci95": 0.03865
+            },
+            "forecast_acc": {
+              "mean": 0.24821,
+              "ci95": 0.03364
+            },
+            "latent_diff": {
+              "mean": 0.00819,
+              "ci95": 0.00073
+            },
+            "latent_curv": {
+              "mean": 0.1191,
+              "ci95": 0.00575
+            },
+            "mean_sep": {
+              "mean": 0.13096,
+              "ci95": 0.00695
+            },
+            "koopman_err": {
+              "mean": 0.00606,
+              "ci95": 0.00052
+            },
+            "adv_shuffled_acc": {
+              "mean": 0.22534,
+              "ci95": 0.03519
+            },
+            "adv_random_acc": {
+              "mean": 0.24669,
+              "ci95": 0.02345
+            },
+            "adv_decorrelated_acc": {
+              "mean": 0.2416,
+              "ci95": 0.03376
+            }
+          },
+          "local_Z": {
+            "raw_acc": {
+              "mean": 0.13212,
+              "ci95": 0.00578
+            },
+            "retro_acc": {
+              "mean": 0.27497,
+              "ci95": 0.03516
+            },
+            "forecast_acc": {
+              "mean": 0.2636,
+              "ci95": 0.04066
+            },
+            "latent_diff": {
+              "mean": 0.00822,
+              "ci95": 0.00081
+            },
+            "latent_curv": {
+              "mean": 0.121,
+              "ci95": 0.00753
+            },
+            "mean_sep": {
+              "mean": 0.13072,
+              "ci95": 0.00741
+            },
+            "koopman_err": {
+              "mean": 0.00646,
+              "ci95": 0.00061
+            },
+            "adv_shuffled_acc": {
+              "mean": 0.20833,
+              "ci95": 0.02832
+            },
+            "adv_random_acc": {
+              "mean": 0.24545,
+              "ci95": 0.0221
+            },
+            "adv_decorrelated_acc": {
+              "mean": 0.25861,
+              "ci95": 0.04057
+            }
+          },
+          "entropy_block": {
+            "raw_acc": {
+              "mean": 0.12862,
+              "ci95": 0.00532
+            },
+            "retro_acc": {
+              "mean": 0.23311,
+              "ci95": 0.02694
+            },
+            "forecast_acc": {
+              "mean": 0.24434,
+              "ci95": 0.0342
+            },
+            "latent_diff": {
+              "mean": 0.00656,
+              "ci95": 0.00075
+            },
+            "latent_curv": {
+              "mean": 0.10579,
+              "ci95": 0.0047
+            },
+            "mean_sep": {
+              "mean": 0.12289,
+              "ci95": 0.00919
+            },
+            "koopman_err": {
+              "mean": 0.00583,
+              "ci95": 0.00051
+            },
+            "adv_shuffled_acc": {
+              "mean": 0.21867,
+              "ci95": 0.03542
+            },
+            "adv_random_acc": {
+              "mean": 0.24199,
+              "ci95": 0.0224
+            },
+            "adv_decorrelated_acc": {
+              "mean": 0.24801,
+              "ci95": 0.03417
+            }
+          }
         }
       }
     }
-  }
+  ],
+  "runtime_s": 5333.2
 }

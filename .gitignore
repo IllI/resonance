@@ -64,3 +64,10 @@ Thumbs.db
 # Log files
 *.log
 .env
+
+# Local machine / credentialed tooling state (do not commit)
+.gcloud_cfg/
+.antigravitycli/
+
+# Emails / contract artifacts (keep local)
+[TRC] You have access to free Cloud TPUs.eml

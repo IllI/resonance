@@ -22,8 +22,6 @@ import urllib.request
 import threading
 from functools import partial
 
-import numpy as np
-
 try:
     import jax
     import jax.numpy as jnp
@@ -150,6 +148,15 @@ def build_tunneling_kernel(features, barrier_base, barrier_alpha, tunnel_temp):
     return kernel, barrier
 
 
+def build_node_tunnel_affinity(motif_entropy, motif_features, barrier_base, barrier_alpha, tunnel_temp):
+    kernel, _ = build_tunneling_kernel(motif_features, barrier_base, barrier_alpha, tunnel_temp)
+    motif_response = jax.nn.softmax(motif_entropy.T, axis=1)
+    affinity = motif_response @ kernel @ motif_response.T
+    affinity = 0.5 * (affinity + affinity.T)
+    affinity = affinity / (jnp.max(affinity) + 1e-8)
+    return affinity
+
+
 def stationary_distribution(kernel, steps=64):
     p = jnp.ones((kernel.shape[0],), dtype=jnp.float32) / kernel.shape[0]
     for _ in range(steps):
@@ -217,7 +224,7 @@ def crofton_weights(nodes, entropy_values, seq_len):
     return weights / (jnp.max(weights) + 1e-8)
 
 
-def build_kinematic_coupling(nodes, crofton, tunneling_strength, ibm_lite=False):
+def build_kinematic_coupling(nodes, crofton, tunneling_strength, ibm_lite=False, tunnel_affinity=None):
     u = nodes[:, 0].astype(jnp.int32)
     v = nodes[:, 1].astype(jnp.int32)
     u1 = u[:, None]
@@ -242,8 +249,9 @@ def build_kinematic_coupling(nodes, crofton, tunneling_strength, ibm_lite=False)
         nearest_neighbor = jnp.abs(idx[:, None] - idx[None, :]) <= 2
         adj = jnp.where(nearest_neighbor, adj, 0.0)
 
-    filament_bias = 0.5 * (crofton[:, None] + crofton[None, :])
-    coupling = adj * (1.0 + tunneling_strength * filament_bias)
+    if tunnel_affinity is None:
+        tunnel_affinity = 0.5 * (crofton[:, None] + crofton[None, :])
+    coupling = adj * (1.0 + tunneling_strength * tunnel_affinity)
     coupling = coupling / (jnp.sum(coupling, axis=1, keepdims=True) + 1e-8)
     return coupling
 
@@ -399,7 +407,29 @@ def semantic_mixtures(key, n_states, n_samples, alpha):
     return raw / (jnp.sum(raw, axis=1, keepdims=True) + 1e-8)
 
 
-def signatures_for_weights(args, weights_batch, nodes, motif_entropy, ctrl_cfg, control_name, key_control):
+def signatures_for_weights(
+    args,
+    weights_batch,
+    nodes,
+    motif_entropy,
+    ctrl_cfg,
+    control_name,
+    key_control,
+    motif_features=None,
+    coupling_entropy=None,
+):
+    if motif_features is not None:
+        affinity_entropy = motif_entropy if coupling_entropy is None else coupling_entropy
+        tunnel_affinity = build_node_tunnel_affinity(
+            affinity_entropy,
+            motif_features,
+            args.barrier_base,
+            args.barrier_alpha,
+            args.tunnel_temp,
+        )
+    else:
+        tunnel_affinity = None
+
     def one_signature(weights, sample_idx):
         entropy_values = weights @ motif_entropy
         crofton = crofton_weights(nodes, entropy_values, args.sequence_length)
@@ -427,7 +457,13 @@ def signatures_for_weights(args, weights_batch, nodes, motif_entropy, ctrl_cfg, 
         x0 = jnp.sqrt(crofton + 1e-3) * jnp.exp(1j * semantic_phase)
         x0 = x0.astype(jnp.complex64)
         x0 = x0 / (jnp.linalg.norm(x0) + 1e-8)
-        coupling = build_kinematic_coupling(nodes, crofton, ctrl_cfg["tunnel"], ctrl_cfg.get("ibm_lite", False))
+        coupling = build_kinematic_coupling(
+            nodes,
+            crofton,
+            ctrl_cfg["tunnel"],
+            ctrl_cfg.get("ibm_lite", False),
+            tunnel_affinity,
+        )
         xs = evolve_dlinoss(
             x0,
             omega,
@@ -443,28 +479,42 @@ def signatures_for_weights(args, weights_batch, nodes, motif_entropy, ctrl_cfg, 
     return jax.vmap(one_signature)(weights_batch, sample_ids)
 
 
-def evaluate_semantic_recovery(args, seed_key, ctrl_cfg, nodes, seqs, graph_features, noise_level):
+def evaluate_semantic_recovery(args, seed_key, ctrl_cfg, nodes, seqs, motif_features, graph_features, noise_level):
     key_train, key_test, key_noise, key_shuffle, key_block, key_crofton, key_phase = jax.random.split(seed_key, 7)
     train_w = semantic_mixtures(key_train, seqs.shape[0], args.recovery_train_states, args.mixture_alpha)
     test_w = semantic_mixtures(key_test, seqs.shape[0], args.recovery_test_states, args.mixture_alpha)
     target_graphs = test_w @ graph_features
 
     clean_entropy = motif_interval_entropy_table(seqs, nodes)
-    train_x = signatures_for_weights(args, train_w, nodes, clean_entropy, ctrl_cfg, "structured", key_train)
-    clean_test_x = signatures_for_weights(args, test_w, nodes, clean_entropy, ctrl_cfg, "structured", key_test)
+    train_x = signatures_for_weights(
+        args, train_w, nodes, clean_entropy, ctrl_cfg, "structured", key_train, motif_features, clean_entropy
+    )
+    clean_test_x = signatures_for_weights(
+        args, test_w, nodes, clean_entropy, ctrl_cfg, "structured", key_test, motif_features, clean_entropy
+    )
     old_noise = args.recovery_noise
     args.recovery_noise = noise_level
-    noisy_test_x = signatures_for_weights(args, test_w, nodes, clean_entropy, ctrl_cfg, "entangled_phase_noise", key_noise)
-    phase_scramble_x = signatures_for_weights(args, test_w, nodes, clean_entropy, ctrl_cfg, "phase_scramble", key_phase)
+    noisy_test_x = signatures_for_weights(
+        args, test_w, nodes, clean_entropy, ctrl_cfg, "entangled_phase_noise", key_noise, motif_features, clean_entropy
+    )
+    phase_scramble_x = signatures_for_weights(
+        args, test_w, nodes, clean_entropy, ctrl_cfg, "phase_scramble", key_phase, motif_features, clean_entropy
+    )
     args.recovery_noise = old_noise
 
     shuffled_seqs = apply_sequence_control(seqs, "markov_shuffle", key_shuffle, args.control_block_size)
     shuffled_entropy = motif_interval_entropy_table(shuffled_seqs, nodes)
-    topology_shuffle_x = signatures_for_weights(args, test_w, nodes, shuffled_entropy, ctrl_cfg, "structured", key_shuffle)
+    topology_shuffle_x = signatures_for_weights(
+        args, test_w, nodes, shuffled_entropy, ctrl_cfg, "structured", key_shuffle, motif_features, clean_entropy
+    )
     block_seqs = apply_sequence_control(seqs, "block_permute", key_block, args.control_block_size)
     block_entropy = motif_interval_entropy_table(block_seqs, nodes)
-    block_permute_x = signatures_for_weights(args, test_w, nodes, block_entropy, ctrl_cfg, "structured", key_block)
-    crofton_random_x = signatures_for_weights(args, test_w, nodes, clean_entropy, ctrl_cfg, "random_crofton", key_crofton)
+    block_permute_x = signatures_for_weights(
+        args, test_w, nodes, block_entropy, ctrl_cfg, "structured", key_block, motif_features, clean_entropy
+    )
+    crofton_random_x = signatures_for_weights(
+        args, test_w, nodes, clean_entropy, ctrl_cfg, "random_crofton", key_crofton, motif_features, clean_entropy
+    )
 
     train_y = train_w @ graph_features
     clean_pred = ridge_decode_jax(train_x, train_y, clean_test_x, args.decoder_ridge)
@@ -484,11 +534,12 @@ def evaluate_semantic_recovery(args, seed_key, ctrl_cfg, nodes, seqs, graph_feat
     mean_graph = jnp.mean(train_y, axis=0, keepdims=True)
     mean_cos = graph_cosine_batch_jax(jnp.repeat(mean_graph, target_graphs.shape[0], axis=0), target_graphs)
     frame_consistency = 1.0 - jnp.mean(jnp.abs(clean_cos - noisy_cos))
-    control_margin = jnp.min(
+    control_margin = jnp.mean(noisy_cos) - jnp.mean(block_cos)
+    minimum_control_margin = jnp.min(
         jnp.array(
             [
                 jnp.mean(noisy_cos) - jnp.mean(topology_cos),
-                jnp.mean(noisy_cos) - jnp.mean(block_cos),
+                control_margin,
                 jnp.mean(noisy_cos) - jnp.mean(crofton_cos),
                 jnp.mean(noisy_cos) - jnp.mean(phase_cos),
             ]
@@ -515,6 +566,7 @@ def evaluate_semantic_recovery(args, seed_key, ctrl_cfg, nodes, seqs, graph_feat
         "noisy_lift_over_crofton_random": float(jnp.mean(noisy_cos) - jnp.mean(crofton_cos)),
         "noisy_lift_over_phase_scramble": float(jnp.mean(noisy_cos) - jnp.mean(phase_cos)),
         "minimum_hard_control_lift": float(control_margin),
+        "minimum_all_control_lift": float(minimum_control_margin),
         "frame_consistency": float(frame_consistency),
         "folded_recovery_score": float(folded_score),
         "gate_cost": float(ctrl_cfg.get("gate_cost", 0.0)),
@@ -703,7 +755,20 @@ def run_program_ao(args):
                 }
 
                 for ctrl_name, cfg in controllers.items():
-                    coupling = build_kinematic_coupling(nodes, crofton, cfg["tunnel"], cfg.get("ibm_lite", False))
+                    tunnel_affinity = build_node_tunnel_affinity(
+                        motif_entropy_cache["structured"],
+                        features,
+                        args.barrier_base,
+                        args.barrier_alpha,
+                        args.tunnel_temp,
+                    )
+                    coupling = build_kinematic_coupling(
+                        nodes,
+                        crofton,
+                        cfg["tunnel"],
+                        cfg.get("ibm_lite", False),
+                        tunnel_affinity,
+                    )
                     xs = evolve_dlinoss(
                         x0,
                         omega,
@@ -790,6 +855,7 @@ def run_program_ao(args):
                         cfg,
                         nodes,
                         seqs,
+                        features,
                         graph_features,
                         noise_level,
                     )
@@ -909,11 +975,11 @@ if __name__ == "__main__":
     parser.add_argument("--recovery-noise", type=float, default=0.18)
     parser.add_argument("--recovery-noise-sweep", nargs="+", type=float, default=[0.18, 0.30, 0.45])
     parser.add_argument("--recovery-seed", type=int, default=271828)
-    parser.add_argument("--control-block-size", type=int, default=4)
-    parser.add_argument("--score-alpha", type=float, default=0.45)
-    parser.add_argument("--score-beta", type=float, default=0.30)
-    parser.add_argument("--score-gamma", type=float, default=0.20)
-    parser.add_argument("--score-delta", type=float, default=0.05)
+    parser.add_argument("--control-block-size", type=int, default=2)
+    parser.add_argument("--score-alpha", type=float, default=0.08)
+    parser.add_argument("--score-beta", type=float, default=0.60)
+    parser.add_argument("--score-gamma", type=float, default=0.25)
+    parser.add_argument("--score-delta", type=float, default=0.07)
     parser.add_argument("--require-tpu", action="store_true")
     parser.add_argument("--smoke-test", action="store_true")
     parser.add_argument(
@@ -933,6 +999,7 @@ if __name__ == "__main__":
         args.run_semantic_recovery = True
         args.recovery_train_states = min(args.recovery_train_states, 12)
         args.recovery_test_states = min(args.recovery_test_states, 6)
+        args.recovery_noise_sweep = [0.30, 0.45]
         print("[AO FOCUSED] semantic recovery only; hard controls evaluated inside JAX decoder")
 
     if args.smoke_test:
