@@ -25,7 +25,7 @@ if ($Zone -notin $AllowedZones) {
     exit 1
 }
 
-$AllowedModes = @("--ap-focused", "--ap-lite", "--ap-r", "--ap-s", "--ap-s-mech", "--ap-s-fidelity", "--ap-t")
+$AllowedModes = @("--ap-focused", "--ap-lite", "--ap-r", "--ap-s", "--ap-s-mech", "--ap-s-fidelity", "--ap-t", "--ap-u", "--aq-0", "--aq-0b", "--aq-1a-tf", "--aq-1a-tf-s29", "--aq-1b", "--aq-1c", "--aq-seq-0", "--aq-img-0", "--aq-img-1", "--aq-img-1-lite")
 if ($ProgramMode -notin $AllowedModes) {
     Write-Host "[ERROR] PROGRAM_AP_MODE must be one of: $($AllowedModes -join ', ')"
     exit 1
@@ -66,7 +66,17 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 Write-Host "[RUN] Launching Program AP on TPU with mode $ProgramMode..."
-$RunCmd = "cd $RemoteDir; rm -f $LogFile; nohup python3 -u $RemoteDir/emergent_quantum_geometries/program_ap_tunnel_eigen_recovery.py --require-tpu $ProgramMode --out-dir $RemoteOutDir > $RemoteDir/$LogFile 2>&1 & echo PROGRAM_AP_PID=`$!"
+$GitCommit = (git -C $PSScriptRoot rev-parse --short HEAD 2>$null)
+if ([string]::IsNullOrWhiteSpace($GitCommit)) {
+    $GitCommit = "unknown"
+}
+$RemoteTimeout = if ($env:PROGRAM_AP_TIMEOUT_SECONDS) { $env:PROGRAM_AP_TIMEOUT_SECONDS } elseif ($ProgramMode -like "*-lite") { "900" } else { "" }
+$PythonCmd = "python3 -u $RemoteDir/emergent_quantum_geometries/program_ap_tunnel_eigen_recovery.py --require-tpu $ProgramMode --out-dir $RemoteOutDir --git-commit $GitCommit"
+if (-not [string]::IsNullOrWhiteSpace($RemoteTimeout)) {
+    Write-Host "[RUN] Applying remote timeout guard: ${RemoteTimeout}s"
+    $PythonCmd = "timeout ${RemoteTimeout}s $PythonCmd"
+}
+$RunCmd = "cd $RemoteDir; rm -f $LogFile; PROGRAM_AP_GIT_COMMIT=$GitCommit nohup $PythonCmd > $RemoteDir/$LogFile 2>&1 & echo PROGRAM_AP_PID=`$!"
 "y" | gcloud compute tpus tpu-vm ssh $NodeId --project=$Project --zone=$Zone --quiet --command=$RunCmd
 if ($LASTEXITCODE -ne 0) {
     Write-Host "[ERROR] Program launch failed."
