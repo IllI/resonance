@@ -1295,7 +1295,35 @@ def build_yinyang_raw_patch_payload(seq_len, frame_count=1, direct_complex=True,
     return payload_seqs, source_features, graph_features, layer_features, transform_info
 
 
-def augment_yinyang_stream_payload(seqs, source_features, graph_features, layer_features, transform_info):
+def parse_stream_gain_specs(gain_text):
+    specs = []
+    for raw in str(gain_text).split(","):
+        label = raw.strip()
+        if not label:
+            continue
+        gain = float(label)
+        if abs(gain - 0.125) < 1e-8:
+            label = "0.125"
+        elif abs(gain - 0.25) < 1e-8:
+            label = "0.25"
+        elif abs(gain - 0.50) < 1e-8:
+            label = "0.50"
+        else:
+            label = f"{gain:g}"
+        specs.append((label, gain))
+    return specs
+
+
+def augment_yinyang_stream_payload(
+    seqs,
+    source_features,
+    graph_features,
+    layer_features,
+    transform_info,
+    gain_sweep=False,
+    operator_sweep=False,
+    gain_specs=None,
+):
     patch_pixels = transform_info["patch_pixels"]
     frame_count = int(transform_info.get("frame_count", 1))
     patch_rows, patch_cols = [int(v) for v in transform_info.get("patch_grid", [4, 4])]
@@ -1325,9 +1353,13 @@ def augment_yinyang_stream_payload(seqs, source_features, graph_features, layer_
     if frame_count >= 2:
         partner_frame = (frame_ids + 1) % frame_count
         partner_idx = partner_frame * patch_count + patch_ids
+        anchor_idx = patch_ids
     else:
         partner_idx = state_idx
+        anchor_idx = state_idx
     partner_pixels = patch_pixels[partner_idx]
+    anchor_pixels = patch_pixels[anchor_idx]
+    delta_to_current = patch_pixels - anchor_pixels
     pair_sum = 0.5 * (patch_pixels + partner_pixels)
     pair_delta = patch_pixels - partner_pixels
     pair_product = patch_pixels * partner_pixels
@@ -1336,18 +1368,50 @@ def augment_yinyang_stream_payload(seqs, source_features, graph_features, layer_
 
     flat_x0 = patch_pixels.astype(jnp.complex64)
     separable_x0 = jnp.concatenate([patch_pixels, mode_features], axis=1).astype(jnp.complex64)
-    pair_scale = jnp.float32(0.25)
-    entangled_resource = jnp.concatenate(
-        [
-            patch_pixels,
-            mode_features,
-            pair_scale * pair_delta,
-            pair_scale * pair_product,
-            pair_corr_scalar,
-        ],
-        axis=1,
-    ).astype(jnp.complex64)
-    stream_payload_width = int(entangled_resource.shape[1])
+    if gain_sweep:
+        pair_gain_specs = gain_specs if gain_specs else [("0.125", 0.125), ("0.25", 0.25)]
+    else:
+        pair_gain_specs = [("0.25", 0.25)]
+
+    def pair_payload(gain):
+        pair_scale = jnp.float32(gain)
+        return jnp.concatenate(
+            [
+                patch_pixels,
+                mode_features,
+                pair_scale * pair_delta,
+                pair_scale * pair_product,
+                pair_corr_scalar,
+            ],
+            axis=1,
+        ).astype(jnp.complex64)
+
+    pair_payloads = {f"pair_v2_gain_{label}": pair_payload(gain) for label, gain in pair_gain_specs}
+    if not gain_sweep:
+        pair_payloads = {"entangled_pair_stream": pair_payload(0.25)}
+    operator_payloads = {}
+    if operator_sweep:
+        def operator_payload(gain):
+            op_scale = jnp.float32(gain)
+            return jnp.concatenate(
+                [
+                    anchor_pixels,
+                    mode_features,
+                    op_scale * delta_to_current,
+                    op_scale * (anchor_pixels * delta_to_current),
+                    pair_corr_scalar,
+                ],
+                axis=1,
+            ).astype(jnp.complex64)
+
+        operator_payloads = {
+            f"delta_operator_gain_{label}": operator_payload(gain) for label, gain in pair_gain_specs
+        }
+    stream_payload_width = max(
+        [int(flat_x0.shape[1]), int(separable_x0.shape[1])]
+        + [int(table.shape[1]) for table in pair_payloads.values()]
+        + [int(table.shape[1]) for table in operator_payloads.values()]
+    )
 
     def pad_stream_x0(table):
         pad_width = stream_payload_width - int(table.shape[1])
@@ -1361,6 +1425,8 @@ def augment_yinyang_stream_payload(seqs, source_features, graph_features, layer_
     transform_info.update(
         {
             "aq_stream_0": True,
+            "aq_stream_1": bool(gain_sweep),
+            "aq_stream_2": bool(operator_sweep),
             "fast_codec_probe": True,
             "stream_frame_ids": frame_ids,
             "stream_patch_ids": patch_ids,
@@ -1371,12 +1437,21 @@ def augment_yinyang_stream_payload(seqs, source_features, graph_features, layer_
             "stream_mode_features": mode_features,
             "stream_pair_partner_indices": partner_idx,
             "stream_pair_resource": pair_resource,
+            "stream_pair_delta": pair_delta,
+            "stream_pair_product": pair_product,
+            "stream_pair_corr_scalar": pair_corr_scalar,
+            "stream_anchor_pixels": anchor_pixels,
+            "stream_delta_to_current": delta_to_current,
             "stream_pair_encoding": "raw_preserving_real_pair_residual_v2",
+            "stream_pair_gain_sweep": bool(gain_sweep),
+            "stream_operator_sweep": bool(operator_sweep),
+            "stream_pair_gains": [gain for _, gain in pair_gain_specs],
             "stream_payload_width": stream_payload_width,
             "stream_complex_x0_tables": {
                 "flat_ordered_roster": pad_stream_x0(flat_x0),
                 "separable_mode_stream": pad_stream_x0(separable_x0),
-                "entangled_pair_stream": pad_stream_x0(entangled_resource),
+                **{name: pad_stream_x0(table) for name, table in pair_payloads.items()},
+                **{name: pad_stream_x0(table) for name, table in operator_payloads.items()},
             },
         }
     )
@@ -2069,7 +2144,7 @@ def semantic_mixtures(key, n_states, n_samples, alpha):
 
 
 def recovery_state_weights(args, key, n_states, n_samples, alpha):
-    if getattr(args, "aq_stream_0", False) or (
+    if getattr(args, "aq_stream_0", False) or getattr(args, "aq_stream_1", False) or getattr(args, "aq_stream_2", False) or (
         getattr(args, "aq_yinyang_4", False) and getattr(args, "yinyang_ordered_recovery", False)
     ):
         idx = jnp.arange(n_samples) % n_states
@@ -2081,6 +2156,8 @@ def recovery_state_weights(args, key, n_states, n_samples, alpha):
         or getattr(args, "aq_1c", False)
         or getattr(args, "aq_seq_0", False)
         or getattr(args, "aq_stream_0", False)
+        or getattr(args, "aq_stream_1", False)
+        or getattr(args, "aq_stream_2", False)
         or getattr(args, "as_0b", False)
         or getattr(args, "as_0", False)
         or getattr(args, "aq_yinyang_4", False)
@@ -2263,6 +2340,41 @@ def signatures_for_weights(
     return jax.vmap(one_signature)(weights_batch, sample_ids)
 
 
+@partial(jax.jit, static_argnums=(4, 5))
+def stream_fast_signatures(weights_batch, complex_x0_table, key_control, noise_level, steps, add_noise):
+    payload = (weights_batch @ complex_x0_table).astype(jnp.complex64)
+    payload_mag = jnp.abs(payload).astype(jnp.float32)
+    payload_dir = payload / (payload_mag + 1e-8)
+    payload_dir = payload_dir / (jnp.linalg.norm(payload_dir, axis=1, keepdims=True) + 1e-8)
+    if add_noise:
+        phase_noise = noise_level * jax.random.normal(key_control, payload_dir.shape)
+        payload_dir = payload_dir * jnp.exp(1j * phase_noise).astype(jnp.complex64)
+
+    n_slots = payload_dir.shape[1]
+    idx = jnp.arange(n_slots)
+    neighbor = (jnp.abs(idx[:, None] - idx[None, :]) <= 1).astype(jnp.float32)
+    neighbor = neighbor.at[jnp.diag_indices(n_slots)].set(0.0)
+    coupling = neighbor / (jnp.sum(neighbor, axis=1, keepdims=True) + 1e-8)
+    omega = jnp.linspace(0.15, 1.75, n_slots, dtype=jnp.float32)
+
+    def one_payload(x0):
+        xs = evolve_dlinoss(
+            x0,
+            omega,
+            coupling,
+            jnp.float32(0.08),
+            jnp.float32(0.03),
+            int(steps),
+            jnp.float32(0.04),
+        )
+        recovered = xs[-1]
+        mag_norm = payload_mag[0] * 0.0 + jnp.abs(recovered).astype(jnp.float32)
+        signature = jnp.concatenate([jnp.real(recovered), jnp.imag(recovered), mag_norm], axis=0)
+        return signature / (jnp.linalg.norm(signature) + 1e-8)
+
+    return jax.vmap(one_payload)(payload_dir)
+
+
 def evaluate_semantic_recovery(
     args,
     seed_key,
@@ -2280,9 +2392,20 @@ def evaluate_semantic_recovery(
     test_w = recovery_state_weights(args, key_test, seqs.shape[0], args.recovery_test_states, args.mixture_alpha)
     target_graphs = test_w @ graph_features
 
-    clean_entropy = motif_interval_entropy_table(seqs, nodes)
+    stream_fast_path = bool(
+        transform_info is not None
+        and (transform_info.get("aq_stream_1", False) or transform_info.get("aq_stream_2", False))
+        and "stream_complex_x0_tables" in transform_info
+        and ctrl_cfg.get("stream_variant") in transform_info["stream_complex_x0_tables"]
+        and getattr(args, "aq_stream_fast_path", True)
+    )
+    if stream_fast_path:
+        clean_entropy = jnp.zeros((seqs.shape[0], nodes.shape[0]), dtype=jnp.float32)
+        dynamics_bundle = None
+    else:
+        clean_entropy = motif_interval_entropy_table(seqs, nodes)
+        dynamics_bundle = build_dynamics_bundle(args, ctrl_cfg, nodes, clean_entropy, motif_features, clean_entropy, noise_level)
     resolved_alpha = resolve_projection_alpha(ctrl_cfg, noise_level)
-    dynamics_bundle = build_dynamics_bundle(args, ctrl_cfg, nodes, clean_entropy, motif_features, clean_entropy, noise_level)
     shape_charge_table = None
     if transform_info is not None and "fft_shape_charges" in transform_info:
         shape_charge_table = transform_info["fft_shape_charges"]
@@ -2297,17 +2420,28 @@ def evaluate_semantic_recovery(
         complex_x0_table = transform_info["fft_complex_x0_table"]
     elif transform_info is not None and transform_info.get("direct_complex_x0", False):
         complex_x0_table = transform_info["direct_complex_x0_table"]
-    train_x = signatures_for_weights(
-        args, train_w, nodes, clean_entropy, ctrl_cfg, "structured", key_train, dynamics_bundle, shape_charge_table, complex_x0_table
-    )
-    clean_test_x = signatures_for_weights(
-        args, test_w, nodes, clean_entropy, ctrl_cfg, "structured", key_test, dynamics_bundle, shape_charge_table, complex_x0_table
-    )
     old_noise = args.recovery_noise
     args.recovery_noise = noise_level
-    noisy_test_x = signatures_for_weights(
-        args, test_w, nodes, clean_entropy, ctrl_cfg, "entangled_phase_noise", key_noise, dynamics_bundle, shape_charge_table, complex_x0_table
-    )
+    if stream_fast_path:
+        train_x = stream_fast_signatures(
+            train_w, complex_x0_table, key_train, jnp.float32(0.0), int(args.aq_stream_fast_steps), False
+        )
+        clean_test_x = stream_fast_signatures(
+            test_w, complex_x0_table, key_test, jnp.float32(0.0), int(args.aq_stream_fast_steps), False
+        )
+        noisy_test_x = stream_fast_signatures(
+            test_w, complex_x0_table, key_noise, jnp.float32(noise_level), int(args.aq_stream_fast_steps), True
+        )
+    else:
+        train_x = signatures_for_weights(
+            args, train_w, nodes, clean_entropy, ctrl_cfg, "structured", key_train, dynamics_bundle, shape_charge_table, complex_x0_table
+        )
+        clean_test_x = signatures_for_weights(
+            args, test_w, nodes, clean_entropy, ctrl_cfg, "structured", key_test, dynamics_bundle, shape_charge_table, complex_x0_table
+        )
+        noisy_test_x = signatures_for_weights(
+            args, test_w, nodes, clean_entropy, ctrl_cfg, "entangled_phase_noise", key_noise, dynamics_bundle, shape_charge_table, complex_x0_table
+        )
     fast_codec_probe = bool(transform_info is not None and transform_info.get("fast_codec_probe", False))
     if fast_codec_probe:
         phase_scramble_x = noisy_test_x
@@ -2888,14 +3022,38 @@ def evaluate_semantic_recovery(
                 patch_token_y = train_w @ transform_info["stream_patch_tokens"]
                 polarity_token_y = train_w @ transform_info["stream_polarity_tokens"]
                 pair_resource_y = train_w @ transform_info["stream_pair_resource"]
+                pair_delta_y = train_w @ transform_info["stream_pair_delta"]
+                pair_product_y = train_w @ transform_info["stream_pair_product"]
+                pair_corr_y = train_w @ transform_info["stream_pair_corr_scalar"]
+                anchor_pixel_y = train_w @ transform_info.get("stream_anchor_pixels", transform_info["patch_pixels"])
+                delta_operator_y = train_w @ transform_info.get(
+                    "stream_delta_to_current",
+                    jnp.zeros_like(transform_info["patch_pixels"]),
+                )
                 frame_token_target = test_w @ transform_info["stream_frame_tokens"]
                 patch_token_target = test_w @ transform_info["stream_patch_tokens"]
                 polarity_token_target = test_w @ transform_info["stream_polarity_tokens"]
                 pair_resource_target = test_w @ transform_info["stream_pair_resource"]
+                pair_delta_target = test_w @ transform_info["stream_pair_delta"]
+                pair_product_target = test_w @ transform_info["stream_pair_product"]
+                pair_corr_target = test_w @ transform_info["stream_pair_corr_scalar"]
+                anchor_pixel_target = test_w @ transform_info.get("stream_anchor_pixels", transform_info["patch_pixels"])
+                delta_operator_target = test_w @ transform_info.get(
+                    "stream_delta_to_current",
+                    jnp.zeros_like(transform_info["patch_pixels"]),
+                )
                 frame_token_pred = ridge_decode_jax(train_x, frame_token_y, noisy_test_x, args.decoder_ridge)
                 patch_token_pred = ridge_decode_jax(train_x, patch_token_y, noisy_test_x, args.decoder_ridge)
                 polarity_token_pred = ridge_decode_jax(train_x, polarity_token_y, noisy_test_x, args.decoder_ridge)
                 pair_resource_pred = ridge_decode_jax(train_x, pair_resource_y, noisy_test_x, args.decoder_ridge)
+                pair_delta_pred = ridge_decode_jax(train_x, pair_delta_y, noisy_test_x, args.decoder_ridge)
+                pair_product_pred = ridge_decode_jax(train_x, pair_product_y, noisy_test_x, args.decoder_ridge)
+                pair_corr_pred = ridge_decode_jax(train_x, pair_corr_y, noisy_test_x, args.decoder_ridge)
+                anchor_pixel_pred = ridge_decode_jax(train_x, anchor_pixel_y, noisy_test_x, args.decoder_ridge)
+                delta_operator_pred = ridge_decode_jax(train_x, delta_operator_y, noisy_test_x, args.decoder_ridge)
+                derived_operator_pixel_pred = jnp.clip(anchor_pixel_pred + delta_operator_pred, 0.0, 1.0)
+                derived_operator_mse = jnp.mean((derived_operator_pixel_pred - patch_pixel_target) ** 2)
+                derived_operator_psnr = -10.0 * jnp.log10(derived_operator_mse + 1e-8)
 
                 true_frame = transform_info["stream_frame_ids"][pair_idx]
                 true_patch = transform_info["stream_patch_ids"][pair_idx]
@@ -2911,21 +3069,36 @@ def evaluate_semantic_recovery(
 
                 per_patch_mse = jnp.mean((pixel_pred - patch_pixel_target) ** 2, axis=1)
                 frame_psnrs = []
+                luma_mae_by_frame = []
                 frame_count = int(transform_info.get("frame_count", 1))
                 for frame_idx in range(frame_count):
                     mask = (true_frame == frame_idx).astype(jnp.float32)
                     frame_mse = jnp.sum(per_patch_mse * mask) / (jnp.sum(mask) + 1e-8)
                     frame_psnrs.append(float(-10.0 * jnp.log10(frame_mse + 1e-8)))
+                    frame_luma_mae = jnp.sum(jnp.abs(patch_luma_pred - patch_luma_target) * mask) / (jnp.sum(mask) + 1e-8)
+                    luma_mae_by_frame.append(float(frame_luma_mae))
 
                 rows, cols = [int(v) for v in transform_info.get("patch_grid", [4, 4])]
                 patch_side = int(transform_info.get("patch_shape", [4, 4])[0])
+                frame_delta_psnr = jnp.float32(0.0)
+                derived_frame_2_psnr = jnp.float32(0.0)
+                derived_frame_delta_psnr = jnp.float32(0.0)
                 if pixel_pred.shape[0] == frame_count * rows * cols:
                     pred_grid = pixel_pred.reshape((frame_count, rows, cols, patch_side, patch_side))
                     target_grid = patch_pixel_target.reshape((frame_count, rows, cols, patch_side, patch_side))
+                    derived_grid = derived_operator_pixel_pred.reshape((frame_count, rows, cols, patch_side, patch_side))
                     right_err = jnp.mean(jnp.abs(pred_grid[:, :, :-1, :, -1] - pred_grid[:, :, 1:, :, 0]))
                     down_err = jnp.mean(jnp.abs(pred_grid[:, :-1, :, -1, :] - pred_grid[:, 1:, :, 0, :]))
                     boundary_consistency = 1.0 / (1.0 + 0.5 * (right_err + down_err))
                     if frame_count >= 2:
+                        frame_delta_mse = jnp.mean(((pred_grid[1] - pred_grid[0]) - (target_grid[1] - target_grid[0])) ** 2)
+                        frame_delta_psnr = -10.0 * jnp.log10(frame_delta_mse + 1e-8)
+                        derived_frame_2_mse = jnp.mean((derived_grid[1] - target_grid[1]) ** 2)
+                        derived_frame_2_psnr = -10.0 * jnp.log10(derived_frame_2_mse + 1e-8)
+                        derived_frame_delta_mse = jnp.mean(
+                            ((derived_grid[1] - derived_grid[0]) - (target_grid[1] - target_grid[0])) ** 2
+                        )
+                        derived_frame_delta_psnr = -10.0 * jnp.log10(derived_frame_delta_mse + 1e-8)
                         pred_pair_corr = jnp.mean(pred_grid[0].reshape((rows * cols, -1)) * pred_grid[1].reshape((rows * cols, -1)), axis=1)
                         true_pair_corr = jnp.mean(target_grid[0].reshape((rows * cols, -1)) * target_grid[1].reshape((rows * cols, -1)), axis=1)
                         pair_correlation_fidelity = jnp.dot(pred_pair_corr, true_pair_corr) / (
@@ -2940,17 +3113,32 @@ def evaluate_semantic_recovery(
                 transform_metrics.update(
                     {
                         "stream_arm": str(ctrl_cfg.get("stream_variant", "unknown")),
+                        "stream_pair_gain": float(ctrl_cfg.get("stream_pair_gain", 0.0)),
                         "frame_1_psnr": frame_psnrs[0] if len(frame_psnrs) > 0 else 0.0,
                         "frame_2_psnr": frame_psnrs[1] if len(frame_psnrs) > 1 else 0.0,
                         "mean_psnr": float(pixel_psnr),
+                        "frame_delta_psnr": float(frame_delta_psnr),
+                        "derived_operator_psnr": float(derived_operator_psnr),
+                        "derived_frame_2_psnr": float(derived_frame_2_psnr),
+                        "derived_frame_delta_psnr": float(derived_frame_delta_psnr),
                         "temporal_order_accuracy": float(temporal_order_acc),
                         "patch_position_accuracy": float(patch_acc),
                         "cross_frame_leakage": float(cross_frame_leakage),
                         "frame_token_recovery": float(frame_acc),
                         "polarity_recovery": float(polarity_acc),
                         "boundary_consistency": float(boundary_consistency),
+                        "luma_mae_by_frame": luma_mae_by_frame,
                         "pair_correlation_fidelity": float(pair_correlation_fidelity),
                         "entanglement_resource_preservation": float(jnp.mean(graph_cosine_batch_jax(pair_resource_pred, pair_resource_target))),
+                        "pair_delta_recovery": float(jnp.mean(graph_cosine_batch_jax(pair_delta_pred, pair_delta_target))),
+                        "pair_product_recovery": float(jnp.mean(graph_cosine_batch_jax(pair_product_pred, pair_product_target))),
+                        "pair_corr_recovery": float(1.0 / (1.0 + jnp.mean(jnp.abs(pair_corr_pred - pair_corr_target)))),
+                        "delta_operator_recovery": float(
+                            jnp.mean(graph_cosine_batch_jax(delta_operator_pred, delta_operator_target))
+                        ),
+                        "anchor_pixel_recovery": float(
+                            jnp.mean(graph_cosine_batch_jax(anchor_pixel_pred, anchor_pixel_target))
+                        ),
                         "frame_token_true_indices": true_frame.tolist(),
                         "frame_token_pred_indices": pred_frame.tolist(),
                         "patch_position_true_indices": true_patch.tolist(),
@@ -2960,10 +3148,15 @@ def evaluate_semantic_recovery(
                     }
                 )
             if getattr(args, "save_preview_png", False):
+                preview_stream_pred = (
+                    derived_operator_pixel_pred
+                    if transform_info.get("aq_stream_2", False) and ctrl_cfg.get("stream_operator_recovery", False)
+                    else pixel_pred
+                )
                 transform_metrics.update(
                     {
                         "preview_patch_pixels_target": patch_pixel_target.tolist(),
-                        "preview_patch_pixels_pred": pixel_pred.tolist(),
+                        "preview_patch_pixels_pred": preview_stream_pred.tolist(),
                         "preview_patch_indices": pair_idx.tolist(),
                         "preview_frame_count": int(transform_info.get("frame_count", 0)),
                         "preview_frame_names": transform_info.get("frame_names", []),
@@ -3104,7 +3297,7 @@ def evaluate_semantic_recovery(
         "projection_alpha": float(resolved_alpha),
         "resolved_projection_alpha": float(resolved_alpha),
         "adaptive_alpha": bool(ctrl_cfg.get("adaptive_alpha", False)),
-        "adaptive_k_chosen": int(dynamics_bundle.get("adaptive_k_chosen", 0)),
+        "adaptive_k_chosen": int((dynamics_bundle or {}).get("adaptive_k_chosen", 0)),
         "recovery_noise": float(noise_level),
         "recovery_train_states": int(args.recovery_train_states),
         "recovery_test_states": int(args.recovery_test_states),
@@ -3121,6 +3314,10 @@ def ap_cell_debug_metadata(args, ctrl_name, ctrl_cfg, noise_idx, noise_level, se
         mode_name = "--aq-1a-tf"
         if getattr(args, "aq_seq_0", False):
             mode_name = "--aq-seq-0"
+    elif getattr(args, "aq_stream_2", False):
+        mode_name = "--aq-stream-2"
+    elif getattr(args, "aq_stream_1", False):
+        mode_name = "--aq-stream-1"
     elif getattr(args, "aq_stream_0", False):
         mode_name = "--aq-stream-0"
     elif getattr(args, "aq_0b", False):
@@ -3260,6 +3457,10 @@ def evaluate_heldout_transport(
 
 
 def experiment_name(args):
+    if getattr(args, "aq_stream_2", False):
+        return "semantic_stream_gain_operator_sweep_aq_stream_2"
+    if getattr(args, "aq_stream_1", False):
+        return "semantic_pair_gain_sweep_aq_stream_1"
     if getattr(args, "aq_stream_0", False):
         return "semantic_entangled_pair_stream_aq_stream_0"
     if getattr(args, "aq_yinyang_4", False):
@@ -3361,6 +3562,8 @@ def run_program_ap(args):
         or getattr(args, "aq_1c", False)
         or getattr(args, "aq_seq_0", False)
         or getattr(args, "aq_stream_0", False)
+        or getattr(args, "aq_stream_1", False)
+        or getattr(args, "aq_stream_2", False)
         or getattr(args, "as_0b", False)
         or getattr(args, "as_0", False)
         or getattr(args, "aq_yinyang_4", False)
@@ -3392,6 +3595,8 @@ def run_program_ap(args):
     if (
         getattr(args, "aq_hybrid_0", False)
         or getattr(args, "aq_stream_0", False)
+        or getattr(args, "aq_stream_1", False)
+        or getattr(args, "aq_stream_2", False)
         or getattr(args, "aq_yinyang_4", False)
         or getattr(args, "aq_yinyang_3", False)
         or getattr(args, "aq_yinyang_2", False)
@@ -3409,16 +3614,23 @@ def run_program_ap(args):
         or getattr(args, "aq_fft_1", False)
         or getattr(args, "aq_fft_0", False)
     ):
-        if getattr(args, "aq_stream_0", False):
+        if getattr(args, "aq_stream_0", False) or getattr(args, "aq_stream_1", False) or getattr(args, "aq_stream_2", False):
             seqs, features, graph_features, layer_features, transform_info = build_yinyang_raw_patch_payload(
                 args.sequence_length,
                 frame_count=2,
                 direct_complex=True,
-                frame_size=16,
+                frame_size=args.aq_stream_frame_size,
                 frame_start=1,
             )
             seqs, features, graph_features, layer_features, transform_info = augment_yinyang_stream_payload(
-                seqs, features, graph_features, layer_features, transform_info
+                seqs,
+                features,
+                graph_features,
+                layer_features,
+                transform_info,
+                gain_sweep=(getattr(args, "aq_stream_1", False) or getattr(args, "aq_stream_2", False)),
+                operator_sweep=getattr(args, "aq_stream_2", False),
+                gain_specs=parse_stream_gain_specs(getattr(args, "aq_stream_gains", "0.125,0.25")),
             )
         elif getattr(args, "aq_yinyang_4", False):
             seqs, features, graph_features, layer_features, transform_info = build_yinyang_raw_patch_payload(
@@ -3507,6 +3719,21 @@ def run_program_ap(args):
             print("  token_metrics = enabled")
             print("  permutation_nulls = enabled")
             print("  runtime_envelope != AQ-FFT-1")
+        if getattr(args, "aq_stream_2", False):
+            print("AQ-STREAM-2 ACTIVE:")
+            print(f"  frame_size = {int(args.aq_stream_frame_size)}")
+            gain_arms = ", ".join([f"pair_v2_gain_{label}" for label, _gain in parse_stream_gain_specs(args.aq_stream_gains)])
+            operator_arms = ", ".join([f"delta_operator_gain_{label}" for label, _gain in parse_stream_gain_specs(args.aq_stream_gains)])
+            print(f"  gain_arms = {gain_arms}")
+            print(f"  operator_arms = {operator_arms}")
+            print("  fast_path = payload-lane D-LinOSS; entropy-table bypass enabled")
+        if getattr(args, "aq_stream_1", False):
+            print("AQ-STREAM-1 ACTIVE:")
+            print("  payload = two 16x16 taichi frames as raw 4x4 patch states")
+            gain_arms = ", ".join([f"pair_v2_gain_{label}" for label, _gain in parse_stream_gain_specs(args.aq_stream_gains)])
+            print(f"  arms = flat_ordered_roster, separable_mode_stream, {gain_arms}")
+            print("  stream modes = time-bin, patch-position, frame-polarity, auxiliary pair residuals")
+            print("  target = characterize pair-resource gain and frame-delta recovery at noise=0.00")
         if getattr(args, "aq_stream_0", False):
             print("AQ-STREAM-0 ACTIVE:")
             print("  payload = two 16x16 taichi frames as raw 4x4 patch states")
@@ -3720,8 +3947,72 @@ def run_program_ap(args):
             "tunnel": 0.00,
             "complex_pair_norm": True,
             "stream_variant": "entangled_pair_stream",
+            "stream_pair_gain": 0.25,
             "gate_cost": 0.04,
             "lane": "stream_pair_resource",
+        },
+        "pair_v2_gain_0.125": {
+            "damping": args.damping,
+            "feedback": 0.00,
+            "tunnel": 0.00,
+            "complex_pair_norm": True,
+            "stream_variant": "pair_v2_gain_0.125",
+            "stream_pair_gain": 0.125,
+            "gate_cost": 0.04,
+            "lane": "stream_pair_gain_sweep",
+        },
+        "pair_v2_gain_0.25": {
+            "damping": args.damping,
+            "feedback": 0.00,
+            "tunnel": 0.00,
+            "complex_pair_norm": True,
+            "stream_variant": "pair_v2_gain_0.25",
+            "stream_pair_gain": 0.25,
+            "gate_cost": 0.04,
+            "lane": "stream_pair_gain_sweep",
+        },
+        "pair_v2_gain_0.50": {
+            "damping": args.damping,
+            "feedback": 0.00,
+            "tunnel": 0.00,
+            "complex_pair_norm": True,
+            "stream_variant": "pair_v2_gain_0.50",
+            "stream_pair_gain": 0.50,
+            "gate_cost": 0.04,
+            "lane": "stream_pair_gain_sweep",
+        },
+        "delta_operator_gain_0.125": {
+            "damping": args.damping,
+            "feedback": 0.00,
+            "tunnel": 0.00,
+            "complex_pair_norm": True,
+            "stream_variant": "delta_operator_gain_0.125",
+            "stream_pair_gain": 0.125,
+            "stream_operator_recovery": True,
+            "gate_cost": 0.04,
+            "lane": "stream_delta_operator",
+        },
+        "delta_operator_gain_0.25": {
+            "damping": args.damping,
+            "feedback": 0.00,
+            "tunnel": 0.00,
+            "complex_pair_norm": True,
+            "stream_variant": "delta_operator_gain_0.25",
+            "stream_pair_gain": 0.25,
+            "stream_operator_recovery": True,
+            "gate_cost": 0.04,
+            "lane": "stream_delta_operator",
+        },
+        "delta_operator_gain_0.50": {
+            "damping": args.damping,
+            "feedback": 0.00,
+            "tunnel": 0.00,
+            "complex_pair_norm": True,
+            "stream_variant": "delta_operator_gain_0.50",
+            "stream_pair_gain": 0.50,
+            "stream_operator_recovery": True,
+            "gate_cost": 0.04,
+            "lane": "stream_delta_operator",
         },
         "filament_stabilized": {"damping": args.damping * 0.7, "feedback": 0.18, "tunnel": 1.00, "gate_cost": 0.20},
         "filament_stabilized_v1": {
@@ -3974,6 +4265,8 @@ def run_program_ap(args):
         getattr(args, "aq_1c", False)
         or getattr(args, "aq_seq_0", False)
         or getattr(args, "aq_stream_0", False)
+        or getattr(args, "aq_stream_1", False)
+        or getattr(args, "aq_stream_2", False)
         or getattr(args, "as_0b", False)
         or getattr(args, "as_0", False)
         or getattr(args, "aq_yinyang_4", False)
@@ -3995,7 +4288,29 @@ def run_program_ap(args):
         or getattr(args, "aq_img_1", False)
         or getattr(args, "aq_img_1_lite", False)
     ):
-        if getattr(args, "aq_stream_0", False):
+        if getattr(args, "aq_stream_2", False):
+            gain_controller_names = [
+                f"pair_v2_gain_{label}" for label, _gain in parse_stream_gain_specs(args.aq_stream_gains)
+            ]
+            operator_controller_names = [
+                f"delta_operator_gain_{label}" for label, _gain in parse_stream_gain_specs(args.aq_stream_gains)
+            ]
+            controllers = {
+                "flat_ordered_roster": controllers["flat_ordered_roster"],
+                "separable_mode_stream": controllers["separable_mode_stream"],
+                **{name: controllers[name] for name in gain_controller_names},
+                **{name: controllers[name] for name in operator_controller_names},
+            }
+        elif getattr(args, "aq_stream_1", False):
+            gain_controller_names = [
+                f"pair_v2_gain_{label}" for label, _gain in parse_stream_gain_specs(args.aq_stream_gains)
+            ]
+            controllers = {
+                "flat_ordered_roster": controllers["flat_ordered_roster"],
+                "separable_mode_stream": controllers["separable_mode_stream"],
+                **{name: controllers[name] for name in gain_controller_names},
+            }
+        elif getattr(args, "aq_stream_0", False):
             controllers = {
                 "flat_ordered_roster": controllers["flat_ordered_roster"],
                 "separable_mode_stream": controllers["separable_mode_stream"],
@@ -4053,9 +4368,14 @@ def run_program_ap(args):
         nodes = build_interval_nodes(args.sequence_length, max_span)
         print(f"\nDepth={depth} nodes={nodes.shape[0]} max_span={max_span}")
 
-        motif_entropy_cache = {
-            "structured": motif_interval_entropy_table(seqs, nodes),
-        }
+        if (getattr(args, "aq_stream_1", False) or getattr(args, "aq_stream_2", False)) and getattr(args, "aq_stream_fast_path", True):
+            motif_entropy_cache = {
+                "structured": jnp.zeros((seqs.shape[0], nodes.shape[0]), dtype=jnp.float32),
+            }
+        else:
+            motif_entropy_cache = {
+                "structured": motif_interval_entropy_table(seqs, nodes),
+            }
         depth_record = {
             "mera_depth": int(depth),
             "max_span": int(max_span),
@@ -4449,6 +4769,8 @@ def run_program_ap(args):
             or getattr(args, "aq_1c", False)
             or getattr(args, "aq_seq_0", False)
             or getattr(args, "aq_stream_0", False)
+            or getattr(args, "aq_stream_1", False)
+            or getattr(args, "aq_stream_2", False)
             or getattr(args, "as_0b", False)
             or getattr(args, "as_0", False)
             or getattr(args, "aq_yinyang_3", False)
@@ -4546,7 +4868,29 @@ def run_program_ap(args):
                                 f"{tf.get('delta_recurrence_match', 0.0):>8.4f}"
                             )
             print("=" * 112)
-        if getattr(args, "aq_stream_0", False):
+        if getattr(args, "aq_stream_2", False):
+            gain_controller_names = [
+                f"pair_v2_gain_{label}" for label, _gain in parse_stream_gain_specs(args.aq_stream_gains)
+            ]
+            operator_controller_names = [
+                f"delta_operator_gain_{label}" for label, _gain in parse_stream_gain_specs(args.aq_stream_gains)
+            ]
+            controllers = {
+                "flat_ordered_roster": controllers["flat_ordered_roster"],
+                "separable_mode_stream": controllers["separable_mode_stream"],
+                **{name: controllers[name] for name in gain_controller_names},
+                **{name: controllers[name] for name in operator_controller_names},
+            }
+        elif getattr(args, "aq_stream_1", False):
+            gain_controller_names = [
+                f"pair_v2_gain_{label}" for label, _gain in parse_stream_gain_specs(args.aq_stream_gains)
+            ]
+            controllers = {
+                "flat_ordered_roster": controllers["flat_ordered_roster"],
+                "separable_mode_stream": controllers["separable_mode_stream"],
+                **{name: controllers[name] for name in gain_controller_names},
+            }
+        elif getattr(args, "aq_stream_0", False):
             controllers = {
                 "flat_ordered_roster": controllers["flat_ordered_roster"],
                 "separable_mode_stream": controllers["separable_mode_stream"],
@@ -4740,13 +5084,19 @@ def run_program_ap(args):
             print("=" * 112)
         if (
             getattr(args, "aq_stream_0", False)
+            or getattr(args, "aq_stream_1", False)
+            or getattr(args, "aq_stream_2", False)
             or getattr(args, "aq_yinyang_4", False)
             or getattr(args, "aq_img_0", False)
             or getattr(args, "aq_img_1", False)
             or getattr(args, "aq_img_1_lite", False)
         ):
             print("\n" + "=" * 112)
-            if getattr(args, "aq_stream_0", False):
+            if getattr(args, "aq_stream_2", False):
+                title = "AQ-STREAM-2 gain plus delta-operator recovery readout"
+            elif getattr(args, "aq_stream_1", False):
+                title = "AQ-STREAM-1 pair-resource gain sweep readout"
+            elif getattr(args, "aq_stream_0", False):
                 title = "AQ-STREAM-0 mode-labeled entangled-pair stream readout"
             elif getattr(args, "aq_yinyang_4", False):
                 title = "AQ-YINYANG-4 raw-pixel image-state transport readout"
@@ -4767,16 +5117,33 @@ def run_program_ap(args):
                                 f"residual_mae={tf.get('image_patch_residual_mae', 0.0):.4f} "
                                 f"luma_mae={tf.get('image_patch_luma_mae', 0.0):.4f}"
                             )
-                            if getattr(args, "aq_stream_0", False):
+                            if getattr(args, "aq_stream_0", False) or getattr(args, "aq_stream_1", False) or getattr(args, "aq_stream_2", False):
                                 print(
                                     f"  arm={tf.get('stream_arm', 'unknown')} "
+                                    f"gain={tf.get('stream_pair_gain', 0.0):.3f} "
                                     f"frame1={tf.get('frame_1_psnr', 0.0):.4f} "
                                     f"frame2={tf.get('frame_2_psnr', 0.0):.4f} "
+                                    f"delta={tf.get('frame_delta_psnr', 0.0):.4f} "
                                     f"order={tf.get('temporal_order_accuracy', 0.0):.4f} "
                                     f"patch={tf.get('patch_position_accuracy', 0.0):.4f} "
                                     f"leak={tf.get('cross_frame_leakage', 0.0):.4f} "
                                     f"pair={tf.get('pair_correlation_fidelity', 0.0):.4f}"
                                 )
+                                if getattr(args, "aq_stream_1", False) or getattr(args, "aq_stream_2", False):
+                                    print(
+                                        f"  pair_delta={tf.get('pair_delta_recovery', 0.0):.4f} "
+                                        f"pair_product={tf.get('pair_product_recovery', 0.0):.4f} "
+                                        f"pair_corr={tf.get('pair_corr_recovery', 0.0):.4f} "
+                                        f"boundary={tf.get('boundary_consistency', 0.0):.4f}"
+                                    )
+                                if getattr(args, "aq_stream_2", False):
+                                    print(
+                                        f"  derived_psnr={tf.get('derived_operator_psnr', 0.0):.4f} "
+                                        f"derived_frame2={tf.get('derived_frame_2_psnr', 0.0):.4f} "
+                                        f"derived_delta={tf.get('derived_frame_delta_psnr', 0.0):.4f} "
+                                        f"delta_op={tf.get('delta_operator_recovery', 0.0):.4f} "
+                                        f"anchor={tf.get('anchor_pixel_recovery', 0.0):.4f}"
+                                    )
             print(f"{'row':>4} {'true_motif':>18} {'pred_motif':>18} {'target_luma':>12} {'pred_luma':>12}")
             print("-" * 112)
             for rec in records:
@@ -5022,6 +5389,43 @@ if __name__ == "__main__":
         help="Run Program AQ-STREAM-0: flat roster vs mode-labeled vs entangled-pair raw frame stream.",
     )
     parser.add_argument(
+        "--aq-stream-1",
+        dest="aq_stream_1",
+        action="store_true",
+        help="Run Program AQ-STREAM-1: pair-resource v2 auxiliary gain sweep for ordered two-frame stream recovery.",
+    )
+    parser.add_argument(
+        "--aq-stream-2",
+        dest="aq_stream_2",
+        action="store_true",
+        help="Run Program AQ-STREAM-2: pair-resource gain sweep plus delta-operator derived-frame recovery.",
+    )
+    parser.add_argument(
+        "--aq-stream-gains",
+        default="0.125,0.25",
+        help="Comma-separated AQ-STREAM pair-v2 gain arms to run, e.g. 0.125,0.25 or 0.50.",
+    )
+    parser.add_argument(
+        "--aq-stream-frame-size",
+        type=int,
+        default=16,
+        choices=[16, 32],
+        help="Reference yin-yang frame size for AQ-STREAM runs.",
+    )
+    parser.add_argument(
+        "--aq-stream-fast-steps",
+        type=int,
+        default=8,
+        help="D-LinOSS payload-lane steps for the AQ-STREAM-1 fast evaluator.",
+    )
+    parser.add_argument(
+        "--no-aq-stream-fast-path",
+        dest="aq_stream_fast_path",
+        action="store_false",
+        default=True,
+        help="Disable the AQ-STREAM-1 payload-lane fast evaluator and use the generic folded-field recovery path.",
+    )
+    parser.add_argument(
         "--aq-img-0",
         dest="aq_img_0",
         action="store_true",
@@ -5193,6 +5597,8 @@ if __name__ == "__main__":
             and not args.aq_yinyang_3
             and not args.aq_yinyang_4
             and not args.aq_stream_0
+            and not args.aq_stream_1
+            and not args.aq_stream_2
             and not args.require_tpu
         ):
             raise SystemExit(0)
@@ -5411,6 +5817,7 @@ if __name__ == "__main__":
         print("[AQ-SEQ-0] noise-free sequential semantic state gate with source payload + next-state feature gate")
 
     if args.aq_stream_0:
+        stream_state_count = 2 * (int(args.aq_stream_frame_size) // 4) * (int(args.aq_stream_frame_size) // 4)
         args.sequence_length = 16
         args.depth_sweep = [3]
         args.seeds = []
@@ -5419,13 +5826,49 @@ if __name__ == "__main__":
         args.run_heldout_transport = False
         args.heldout_include_controls = False
         args.run_semantic_recovery = True
-        args.recovery_train_states = 32
-        args.recovery_test_states = 32
+        args.recovery_train_states = stream_state_count
+        args.recovery_test_states = stream_state_count
         args.recovery_noise_sweep = [0.00]
         args.recovery_seeds = [11]
         args.control_block_size = 2
         args.save_preview_png = True
-        print("[AQ-STREAM-0] flat roster vs separable mode stream vs entangled pair stream")
+        print(f"[AQ-STREAM-0] flat roster vs separable mode stream vs entangled pair stream ({args.aq_stream_frame_size}x{args.aq_stream_frame_size})")
+
+    if args.aq_stream_1:
+        stream_state_count = 2 * (int(args.aq_stream_frame_size) // 4) * (int(args.aq_stream_frame_size) // 4)
+        args.sequence_length = 16
+        args.depth_sweep = [3]
+        args.seeds = []
+        args.dlinoss_steps = min(args.dlinoss_steps, 16)
+        args.include_controls = False
+        args.run_heldout_transport = False
+        args.heldout_include_controls = False
+        args.run_semantic_recovery = True
+        args.recovery_train_states = stream_state_count
+        args.recovery_test_states = stream_state_count
+        args.recovery_noise_sweep = [0.00]
+        args.recovery_seeds = [11]
+        args.control_block_size = 2
+        args.save_preview_png = True
+        print(f"[AQ-STREAM-1] pair-resource v2 auxiliary gain sweep ({args.aq_stream_frame_size}x{args.aq_stream_frame_size})")
+
+    if args.aq_stream_2:
+        stream_state_count = 2 * (int(args.aq_stream_frame_size) // 4) * (int(args.aq_stream_frame_size) // 4)
+        args.sequence_length = 16
+        args.depth_sweep = [3]
+        args.seeds = []
+        args.dlinoss_steps = min(args.dlinoss_steps, 16)
+        args.include_controls = False
+        args.run_heldout_transport = False
+        args.heldout_include_controls = False
+        args.run_semantic_recovery = True
+        args.recovery_train_states = stream_state_count
+        args.recovery_test_states = stream_state_count
+        args.recovery_noise_sweep = [0.00]
+        args.recovery_seeds = [11]
+        args.control_block_size = 2
+        args.save_preview_png = True
+        print(f"[AQ-STREAM-2] gain sweep plus delta-operator recovery ({args.aq_stream_frame_size}x{args.aq_stream_frame_size})")
 
     if args.aq_img_0 or args.aq_img_1 or args.aq_img_1_lite:
         args.sequence_length = 8 if args.aq_img_1_lite else 16
@@ -5692,6 +6135,8 @@ if __name__ == "__main__":
             or args.aq_1c
             or args.aq_seq_0
             or args.aq_stream_0
+            or args.aq_stream_1
+            or args.aq_stream_2
             or args.as_0
             or args.aq_hybrid_0
             or args.aq_dna_0
@@ -5708,7 +6153,8 @@ if __name__ == "__main__":
             or args.aq_img_1
             or args.aq_img_1_lite
         )
-        args.sequence_length = 16 if (args.aq_stream_0 or args.as_0b or args.as_0 or args.aq_hybrid_0 or args.aq_dna_0 or args.aq_yinyang_4 or args.aq_fft_7 or args.aq_fft_6 or args.aq_fft_5 or args.aq_fft_4 or args.aq_fft_3 or args.aq_fft_2 or args.aq_fft_1 or args.aq_fft_0) else (8 if (args.aq_0b or aq_l5_mode) else 12)
+        stream_state_count = 2 * (int(args.aq_stream_frame_size) // 4) * (int(args.aq_stream_frame_size) // 4)
+        args.sequence_length = 16 if (args.aq_stream_0 or args.aq_stream_1 or args.aq_stream_2 or args.as_0b or args.as_0 or args.aq_hybrid_0 or args.aq_dna_0 or args.aq_yinyang_4 or args.aq_fft_7 or args.aq_fft_6 or args.aq_fft_5 or args.aq_fft_4 or args.aq_fft_3 or args.aq_fft_2 or args.aq_fft_1 or args.aq_fft_0) else (8 if (args.aq_0b or aq_l5_mode) else 12)
         args.depth_sweep = [2]
         args.seeds = [11]
         args.dlinoss_steps = 4 if (args.aq_0b or aq_l5_mode) else 12
@@ -5719,10 +6165,10 @@ if __name__ == "__main__":
         args.run_semantic_recovery = True
         args.n_train_states = 2 if (args.aq_0b or aq_l5_mode) else 3
         args.n_test_states = 1 if (args.aq_0b or aq_l5_mode) else 2
-        args.recovery_train_states = 32 if args.aq_stream_0 else (16 if (args.aq_1c or args.as_0b or args.as_0 or args.aq_hybrid_0 or args.aq_dna_0 or args.aq_yinyang_4 or args.aq_fft_7 or args.aq_fft_6 or args.aq_fft_5 or args.aq_fft_4 or args.aq_fft_3 or args.aq_fft_2 or args.aq_fft_1 or args.aq_fft_0 or args.aq_img_0 or args.aq_img_1) else (8 if args.aq_img_1_lite else (4 if aq_l5_mode else (2 if args.aq_0b else 3))))
-        args.recovery_test_states = 32 if args.aq_stream_0 else (16 if (args.aq_1c or args.as_0b or args.as_0 or args.aq_hybrid_0 or args.aq_dna_0 or args.aq_yinyang_4 or args.aq_fft_7 or args.aq_fft_6 or args.aq_fft_5 or args.aq_fft_4 or args.aq_fft_3 or args.aq_fft_2 or args.aq_fft_1 or args.aq_fft_0 or args.aq_img_0 or args.aq_img_1) else (8 if args.aq_img_1_lite else (4 if aq_l5_mode else (1 if args.aq_0b else 2))))
+        args.recovery_train_states = stream_state_count if (args.aq_stream_0 or args.aq_stream_1 or args.aq_stream_2) else (16 if (args.aq_1c or args.as_0b or args.as_0 or args.aq_hybrid_0 or args.aq_dna_0 or args.aq_yinyang_4 or args.aq_fft_7 or args.aq_fft_6 or args.aq_fft_5 or args.aq_fft_4 or args.aq_fft_3 or args.aq_fft_2 or args.aq_fft_1 or args.aq_fft_0 or args.aq_img_0 or args.aq_img_1) else (8 if args.aq_img_1_lite else (4 if aq_l5_mode else (2 if args.aq_0b else 3))))
+        args.recovery_test_states = stream_state_count if (args.aq_stream_0 or args.aq_stream_1 or args.aq_stream_2) else (16 if (args.aq_1c or args.as_0b or args.as_0 or args.aq_hybrid_0 or args.aq_dna_0 or args.aq_yinyang_4 or args.aq_fft_7 or args.aq_fft_6 or args.aq_fft_5 or args.aq_fft_4 or args.aq_fft_3 or args.aq_fft_2 or args.aq_fft_1 or args.aq_fft_0 or args.aq_img_0 or args.aq_img_1) else (8 if args.aq_img_1_lite else (4 if aq_l5_mode else (1 if args.aq_0b else 2))))
         args.recovery_noise_sweep = [0.30] if aq_l5_mode else ([0.00] if args.aq_0b else [0.18])
-        args.recovery_noise_sweep = [0.00] if (args.aq_1c or args.aq_seq_0 or args.aq_stream_0 or args.as_0b or args.as_0 or args.aq_hybrid_0 or args.aq_dna_0 or args.aq_yinyang_4 or args.aq_fft_7 or args.aq_fft_6 or args.aq_fft_5 or args.aq_fft_4 or args.aq_fft_3 or args.aq_fft_2 or args.aq_fft_1 or args.aq_fft_0 or args.aq_img_0 or args.aq_img_1 or args.aq_img_1_lite) else args.recovery_noise_sweep
+        args.recovery_noise_sweep = [0.00] if (args.aq_1c or args.aq_seq_0 or args.aq_stream_0 or args.aq_stream_1 or args.aq_stream_2 or args.as_0b or args.as_0 or args.aq_hybrid_0 or args.aq_dna_0 or args.aq_yinyang_4 or args.aq_fft_7 or args.aq_fft_6 or args.aq_fft_5 or args.aq_fft_4 or args.aq_fft_3 or args.aq_fft_2 or args.aq_fft_1 or args.aq_fft_0 or args.aq_img_0 or args.aq_img_1 or args.aq_img_1_lite) else args.recovery_noise_sweep
         args.recovery_seeds = [11] if (args.aq_0b or aq_l5_mode) else args.recovery_seeds
         args.control_block_size = 2 if (args.aq_0b or aq_l5_mode) else 3
         print("[SMOKE TEST]")

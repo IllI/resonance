@@ -27,7 +27,7 @@ if ($Zone -notin $AllowedZones) {
     exit 1
 }
 
-$AllowedModes = @("--ap-focused", "--ap-lite", "--ap-r", "--ap-s", "--ap-s-mech", "--ap-s-fidelity", "--ap-t", "--ap-u", "--aq-0", "--aq-0b", "--aq-1a-tf", "--aq-1a-tf-s29", "--aq-1b", "--aq-1c", "--aq-seq-0", "--aq-stream-0", "--aq-img-0", "--aq-img-1", "--aq-img-1-lite", "--aq-fft-0", "--aq-fft-1", "--aq-fft-2", "--aq-fft-3", "--aq-fft-4", "--aq-fft-5", "--aq-fft-6", "--aq-fft-7", "--aq-yinyang-0", "--aq-yinyang-1", "--aq-yinyang-2", "--aq-yinyang-3", "--aq-yinyang-4", "--aq-dna-0", "--aq-hybrid-0", "--as-0", "--as-0b")
+$AllowedModes = @("--ap-focused", "--ap-lite", "--ap-r", "--ap-s", "--ap-s-mech", "--ap-s-fidelity", "--ap-t", "--ap-u", "--aq-0", "--aq-0b", "--aq-1a-tf", "--aq-1a-tf-s29", "--aq-1b", "--aq-1c", "--aq-seq-0", "--aq-stream-0", "--aq-stream-1", "--aq-stream-2", "--aq-img-0", "--aq-img-1", "--aq-img-1-lite", "--aq-fft-0", "--aq-fft-1", "--aq-fft-2", "--aq-fft-3", "--aq-fft-4", "--aq-fft-5", "--aq-fft-6", "--aq-fft-7", "--aq-yinyang-0", "--aq-yinyang-1", "--aq-yinyang-2", "--aq-yinyang-3", "--aq-yinyang-4", "--aq-dna-0", "--aq-hybrid-0", "--as-0", "--as-0b")
 if ($ProgramMode -notin $AllowedModes) {
     Write-Host "[ERROR] PROGRAM_AP_MODE must be one of: $($AllowedModes -join ', ')"
     exit 1
@@ -60,8 +60,39 @@ Write-Host "[SSH] Verifying TPU-backed JAX runtime..."
 $RuntimeCheck = "python3 -c 'import jax; print(jax.__version__, jax.default_backend(), jax.devices()); assert jax.default_backend() == ""tpu""'"
 "y" | gcloud compute tpus tpu-vm ssh $NodeId --project=$Project --zone=$Zone --quiet --command=$RuntimeCheck
 if ($LASTEXITCODE -ne 0) {
-    Write-Host "[ERROR] TPU JAX runtime check failed."
-    exit 1
+    Write-Host "[SETUP] TPU JAX runtime missing or not ready. Installing jax[tpu]..."
+    $InstallJaxCmd = "python3 -m pip install -q -U 'jax[tpu]' -f https://storage.googleapis.com/jax-releases/libtpu_releases.html"
+    "y" | gcloud compute tpus tpu-vm ssh $NodeId --project=$Project --zone=$Zone --quiet --command=$InstallJaxCmd
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "[ERROR] TPU JAX install failed."
+        exit 1
+    }
+    Write-Host "[SETUP] Installing small runtime helpers..."
+    $InstallHelpersCmd = "python3 -m pip install -q -U numpy pillow"
+    "y" | gcloud compute tpus tpu-vm ssh $NodeId --project=$Project --zone=$Zone --quiet --command=$InstallHelpersCmd
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "[ERROR] Runtime helper install failed."
+        exit 1
+    }
+    Write-Host "[SSH] Re-verifying TPU-backed JAX runtime..."
+    "y" | gcloud compute tpus tpu-vm ssh $NodeId --project=$Project --zone=$Zone --quiet --command=$RuntimeCheck
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "[ERROR] TPU JAX runtime check failed after install."
+        exit 1
+    }
+}
+
+Write-Host "[SSH] Verifying Python runtime helpers..."
+$HelperCheck = "python3 -c 'import numpy, PIL; print(numpy.__version__)'"
+"y" | gcloud compute tpus tpu-vm ssh $NodeId --project=$Project --zone=$Zone --quiet --command=$HelperCheck
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "[SETUP] Installing small runtime helpers..."
+    $InstallHelpersCmd = "python3 -m pip install -q -U numpy pillow"
+    "y" | gcloud compute tpus tpu-vm ssh $NodeId --project=$Project --zone=$Zone --quiet --command=$InstallHelpersCmd
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "[ERROR] Runtime helper install failed."
+        exit 1
+    }
 }
 
 Write-Host "[SCP] Uploading Program AP source only..."
