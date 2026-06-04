@@ -1918,3 +1918,75 @@ Next implementation step:
 
 - compare ordered two-frame quality against two independently recovered one-frame outputs
 - decide whether the next run should split frame identity and image body into separate channels before reintroducing temporal coupling
+
+## AQ-STREAM-0 Entangled-Pair Streaming Gate
+
+The roadmap now splits:
+
+| branch | purpose | next action |
+| --- | --- | --- |
+| folded-state teleportation | revisit semantic folding with stronger encoding tools such as FFT/TTN/MERA | pause |
+| entangled-pair streaming | test whether structured pair resources improve ordered frame recovery | run `AQ-STREAM-0` |
+
+`AQ-STREAM-0` keeps the successful raw patch-state channel and asks whether ordered two-frame recovery improves when time, patch position, frame polarity, and pair correlations are explicit internal modes.
+
+The three arms are:
+
+- `flat_ordered_roster`
+- `separable_mode_stream`
+- `entangled_pair_stream`
+
+Primary gate:
+
+```text
+entangled_pair_stream mean_psnr > 25.0450 dB
+cross_frame_leakage decreases
+patch_position_accuracy remains 1.0000
+```
+
+Strong gate:
+
+```text
+entangled_pair_stream mean_psnr >= 27 dB
+```
+
+Implementation status:
+
+- added `--aq-stream-0`
+- added stream-specific complex oscillator payload tables
+- added time/patch/polarity/pair-resource metrics
+- added run spec at `emergent_quantum_geometries/docs/PROGRAM_AQ_STREAM0_RUN_SPEC_2026-06-04.md`
+
+Completed AQ-STREAM-0 readout:
+
+| arm | mean PSNR | frame 1 | frame 2 | order | patch | leakage |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| `flat_ordered_roster` | `25.9232` | `25.7380` | `26.1167` | `1.0000` | `1.0000` | `0.0000` |
+| `separable_mode_stream` | `28.4754` | `28.0911` | `28.8970` | `1.0000` | `1.0000` | `0.0000` |
+| `entangled_pair_stream` | `17.5098` | `17.5350` | `17.4848` | `1.0000` | `1.0000` | `0.0000` |
+
+Conclusion:
+
+`AQ-STREAM-0` supports the streaming branch, but not the first entangled-pair body. The separable stream arm showed that explicit time/patch/polarity labels improve ordered two-frame recovery by about `+2.55 dB` over the flat baseline. The entangled arm failed despite perfect order and zero frame leakage, which points to destructive pair encoding rather than a failure of stream ordering.
+
+Quick correction:
+
+- keep the active TPU and same launch envelope
+- replace `raw_patch + i * partner_patch` with a raw-preserving real pair-residual packet
+- rerun `--aq-stream-0` to test whether pair information helps once it is auxiliary rather than occupying the source patch's imaginary quadrature
+
+Follow-up result:
+
+| arm | mean PSNR | frame 1 | frame 2 | order | patch | leakage |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| `flat_ordered_roster` | `25.9448` | `25.7323` | `26.1682` | `1.0000` | `1.0000` | `0.0000` |
+| `separable_mode_stream` | `28.4640` | `28.0736` | `28.8930` | `1.0000` | `1.0000` | `0.0000` |
+| `entangled_pair_stream` v2 | `29.2137` | `28.5450` | `30.0043` | `1.0000` | `1.0000` | `0.0000` |
+
+The correction worked. The stream branch now has evidence that pair-resource information improves ordered visual recovery when it is encoded as an auxiliary real residual while preserving the source patch body. The first entangled result failed because the partner patch was quadrature-coupled into the source slot, not because pair resources are unusable.
+
+Artifacts:
+
+- `tpu_previews/aq_stream0_v2_2026-06-04/program_ap_summary.json`
+- `tpu_previews/aq_stream0_v2_2026-06-04/aq_frame_depth3_noise0.0_seed11_entangled_pair_stream_taichi_16x16_frame_1_compare.png`
+- `tpu_previews/aq_stream0_v2_2026-06-04/aq_frame_depth3_noise0.0_seed11_entangled_pair_stream_taichi_16x16_frame_2_compare.png`

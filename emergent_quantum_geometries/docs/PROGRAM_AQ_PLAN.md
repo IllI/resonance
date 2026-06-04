@@ -2053,3 +2053,64 @@ Implementation note:
 
 - raw `AQ-YINYANG-4` now marks itself as a `fast_codec_probe`
 - future sanity runs should keep the PNG outputs while skipping the extra adversarial-control signature burden that slowed the previous image checks
+
+## AQ Roadmap Split
+
+Added 2026-06-04:
+
+The image work now splits into two branches.
+
+| branch | purpose | status |
+| --- | --- | --- |
+| folded-state teleportation branch | revisit semantic state folding with better encoding tools, possibly FFT/TTN/MERA later | pause for now |
+| entangled-pair streaming branch | test whether stream-like pair resources improve ordered frame recovery | run next |
+
+The immediate next run is:
+
+- `AQ-STREAM-0`
+- raw two-frame YINYANG payload
+- arms: `flat_ordered_roster`, `separable_mode_stream`, `entangled_pair_stream`
+- baseline: ordered flat roster at `25.0450 dB`
+
+The scientific question is not whether complex information teleports instantly. The simulator question is narrower and testable:
+
+```text
+Can a stream of mode-labeled entangled-pair-like resources carry folded state-shape packets
+more coherently than a flat list of patch states?
+```
+
+Run spec:
+
+- `emergent_quantum_geometries/docs/PROGRAM_AQ_STREAM0_RUN_SPEC_2026-06-04.md`
+
+Completed AQ-STREAM-0 result:
+
+| arm | mean PSNR | order | patch | leakage | interpretation |
+| --- | ---: | ---: | ---: | ---: | --- |
+| `flat_ordered_roster` | `25.9232 dB` | `1.0000` | `1.0000` | `0.0000` | solid ordered two-frame baseline |
+| `separable_mode_stream` | `28.4754 dB` | `1.0000` | `1.0000` | `0.0000` | mode labels strongly improve reconstruction |
+| `entangled_pair_stream` | `17.5098 dB` | `1.0000` | `1.0000` | `0.0000` | complex pair body damages pixel recovery |
+
+The main finding is that stream metadata is useful, but the first pair-resource injection was too aggressive. The failure did not come from frame-order confusion: temporal order, patch position, and cross-frame leakage were all clean. The likely issue is that `raw_patch + i * partner_patch` forces the partner frame into the same oscillator slot as the source patch, weakening local image-body recovery.
+
+Immediate follow-up:
+
+- keep `--aq-stream-0`
+- preserve the separable stream envelope
+- replace the entangled arm with a raw-preserving real pair-residual payload
+- test whether pair information helps when it is auxiliary instead of quadrature-coupled to the source patch
+
+Completed follow-up:
+
+| arm | mean PSNR | frame 1 | frame 2 | order | patch | leakage |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| `flat_ordered_roster` | `25.9448 dB` | `25.7323` | `26.1682` | `1.0000` | `1.0000` | `0.0000` |
+| `separable_mode_stream` | `28.4640 dB` | `28.0736` | `28.8930` | `1.0000` | `1.0000` | `0.0000` |
+| `entangled_pair_stream` v2 | `29.2137 dB` | `28.5450` | `30.0043` | `1.0000` | `1.0000` | `0.0000` |
+
+This reverses the first entangled-arm result. Pair resources can help, but only when the local patch body remains directly recoverable. The useful design principle is to keep source-state content in the primary channel and treat pair information as an auxiliary residual or constraint channel.
+
+Local visual artifacts:
+
+- `tpu_previews/aq_stream0_v2_2026-06-04/aq_frame_depth3_noise0.0_seed11_entangled_pair_stream_taichi_16x16_frame_1_compare.png`
+- `tpu_previews/aq_stream0_v2_2026-06-04/aq_frame_depth3_noise0.0_seed11_entangled_pair_stream_taichi_16x16_frame_2_compare.png`
