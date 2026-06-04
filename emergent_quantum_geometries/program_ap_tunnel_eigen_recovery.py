@@ -17,12 +17,16 @@ This program extends Program AO:
 import argparse
 import json
 import os
+import struct
 import subprocess
 import sys
 import time
 import urllib.request
 import threading
+import zlib
 from functools import partial
+
+import numpy as np
 
 try:
     import jax
@@ -38,6 +42,285 @@ AP_S_FIDELITY_APR_REFERENCE = {
 }
 
 AP_U_REFERENCE_TOLERANCE = 0.003
+
+
+def write_grayscale_png(path, image):
+    """Write a small 8-bit grayscale PNG without adding image dependencies."""
+    arr = np.asarray(image, dtype=np.uint8)
+    if arr.ndim != 2:
+        raise ValueError("write_grayscale_png expects a 2D uint8 array")
+    height, width = arr.shape
+    raw = b"".join(b"\x00" + arr[row].tobytes() for row in range(height))
+
+    def chunk(kind, data):
+        checksum = zlib.crc32(kind + data) & 0xFFFFFFFF
+        return struct.pack(">I", len(data)) + kind + data + struct.pack(">I", checksum)
+
+    png = (
+        b"\x89PNG\r\n\x1a\n"
+        + chunk(b"IHDR", struct.pack(">IIBBBBB", width, height, 8, 0, 0, 0, 0))
+        + chunk(b"IDAT", zlib.compress(raw, 9))
+        + chunk(b"IEND", b"")
+    )
+    with open(path, "wb") as f:
+        f.write(png)
+
+
+def read_png_luma(path):
+    with open(path, "rb") as f:
+        data = f.read()
+    if data[:8] != b"\x89PNG\r\n\x1a\n":
+        raise ValueError(f"Not a PNG file: {path}")
+
+    pos = 8
+    width = height = bit_depth = color_type = None
+    palette = None
+    transparency = None
+    idat = []
+    while pos < len(data):
+        length = struct.unpack(">I", data[pos : pos + 4])[0]
+        kind = data[pos + 4 : pos + 8]
+        chunk = data[pos + 8 : pos + 8 + length]
+        pos += 12 + length
+        if kind == b"IHDR":
+            width, height, bit_depth, color_type, _compression, _filter, interlace = struct.unpack(">IIBBBBB", chunk)
+            if interlace != 0:
+                raise ValueError(f"Interlaced PNGs are not supported: {path}")
+            if bit_depth != 8:
+                raise ValueError(f"Only 8-bit PNGs are supported, got bit depth {bit_depth}: {path}")
+        elif kind == b"PLTE":
+            palette = np.frombuffer(chunk, dtype=np.uint8).reshape((-1, 3))
+        elif kind == b"tRNS":
+            transparency = np.frombuffer(chunk, dtype=np.uint8)
+        elif kind == b"IDAT":
+            idat.append(chunk)
+        elif kind == b"IEND":
+            break
+
+    if width is None or height is None:
+        raise ValueError(f"PNG missing IHDR: {path}")
+    channels = {0: 1, 2: 3, 3: 1, 4: 2, 6: 4}.get(color_type)
+    if channels is None:
+        raise ValueError(f"Unsupported PNG color type {color_type}: {path}")
+
+    raw = zlib.decompress(b"".join(idat))
+    stride = int(width) * channels
+    rows = []
+    prev = np.zeros((stride,), dtype=np.uint8)
+    idx = 0
+    for _row in range(int(height)):
+        filter_type = raw[idx]
+        idx += 1
+        cur = np.frombuffer(raw[idx : idx + stride], dtype=np.uint8).copy()
+        idx += stride
+        bpp = channels
+        for i in range(stride):
+            left = int(cur[i - bpp]) if i >= bpp else 0
+            up = int(prev[i])
+            up_left = int(prev[i - bpp]) if i >= bpp else 0
+            if filter_type == 1:
+                cur[i] = (int(cur[i]) + left) & 0xFF
+            elif filter_type == 2:
+                cur[i] = (int(cur[i]) + up) & 0xFF
+            elif filter_type == 3:
+                cur[i] = (int(cur[i]) + ((left + up) // 2)) & 0xFF
+            elif filter_type == 4:
+                p = left + up - up_left
+                pa, pb, pc = abs(p - left), abs(p - up), abs(p - up_left)
+                predictor = left if pa <= pb and pa <= pc else (up if pb <= pc else up_left)
+                cur[i] = (int(cur[i]) + predictor) & 0xFF
+            elif filter_type != 0:
+                raise ValueError(f"Unsupported PNG filter {filter_type}: {path}")
+        rows.append(cur.copy())
+        prev = cur
+
+    pixels = np.stack(rows).reshape((int(height), int(width), channels))
+    if color_type == 0:
+        luma = pixels[:, :, 0].astype(np.float32)
+    elif color_type == 3:
+        if palette is None:
+            raise ValueError(f"Indexed PNG missing palette: {path}")
+        rgb = palette[pixels[:, :, 0]]
+        if transparency is not None:
+            alpha = np.ones((palette.shape[0],), dtype=np.float32) * 255.0
+            alpha[: transparency.shape[0]] = transparency.astype(np.float32)
+            a = alpha[pixels[:, :, 0]][:, :, None] / 255.0
+            rgb = rgb.astype(np.float32) * a + 127.5 * (1.0 - a)
+        luma = 0.2126 * rgb[:, :, 0] + 0.7152 * rgb[:, :, 1] + 0.0722 * rgb[:, :, 2]
+    else:
+        rgb = pixels[:, :, :3].astype(np.float32)
+        if color_type in (4, 6):
+            alpha = pixels[:, :, -1:].astype(np.float32) / 255.0
+            rgb = rgb * alpha + 127.5 * (1.0 - alpha)
+        luma = 0.2126 * rgb[:, :, 0] + 0.7152 * rgb[:, :, 1] + 0.0722 * rgb[:, :, 2]
+    return luma / 255.0
+
+
+def render_patch_preview_png(target_pixels, pred_pixels, path, patch_side=4, scale=16, gap=2):
+    """Render target/recovered/error patch contact sheet for AQ image codecs."""
+    target = np.asarray(target_pixels, dtype=np.float32).reshape((-1, patch_side, patch_side))
+    pred = np.asarray(pred_pixels, dtype=np.float32).reshape((-1, patch_side, patch_side))
+    n = min(target.shape[0], pred.shape[0], 16)
+    if n == 0:
+        return False
+    target = np.clip(target[:n], 0.0, 1.0)
+    pred = np.clip(pred[:n], 0.0, 1.0)
+    err = np.clip(np.abs(pred - target) * 4.0, 0.0, 1.0)
+
+    patch_px = patch_side * scale
+    width = n * patch_px + (n - 1) * gap
+    height = 3 * patch_px + 2 * gap
+    canvas = np.full((height, width), 245, dtype=np.uint8)
+    for band, patches in enumerate((target, pred, err)):
+        y0 = band * (patch_px + gap)
+        for idx, patch in enumerate(patches):
+            x0 = idx * (patch_px + gap)
+            block = np.kron(patch, np.ones((scale, scale), dtype=np.float32))
+            canvas[y0 : y0 + patch_px, x0 : x0 + patch_px] = np.rint(block * 255.0).astype(np.uint8)
+
+    write_grayscale_png(path, canvas)
+    return True
+
+
+def assemble_patch_frames(pixels, frame_count, patch_grid=(4, 4), patch_side=4):
+    patches = np.asarray(pixels, dtype=np.float32).reshape((-1, patch_side, patch_side))
+    rows, cols = int(patch_grid[0]), int(patch_grid[1])
+    frame_count = int(frame_count)
+    expected = frame_count * rows * cols
+    if patches.shape[0] < expected:
+        raise ValueError(f"Need {expected} patches to assemble frames, got {patches.shape[0]}")
+    frames = []
+    for frame_idx in range(frame_count):
+        start = frame_idx * rows * cols
+        frame = np.zeros((rows * patch_side, cols * patch_side), dtype=np.float32)
+        for patch_idx in range(rows * cols):
+            pr = patch_idx // cols
+            pc = patch_idx % cols
+            patch = patches[start + patch_idx]
+            y0 = pr * patch_side
+            x0 = pc * patch_side
+            frame[y0 : y0 + patch_side, x0 : x0 + patch_side] = patch
+        frames.append(np.clip(frame, 0.0, 1.0))
+    return frames
+
+
+def reorder_patch_pixels_for_frames(pixels, patch_indices, frame_count, patch_grid=(4, 4), patch_side=4):
+    patches = np.asarray(pixels, dtype=np.float32).reshape((-1, patch_side * patch_side))
+    indices = np.asarray(patch_indices, dtype=np.int64).reshape(-1)
+    rows, cols = int(patch_grid[0]), int(patch_grid[1])
+    total = int(frame_count) * rows * cols
+    ordered = np.zeros((total, patch_side * patch_side), dtype=np.float32)
+    seen = np.zeros((total,), dtype=bool)
+    for patch, idx in zip(patches, indices):
+        if 0 <= idx < total and not seen[idx]:
+            ordered[idx] = patch
+            seen[idx] = True
+    if not np.all(seen):
+        missing = np.where(~seen)[0].tolist()
+        raise ValueError(f"Missing preview patches for indices: {missing[:8]}")
+    return ordered
+
+
+def render_frame_png(path, frame, scale=16):
+    frame = np.asarray(frame, dtype=np.float32)
+    block = np.kron(np.clip(frame, 0.0, 1.0), np.ones((scale, scale), dtype=np.float32))
+    write_grayscale_png(path, np.rint(block * 255.0).astype(np.uint8))
+
+
+def render_frame_comparison_png(target_frame, pred_frame, path, scale=16, gap=4):
+    target = np.asarray(target_frame, dtype=np.float32)
+    pred = np.asarray(pred_frame, dtype=np.float32)
+    err = np.clip(np.abs(pred - target) * 4.0, 0.0, 1.0)
+    panels = [target, pred, err]
+    panel_h, panel_w = target.shape
+    canvas = np.full((panel_h * scale, 3 * panel_w * scale + 2 * gap), 245, dtype=np.uint8)
+    for idx, frame in enumerate(panels):
+        block = np.kron(np.clip(frame, 0.0, 1.0), np.ones((scale, scale), dtype=np.float32))
+        x0 = idx * (panel_w * scale + gap)
+        canvas[:, x0 : x0 + panel_w * scale] = np.rint(block * 255.0).astype(np.uint8)
+    write_grayscale_png(path, canvas)
+
+
+def write_frame_preview_pngs(target_pixels, pred_pixels, out_dir, prefix, frame_count, frame_names, patch_grid):
+    written = []
+    target_frames = assemble_patch_frames(target_pixels, frame_count, patch_grid)
+    pred_frames = assemble_patch_frames(pred_pixels, frame_count, patch_grid)
+    for idx, (target_frame, pred_frame) in enumerate(zip(target_frames, pred_frames)):
+        frame_name = safe_filename_part(frame_names[idx] if idx < len(frame_names) else f"frame_{idx:02d}")
+        base = f"{prefix}_{frame_name}"
+        target_path = os.path.join(out_dir, f"{base}_target.png")
+        recovered_path = os.path.join(out_dir, f"{base}_recovered.png")
+        error_path = os.path.join(out_dir, f"{base}_error.png")
+        compare_path = os.path.join(out_dir, f"{base}_compare.png")
+        render_frame_png(target_path, target_frame)
+        render_frame_png(recovered_path, pred_frame)
+        render_frame_png(error_path, np.clip(np.abs(pred_frame - target_frame) * 4.0, 0.0, 1.0))
+        render_frame_comparison_png(target_frame, pred_frame, compare_path)
+        written.extend([target_path, recovered_path, error_path, compare_path])
+    return written
+
+
+def safe_filename_part(value):
+    return "".join(ch if ch.isalnum() or ch in ("-", "_", ".") else "_" for ch in str(value))
+
+
+def write_recovery_preview_pngs(records, out_dir):
+    written = []
+    for rec in records:
+        depth = rec.get("mera_depth", "d")
+        for noise_level, seed_map in rec.get("semantic_recovery", {}).items():
+            for seed, ctrl_map in seed_map.items():
+                for ctrl, metrics in ctrl_map.items():
+                    tf = metrics.get("transform_field", {})
+                    target_pixels = tf.get("preview_patch_pixels_target")
+                    pred_pixels = tf.get("preview_patch_pixels_pred")
+                    if target_pixels is None or pred_pixels is None:
+                        continue
+                    patch_indices = tf.get("preview_patch_indices", tf.get("patch_true_indices"))
+                    name = (
+                        f"aq_preview_depth{safe_filename_part(depth)}"
+                        f"_noise{safe_filename_part(noise_level)}"
+                        f"_seed{safe_filename_part(seed)}"
+                        f"_{safe_filename_part(ctrl)}.png"
+                    )
+                    path = os.path.join(out_dir, name)
+                    if render_patch_preview_png(target_pixels, pred_pixels, path):
+                        written.append(path)
+                    frame_count = int(tf.get("preview_frame_count", 0) or 0)
+                    if frame_count > 0:
+                        frame_target_pixels = target_pixels
+                        frame_pred_pixels = pred_pixels
+                        if patch_indices is not None:
+                            frame_target_pixels = reorder_patch_pixels_for_frames(
+                                target_pixels,
+                                patch_indices,
+                                frame_count,
+                                tf.get("preview_patch_grid", [4, 4]),
+                            )
+                            frame_pred_pixels = reorder_patch_pixels_for_frames(
+                                pred_pixels,
+                                patch_indices,
+                                frame_count,
+                                tf.get("preview_patch_grid", [4, 4]),
+                            )
+                        prefix = (
+                            f"aq_frame_depth{safe_filename_part(depth)}"
+                            f"_noise{safe_filename_part(noise_level)}"
+                            f"_seed{safe_filename_part(seed)}"
+                            f"_{safe_filename_part(ctrl)}"
+                        )
+                        written.extend(
+                            write_frame_preview_pngs(
+                                frame_target_pixels,
+                                frame_pred_pixels,
+                                out_dir,
+                                prefix,
+                                frame_count,
+                                tf.get("preview_frame_names", []),
+                                tf.get("preview_patch_grid", [4, 4]),
+                            )
+                        )
+    return written
 
 
 def current_git_commit():
@@ -700,6 +983,633 @@ def build_image_patch_codec_payload(seq_len, residual_vector=False, patch_limit=
     return payload_seqs, source_features, graph_features, layer_features, transform_info
 
 
+def build_yinyang_frames(frame_size=16, supersample=4):
+    sample_size = int(frame_size) * int(max(1, supersample))
+    coords = (jnp.arange(sample_size, dtype=jnp.float32) + 0.5) / float(sample_size)
+    yy, xx = jnp.meshgrid(coords, coords, indexing="ij")
+    x = 2.0 * xx - 1.0
+    y = 1.0 - 2.0 * yy
+    circle = x * x + y * y <= 0.98 * 0.98
+
+    upper_lobe = x * x + (y - 0.5) * (y - 0.5) <= 0.5 * 0.5
+    lower_lobe = x * x + (y + 0.5) * (y + 0.5) <= 0.5 * 0.5
+    upper_dot = x * x + (y - 0.5) * (y - 0.5) <= 0.13 * 0.13
+    lower_dot = x * x + (y + 0.5) * (y + 0.5) <= 0.13 * 0.13
+
+    base = jnp.where(y >= 0.0, 1.0, 0.0)
+    symbol = jnp.where(upper_lobe, 0.0, base)
+    symbol = jnp.where(lower_lobe, 1.0, symbol)
+    symbol = jnp.where(upper_dot, 1.0, symbol)
+    symbol = jnp.where(lower_dot, 0.0, symbol)
+    symbol = jnp.where(circle, symbol, 0.5)
+    inverted = jnp.where(circle, 1.0 - symbol, 0.5)
+    symbol = symbol.reshape((frame_size, supersample, frame_size, supersample)).mean(axis=(1, 3))
+    inverted = inverted.reshape((frame_size, supersample, frame_size, supersample)).mean(axis=(1, 3))
+    return jnp.stack([symbol, inverted])
+
+
+def write_yinyang_reference_pngs(out_dir):
+    os.makedirs(out_dir, exist_ok=True)
+    frames = jax.device_get(build_yinyang_frames(frame_size=32, supersample=8))
+    human_frames = jax.device_get(build_yinyang_frames(frame_size=256, supersample=2))
+    names = ["frame_00_yin_yang", "frame_01_yang_yin"]
+    written = []
+    for name, frame in zip(names, frames):
+        path = os.path.join(out_dir, f"{name}_reference.png")
+        render_frame_png(path, frame)
+        written.append(path)
+    for name, frame in zip(names, human_frames):
+        path = os.path.join(out_dir, f"{name}_human_reference.png")
+        render_frame_png(path, frame, scale=1)
+        written.append(path)
+    return written
+
+
+def find_yinyang_reference_dir():
+    candidates = [
+        os.environ.get("YINYANG_REFERENCE_DIR", ""),
+        os.path.join(os.getcwd(), "yinyang_reference_v2"),
+        os.path.join(os.getcwd(), "tpu_previews", "yinyang_reference_v2"),
+        os.path.join(os.path.dirname(os.getcwd()), "tpu_previews", "yinyang_reference_v2"),
+    ]
+    for candidate in candidates:
+        if candidate and os.path.isdir(candidate):
+            return candidate
+    return None
+
+
+def load_yinyang_reference_frames(frame_size=32, frame_count=2, frame_start=1):
+    ref_dir = find_yinyang_reference_dir()
+    if ref_dir is None:
+        return None, None
+    prefix = f"taichi_{int(frame_size)}x{int(frame_size)}_frame_"
+    names = sorted(name for name in os.listdir(ref_dir) if name.startswith(prefix) and name.lower().endswith(".png"))
+    if not names:
+        return None, None
+    start = max(0, int(frame_start) - 1)
+    selected_names = names[start : start + int(frame_count)]
+    if len(selected_names) < int(frame_count):
+        raise ValueError(f"Requested {frame_count} frame(s) from frame_start={frame_start}, but only found {len(names)} matching PNGs")
+    frames = []
+    for name in selected_names:
+        frame = read_png_luma(os.path.join(ref_dir, name))
+        if frame.shape != (int(frame_size), int(frame_size)):
+            raise ValueError(f"Reference frame {name} has shape {frame.shape}, expected {(int(frame_size), int(frame_size))}")
+        frames.append(jnp.asarray(frame, dtype=jnp.float32))
+    return jnp.stack(frames), selected_names
+
+
+def build_yinyang_fft_patch_codec_payload(
+    seq_len,
+    top_k=6,
+    residual_k=4,
+    direct_complex=True,
+    dna_instruction=True,
+    frame_count=2,
+):
+    payload_seqs, source_features, graph_features, layer_features, transform_info = build_fft_patch_codec_payload(
+        seq_len,
+        top_k=top_k,
+        patch_limit=16,
+        residual_k=residual_k,
+        direct_complex=direct_complex,
+        dna_instruction=dna_instruction,
+    )
+
+    frames = build_yinyang_frames()[: int(frame_count)]
+    frame_count, frame_size, _ = frames.shape
+    patch_side = 4
+    patch_rows = frame_size // patch_side
+    patch_cols = frame_size // patch_side
+    patches = []
+    for frame_idx in range(int(frame_count)):
+        frame = frames[frame_idx]
+        for row in range(int(patch_rows)):
+            for col in range(int(patch_cols)):
+                patch = frame[
+                    row * patch_side : (row + 1) * patch_side,
+                    col * patch_side : (col + 1) * patch_side,
+                ].reshape(-1)
+                patches.append(patch)
+    patch_pixels = jnp.stack(patches)
+
+    motif_pixels = transform_info["motif_pixel_catalog"]
+    patch_motif_indices = jnp.argmin(
+        jnp.mean((patch_pixels[:, None, :] - motif_pixels[None, :, :]) ** 2, axis=2),
+        axis=1,
+    ).astype(jnp.int32)
+    payload_seqs = jnp.rint(patch_pixels * 3.0).astype(jnp.int32)
+    motif_features = transform_info["motif_code_catalog"][patch_motif_indices]
+
+    patches_2d = patch_pixels.reshape((patch_pixels.shape[0], patch_side, patch_side))
+    fft_full = jnp.fft.fft2(patches_2d).reshape((patch_pixels.shape[0], 16))
+    magnitudes = jnp.abs(fft_full)
+    top_k = int(max(1, min(16, int(top_k))))
+    residual_k = int(max(0, min(16 - top_k, int(residual_k))))
+    basis_order = jnp.array([0, 1, 4, 5, 2, 8, 6, 9, 10, 3, 12, 7, 13, 11, 14, 15], dtype=jnp.int32)
+    core_idx = basis_order[:top_k]
+    core_mask = jnp.sum(jax.nn.one_hot(core_idx, 16, dtype=jnp.float32), axis=0)
+    residual_magnitudes = magnitudes * (1.0 - core_mask[None, :])
+    residual_idx = jnp.argsort(residual_magnitudes, axis=1)[:, -residual_k:] if residual_k > 0 else jnp.zeros((patch_pixels.shape[0], 0), dtype=jnp.int32)
+    top_idx = (
+        jnp.concatenate([jnp.tile(core_idx[None, :], (patch_pixels.shape[0], 1)), residual_idx], axis=1)
+        if residual_k > 0
+        else jnp.tile(core_idx[None, :], (patch_pixels.shape[0], 1))
+    )
+    top_mask = jnp.clip(jnp.sum(jax.nn.one_hot(top_idx, 16, dtype=jnp.float32), axis=1), 0.0, 1.0)
+    residual_mask = jnp.clip(jnp.sum(jax.nn.one_hot(residual_idx, 16, dtype=jnp.float32), axis=1), 0.0, 1.0)
+    sparse_fft = fft_full * top_mask
+    sparse_mag = jnp.abs(sparse_fft)
+    sparse_phase = jnp.angle(sparse_fft)
+    sparse_phase_cos = jnp.cos(sparse_phase) * top_mask
+    sparse_phase_sin = jnp.sin(sparse_phase) * top_mask
+    sparse_fft_complex_features = jnp.concatenate([jnp.real(sparse_fft), jnp.imag(sparse_fft)], axis=1)
+    full_fft_features = jnp.concatenate([jnp.real(fft_full), jnp.imag(fft_full)], axis=1)
+    low_freq_idx = jnp.array([0, 1, 4, 5], dtype=jnp.int32)
+    low_freq_mag = sparse_mag[:, low_freq_idx]
+    low_freq_phase = jnp.concatenate([sparse_phase_cos[:, low_freq_idx], sparse_phase_sin[:, low_freq_idx]], axis=1)
+    dc_mag = jnp.abs(fft_full[:, 0:1])
+    total_energy = jnp.sum(magnitudes * magnitudes, axis=1, keepdims=True) + 1e-8
+    dc_energy = (jnp.abs(fft_full[:, 0:1]) ** 2) / total_energy
+    lowfreq_energy = jnp.sum((jnp.abs(fft_full[:, low_freq_idx]) ** 2), axis=1, keepdims=True) / total_energy
+    residual_energy = jnp.sum((magnitudes * magnitudes) * residual_mask, axis=1, keepdims=True) / total_energy
+    phase_coherence = jnp.sum(sparse_phase_cos * top_mask, axis=1, keepdims=True) / (
+        jnp.sum(top_mask, axis=1, keepdims=True) + 1e-8
+    )
+    support_prob = top_mask / (jnp.sum(top_mask, axis=1, keepdims=True) + 1e-8)
+    support_entropy = -jnp.sum(
+        jnp.where(support_prob > 0.0, support_prob * jnp.log(support_prob + 1e-8), 0.0),
+        axis=1,
+        keepdims=True,
+    ) / jnp.log(jnp.float32(16.0))
+    motif_consistency = jnp.max(motif_features, axis=1, keepdims=True)
+    shape_charges = jnp.concatenate(
+        [dc_energy, lowfreq_energy, phase_coherence, residual_energy, support_entropy, motif_consistency],
+        axis=1,
+    )
+    mag_norm = sparse_mag / (jnp.sum(sparse_mag, axis=1, keepdims=True) + 1e-8)
+    freq_axis = jnp.linspace(0.0, 1.0, 16, dtype=jnp.float32)[None, :]
+    checksum = jnp.mod(
+        jnp.sum(top_mask * (freq_axis + 0.125) + mag_norm * 0.5 + sparse_phase_cos * 0.25, axis=1, keepdims=True),
+        1.0,
+    )
+    instruction_features = jnp.concatenate([top_mask, residual_mask, mag_norm, sparse_phase_cos, sparse_phase_sin, checksum], axis=1)
+    source_features = jnp.concatenate([motif_features, sparse_fft_complex_features, instruction_features], axis=1)
+    graph_features = jnp.concatenate([sparse_fft_complex_features, instruction_features, motif_features], axis=1)
+    layer_features = {
+        "L1_occupation": dc_mag,
+        "L2_transition": low_freq_mag,
+        "L3_fft_phase": low_freq_phase,
+        "L4_recurrence": sparse_mag,
+        "L5_transform": instruction_features,
+    }
+    oracle_recon = jnp.real(jnp.fft.ifft2(sparse_fft.reshape((patch_pixels.shape[0], 4, 4))).reshape((patch_pixels.shape[0], 16)))
+    oracle_recon = jnp.clip(oracle_recon, 0.0, 1.0)
+    oracle_mse = jnp.mean((oracle_recon - patch_pixels) ** 2)
+    transform_info.update(
+        {
+            "pair_names": [
+                f"yin_yang_f{frame_idx}_patch_{patch_idx:02d}"
+                for frame_idx in range(int(frame_count))
+                for patch_idx in range(int(patch_rows * patch_cols))
+            ],
+            "source_features": source_features,
+            "target_features": full_fft_features,
+            "transform_code": instruction_features,
+            "delta_graph": graph_features,
+            "delta_phase": low_freq_phase,
+            "delta_recurrence": top_mask,
+            "patch_pixels": patch_pixels,
+            "patch_motif_indices": patch_motif_indices,
+            "fft_full": fft_full,
+            "fft_sparse": sparse_fft,
+            "fft_sparse_features": sparse_fft_complex_features,
+            "fft_sparse_complex_features": sparse_fft_complex_features,
+            "fft_complex_x0_table": sparse_fft,
+            "fft_top_indices": top_idx,
+            "fft_top_mask": top_mask,
+            "fft_top_k": top_k,
+            "fft_core_k": top_k,
+            "fft_residual_k": residual_k,
+            "fft_total_k": top_k + residual_k,
+            "fft_basis_indices": core_idx.tolist(),
+            "fft_residual_indices": residual_idx.tolist(),
+            "fft_instruction_features": instruction_features,
+            "fft_shape_charges": shape_charges,
+            "fft_direct_complex_x0": True,
+            "fft_codec_format": "complex_ri",
+            "fft_codec_variant": "yinyang_direct_complex_oscillator",
+            "fft_oracle_psnr": float(-10.0 * jnp.log10(oracle_mse + 1e-8)),
+            "source_names": transform_info["source_names"],
+            "patch_grid": [4, 4],
+            "patch_shape": [4, 4],
+            "frame_count": int(frame_count),
+            "frame_names": ["frame_00_yin_yang", "frame_01_yang_yin"][: int(frame_count)],
+            "frame_shape": [int(frame_size), int(frame_size)],
+            "yinyang_frame_codec": True,
+        }
+    )
+    return payload_seqs, source_features, graph_features, layer_features, transform_info
+
+
+def build_yinyang_raw_patch_payload(seq_len, frame_count=1, direct_complex=True, frame_size=32, frame_start=1):
+    del seq_len
+    frames, reference_names = load_yinyang_reference_frames(frame_size=frame_size, frame_count=frame_count, frame_start=frame_start)
+    if frames is None:
+        frames = build_yinyang_frames(frame_size=int(frame_size), supersample=8)[: int(frame_count)]
+        reference_names = ["frame_00_yin_yang", "frame_01_yang_yin"][: int(frame_count)]
+        reference_source = "generated"
+    else:
+        reference_names = [os.path.splitext(name)[0] for name in reference_names]
+        reference_source = "taichi_reference_png"
+    frame_count, frame_size, _ = frames.shape
+    patch_side = 4
+    patch_rows = frame_size // patch_side
+    patch_cols = frame_size // patch_side
+    patches = []
+    for frame_idx in range(int(frame_count)):
+        frame = frames[frame_idx]
+        for row in range(int(patch_rows)):
+            for col in range(int(patch_cols)):
+                patch = frame[
+                    row * patch_side : (row + 1) * patch_side,
+                    col * patch_side : (col + 1) * patch_side,
+                ].reshape(-1)
+                patches.append(patch)
+    patch_pixels = jnp.stack(patches)
+    payload_seqs = jnp.rint(patch_pixels * 3.0).astype(jnp.int32)
+
+    pixel_mean = jnp.mean(patch_pixels, axis=1, keepdims=True)
+    pixel_std = jnp.std(patch_pixels, axis=1, keepdims=True)
+    pixel_min = jnp.min(patch_pixels, axis=1, keepdims=True)
+    pixel_max = jnp.max(patch_pixels, axis=1, keepdims=True)
+    pixel_energy = jnp.mean(patch_pixels * patch_pixels, axis=1, keepdims=True)
+    patch_stats = jnp.concatenate([pixel_mean, pixel_std, pixel_min, pixel_max, pixel_energy], axis=1)
+    position_feature = jax.nn.one_hot(jnp.arange(patch_pixels.shape[0], dtype=jnp.int32), patch_pixels.shape[0], dtype=jnp.float32)
+
+    source_features = jnp.concatenate([patch_pixels, patch_stats, position_feature], axis=1)
+    graph_features = jnp.concatenate([patch_stats, patch_pixels, position_feature], axis=1)
+    base_layer_features = build_layer_feature_table(payload_seqs)
+    layer_features = {
+        "L1_occupation": pixel_mean,
+        "L2_transition": patch_pixels[:, :4],
+        "L3_fft_phase": patch_pixels[:, 4:8],
+        "L4_recurrence": patch_pixels[:, 8:16],
+        "L5_transform": jnp.concatenate([patch_stats, position_feature], axis=1),
+    }
+    transform_info = {
+        "image_patch_codec": True,
+        "raw_yinyang_patch_codec": True,
+        "pair_names": [
+            f"raw_yinyang_f{frame_idx}_patch_{patch_idx:02d}"
+            for frame_idx in range(int(frame_count))
+            for patch_idx in range(int(patch_rows * patch_cols))
+        ],
+        "source_features": source_features,
+        "target_features": source_features,
+        "transform_code": jnp.concatenate([patch_pixels, patch_stats], axis=1),
+        "delta_graph": graph_features,
+        "delta_phase": base_layer_features["L3_fft_phase"],
+        "delta_recurrence": base_layer_features["L4_recurrence"],
+        "patch_pixels": patch_pixels,
+        "motif_pixel_catalog": patch_pixels,
+        "motif_code_catalog": source_features,
+        "patch_motif_indices": jnp.arange(patch_pixels.shape[0], dtype=jnp.int32),
+        "fft_top_indices": jnp.arange(patch_pixels.shape[0] * 0, dtype=jnp.int32).reshape((patch_pixels.shape[0], 0)),
+        "residuals": jnp.zeros((patch_pixels.shape[0],), dtype=jnp.float32),
+        "residual_vectors": jnp.zeros((patch_pixels.shape[0], 5), dtype=jnp.float32),
+        "residual_vector_codec": False,
+        "source_names": [f"raw_patch_{i:02d}" for i in range(int(patch_pixels.shape[0]))],
+        "patch_grid": [int(patch_rows), int(patch_cols)],
+        "patch_shape": [patch_side, patch_side],
+        "frame_count": int(frame_count),
+        "frame_names": reference_names,
+        "frame_shape": [int(frame_size), int(frame_size)],
+        "frame_reference_source": reference_source,
+        "direct_complex_x0": bool(direct_complex),
+        "direct_complex_x0_table": patch_pixels.astype(jnp.complex64),
+        "direct_complex_x0_kind": "raw_pixels",
+        "fft_patch_codec": False,
+        "fast_codec_probe": True,
+    }
+    return payload_seqs, source_features, graph_features, layer_features, transform_info
+
+
+def token_mutual_information(labels_a, labels_b, n_a, n_b):
+    labels_a = labels_a.astype(jnp.int32).reshape(-1)
+    labels_b = labels_b.astype(jnp.int32).reshape(-1)
+    joint_idx = labels_a * int(n_b) + labels_b
+    joint = jnp.bincount(joint_idx, length=int(n_a) * int(n_b)).astype(jnp.float32)
+    joint = joint.reshape((int(n_a), int(n_b)))
+    joint = joint / (jnp.sum(joint) + 1e-8)
+    pa = jnp.sum(joint, axis=1, keepdims=True)
+    pb = jnp.sum(joint, axis=0, keepdims=True)
+    ratio = joint / (pa * pb + 1e-8)
+    return jnp.sum(jnp.where(joint > 0.0, joint * (jnp.log(ratio + 1e-8) / jnp.log(2.0)), 0.0))
+
+
+def token_mi_against_roll_null(labels_a, labels_b, n_a, n_b):
+    observed = token_mutual_information(labels_a, labels_b, n_a, n_b)
+    shifts = jnp.arange(1, 9, dtype=jnp.int32)
+    nulls = jnp.stack(
+        [token_mutual_information(labels_a, jnp.roll(labels_b, int(shift)), n_a, n_b) for shift in shifts]
+    )
+    return observed, jnp.mean(nulls), jnp.mean((nulls >= observed).astype(jnp.float32))
+
+
+def ttn_fold_instruction_packets(packet_features, slot_charges):
+    current = packet_features
+    charge_current = slot_charges
+    bond_messages = []
+    charge_messages = []
+    while current.shape[1] > 1:
+        left = current[:, 0::2, :]
+        right = current[:, 1::2, :]
+        parent = jnp.concatenate([(left + right) * 0.5, jnp.abs(left - right), left * right], axis=2)
+        charge_parent = charge_current[:, 0::2, :] + charge_current[:, 1::2, :]
+        bond_messages.append(jnp.mean(parent, axis=1))
+        charge_messages.append(jnp.mean(charge_parent, axis=1))
+        current = parent
+        charge_current = charge_parent
+    root_tensor = current[:, 0, :]
+    root_charge = charge_current[:, 0, :]
+    internal_bonds = jnp.concatenate(bond_messages[:-1] if len(bond_messages) > 1 else bond_messages, axis=1)
+    charge_bonds = jnp.concatenate(charge_messages[:-1] if len(charge_messages) > 1 else charge_messages, axis=1)
+    return root_tensor, internal_bonds, root_charge, charge_bonds
+
+
+def hermitian_project_fft4(fft_values):
+    fft_grid = fft_values.reshape((-1, 4, 4))
+    rows = jnp.arange(4, dtype=jnp.int32)
+    cols = jnp.arange(4, dtype=jnp.int32)
+    rr, cc = jnp.meshgrid(rows, cols, indexing="ij")
+    partner = jnp.conj(fft_grid[:, (-rr) % 4, (-cc) % 4])
+    projected = 0.5 * (fft_grid + partner)
+    self_mask = (((2 * rr) % 4 == 0) & ((2 * cc) % 4 == 0))[None, :, :]
+    projected = jnp.where(self_mask, jnp.real(projected) + 0j, projected)
+    return projected.reshape((-1, 16))
+
+
+def hermitian_error_fft4(fft_values):
+    fft_grid = fft_values.reshape((-1, 4, 4))
+    rows = jnp.arange(4, dtype=jnp.int32)
+    cols = jnp.arange(4, dtype=jnp.int32)
+    rr, cc = jnp.meshgrid(rows, cols, indexing="ij")
+    partner = jnp.conj(fft_grid[:, (-rr) % 4, (-cc) % 4])
+    pair_error = jnp.abs(fft_grid - partner) ** 2
+    denom = jnp.sum(jnp.abs(fft_grid) ** 2, axis=(1, 2)) + 1e-8
+    return jnp.mean(jnp.sum(pair_error, axis=(1, 2)) / denom)
+
+
+def self_conjugate_imag_energy_fft4(fft_values):
+    self_idx = jnp.array([0, 2, 8, 10], dtype=jnp.int32)
+    self_values = fft_values[:, self_idx]
+    return jnp.mean(jnp.sum(jnp.imag(self_values) ** 2, axis=1))
+
+
+def build_fft_patch_codec_payload(
+    seq_len,
+    top_k=6,
+    patch_limit=16,
+    residual_k=0,
+    direct_complex=False,
+    dna_instruction=False,
+    dna_tokenized=False,
+    dna_checksum_mode=False,
+    ttn_folded=False,
+    ttn_unfold_decoder=False,
+):
+    del seq_len
+    payload_seqs, _source_features, _graph_features, _layer_features, base_info = build_image_patch_codec_payload(
+        16,
+        residual_vector=False,
+        patch_limit=patch_limit,
+    )
+    patch_pixels = base_info["patch_pixels"]
+    patches_2d = patch_pixels.reshape((patch_limit, 4, 4))
+    fft_full = jnp.fft.fft2(patches_2d).reshape((patch_limit, 16))
+    magnitudes = jnp.abs(fft_full)
+    top_k = int(max(1, min(16, int(top_k))))
+    residual_k = int(max(0, min(16 - top_k, int(residual_k))))
+    # Fixed low-frequency-first basis ordering (4x4 rfft-style zig-zag-ish scan).
+    basis_order = jnp.array([0, 1, 4, 5, 2, 8, 6, 9, 10, 3, 12, 7, 13, 11, 14, 15], dtype=jnp.int32)
+    core_idx = basis_order[:top_k]
+    core_mask = jnp.sum(jax.nn.one_hot(core_idx, 16, dtype=jnp.float32), axis=0)
+    residual_magnitudes = magnitudes * (1.0 - core_mask[None, :])
+    if residual_k > 0:
+        residual_idx = jnp.argsort(residual_magnitudes, axis=1)[:, -residual_k:]
+        top_idx = jnp.concatenate([jnp.tile(core_idx[None, :], (patch_limit, 1)), residual_idx], axis=1)
+    else:
+        residual_idx = jnp.zeros((patch_limit, 0), dtype=jnp.int32)
+        top_idx = jnp.tile(core_idx[None, :], (patch_limit, 1))
+    top_mask = jnp.sum(jax.nn.one_hot(top_idx, 16, dtype=jnp.float32), axis=1)
+    top_mask = jnp.clip(top_mask, 0.0, 1.0)
+    residual_mask = jnp.sum(jax.nn.one_hot(residual_idx, 16, dtype=jnp.float32), axis=1)
+    residual_mask = jnp.clip(residual_mask, 0.0, 1.0)
+    sparse_fft = fft_full * top_mask
+    sparse_mag = jnp.abs(sparse_fft)
+    sparse_phase = jnp.angle(sparse_fft)
+    sparse_phase_cos = jnp.cos(sparse_phase) * top_mask
+    sparse_phase_sin = jnp.sin(sparse_phase) * top_mask
+    sparse_fft_mag_phase_features = jnp.concatenate([sparse_mag, sparse_phase_cos, sparse_phase_sin], axis=1)
+    sparse_fft_complex_features = jnp.concatenate([jnp.real(sparse_fft), jnp.imag(sparse_fft)], axis=1)
+    sparse_fft_features = sparse_fft_complex_features if direct_complex else sparse_fft_mag_phase_features
+    full_fft_features = jnp.concatenate([jnp.real(fft_full), jnp.imag(fft_full)], axis=1)
+    low_freq_idx = jnp.array([0, 1, 4, 5], dtype=jnp.int32)
+    low_freq_mag = sparse_mag[:, low_freq_idx]
+    low_freq_phase = jnp.concatenate([sparse_phase_cos[:, low_freq_idx], sparse_phase_sin[:, low_freq_idx]], axis=1)
+    dc_mag = jnp.abs(fft_full[:, 0:1])
+    total_energy = jnp.sum(magnitudes * magnitudes, axis=1, keepdims=True) + 1e-8
+    dc_energy = (jnp.abs(fft_full[:, 0:1]) ** 2) / total_energy
+    lowfreq_energy = jnp.sum((jnp.abs(fft_full[:, low_freq_idx]) ** 2), axis=1, keepdims=True) / total_energy
+    residual_energy = jnp.sum((magnitudes * magnitudes) * residual_mask, axis=1, keepdims=True) / total_energy
+    phase_coherence = jnp.sum(sparse_phase_cos * top_mask, axis=1, keepdims=True) / (
+        jnp.sum(top_mask, axis=1, keepdims=True) + 1e-8
+    )
+    support_prob = top_mask / (jnp.sum(top_mask, axis=1, keepdims=True) + 1e-8)
+    support_entropy = -jnp.sum(
+        jnp.where(support_prob > 0.0, support_prob * jnp.log(support_prob + 1e-8), 0.0),
+        axis=1,
+        keepdims=True,
+    ) / jnp.log(jnp.float32(16.0))
+
+    motif_features = base_info["motif_code_catalog"][base_info["patch_motif_indices"]]
+    motif_consistency = jnp.max(motif_features, axis=1, keepdims=True)
+    shape_charges = jnp.concatenate(
+        [dc_energy, lowfreq_energy, phase_coherence, residual_energy, support_entropy, motif_consistency],
+        axis=1,
+    )
+    mag_norm = sparse_mag / (jnp.sum(sparse_mag, axis=1, keepdims=True) + 1e-8)
+    freq_axis = jnp.linspace(0.0, 1.0, 16, dtype=jnp.float32)[None, :]
+    checksum = jnp.mod(
+        jnp.sum(top_mask * (freq_axis + 0.125) + mag_norm * 0.5 + sparse_phase_cos * 0.25, axis=1, keepdims=True),
+        1.0,
+    )
+    instruction_features = jnp.concatenate(
+        [top_mask, residual_mask, mag_norm, sparse_phase_cos, sparse_phase_sin, checksum],
+        axis=1,
+    )
+    packet_features = jnp.stack(
+        [
+            top_mask,
+            residual_mask,
+            mag_norm,
+            sparse_phase_cos,
+            sparse_phase_sin,
+            jnp.tile(freq_axis, (patch_limit, 1)),
+            jnp.tile(checksum, (1, 16)),
+        ],
+        axis=2,
+    )
+    dc_slot = jax.nn.one_hot(jnp.array([0], dtype=jnp.int32), 16, dtype=jnp.float32)[0]
+    low_slot = jnp.sum(jax.nn.one_hot(low_freq_idx, 16, dtype=jnp.float32), axis=0)
+    slot_energy = (magnitudes * magnitudes) / total_energy
+    slot_charges = jnp.stack(
+        [
+            slot_energy * dc_slot[None, :],
+            slot_energy * low_slot[None, :],
+            top_mask * sparse_phase_cos / (jnp.sum(top_mask, axis=1, keepdims=True) + 1e-8),
+            residual_mask,
+            top_mask * motif_consistency / (jnp.sum(top_mask, axis=1, keepdims=True) + 1e-8),
+            top_mask * checksum / (jnp.sum(top_mask, axis=1, keepdims=True) + 1e-8),
+        ],
+        axis=2,
+    )
+    ttn_root_tensor, ttn_internal_bonds, ttn_root_charge, ttn_charge_bonds = ttn_fold_instruction_packets(
+        packet_features, slot_charges
+    )
+    ttn_grammar_features = jnp.concatenate(
+        [ttn_root_tensor, ttn_internal_bonds, ttn_root_charge, ttn_charge_bonds],
+        axis=1,
+    )
+    retained_mask = top_mask.astype(jnp.float32)
+    mag_mean = jnp.mean(sparse_mag)
+    mag_std = jnp.std(sparse_mag) + 1e-8
+    mag_state = jnp.where(sparse_mag > mag_mean + 0.35 * mag_std, 2, jnp.where(sparse_mag > mag_mean, 1, 0))
+    phase_raw = jnp.floor((jnp.mod(sparse_phase + jnp.pi, 2.0 * jnp.pi) / (2.0 * jnp.pi)) * 4.0).astype(jnp.int32)
+    phase_state = jnp.clip(phase_raw, 0, 3)
+    residual_mag = sparse_mag * residual_mask
+    residual_threshold = jnp.mean(jnp.where(residual_mask > 0.0, residual_mag, 0.0))
+    residual_state = jnp.where(
+        core_mask[None, :] > 0.0,
+        1,
+        jnp.where(residual_mask > 0.0, jnp.where(residual_mag > residual_threshold, 3, 2), 0),
+    )
+    dominant_idx = jnp.argmax(sparse_mag, axis=1)
+    dominant_mask = jax.nn.one_hot(dominant_idx, 16, dtype=jnp.float32)
+    support_rank_state = jnp.where(
+        dominant_mask > 0.0,
+        3,
+        jnp.where(core_mask[None, :] > 0.0, 2, jnp.where(residual_mask > 0.0, 1, 0)),
+    )
+    mag_tokens = jax.nn.one_hot(mag_state, 3, dtype=jnp.float32).reshape((patch_limit, -1))
+    phase_tokens = jax.nn.one_hot(phase_state, 4, dtype=jnp.float32).reshape((patch_limit, -1))
+    residual_tokens = jax.nn.one_hot(residual_state, 4, dtype=jnp.float32).reshape((patch_limit, -1))
+    support_tokens = jax.nn.one_hot(support_rank_state, 4, dtype=jnp.float32).reshape((patch_limit, -1))
+    dna_token_features = jnp.concatenate(
+        [mag_tokens, phase_tokens, residual_tokens, support_tokens, motif_features, checksum],
+        axis=1,
+    )
+    grammar_features = (
+        ttn_grammar_features
+        if ttn_folded
+        else (dna_token_features if dna_tokenized else (instruction_features if dna_instruction else sparse_fft_features))
+    )
+    if ttn_folded:
+        source_features = jnp.concatenate([motif_features, ttn_grammar_features], axis=1)
+        graph_features = jnp.concatenate([ttn_grammar_features, motif_features], axis=1)
+    else:
+        source_features = jnp.concatenate([motif_features, sparse_fft_features, grammar_features], axis=1)
+        graph_features = jnp.concatenate([sparse_fft_features, grammar_features, motif_features], axis=1)
+    layer_features = {
+        "L1_occupation": dc_mag,
+        "L2_transition": low_freq_mag,
+        "L3_fft_phase": low_freq_phase,
+        "L4_recurrence": sparse_mag,
+        "L5_transform": grammar_features,
+    }
+    oracle_recon = jnp.real(jnp.fft.ifft2(sparse_fft.reshape((patch_limit, 4, 4))).reshape((patch_limit, 16)))
+    oracle_recon = jnp.clip(oracle_recon, 0.0, 1.0)
+    oracle_mse = jnp.mean((oracle_recon - patch_pixels) ** 2)
+    transform_info = {
+        "fft_patch_codec": True,
+        "image_patch_codec": False,
+        "pair_names": [name.replace("patch_", "fft_patch_") for name in base_info["pair_names"]],
+        "source_features": source_features,
+        "target_features": full_fft_features,
+        "transform_code": grammar_features,
+        "delta_graph": graph_features,
+        "delta_phase": low_freq_phase,
+        "delta_recurrence": top_mask,
+        "patch_pixels": patch_pixels,
+        "motif_code_catalog": base_info["motif_code_catalog"],
+        "motif_pixel_catalog": base_info["motif_pixel_catalog"],
+        "patch_motif_indices": base_info["patch_motif_indices"],
+        "fft_full": fft_full,
+        "fft_sparse": sparse_fft,
+        "fft_sparse_features": sparse_fft_features,
+        "fft_sparse_mag_phase_features": sparse_fft_mag_phase_features,
+        "fft_sparse_complex_features": sparse_fft_complex_features,
+        "fft_complex_x0_table": sparse_fft,
+        "fft_top_indices": top_idx,
+        "fft_top_mask": top_mask,
+        "fft_top_k": top_k,
+        "fft_core_k": top_k,
+        "fft_residual_k": residual_k,
+        "fft_total_k": top_k + residual_k,
+        "fft_basis_indices": core_idx.tolist(),
+        "fft_residual_indices": residual_idx.tolist(),
+        "fft_instruction_features": instruction_features,
+        "dna_token_features": dna_token_features,
+        "dna_mag_state": mag_state,
+        "dna_phase_state": phase_state,
+        "dna_residual_state": residual_state,
+        "dna_support_rank_state": support_rank_state,
+        "dna_retained_mask": retained_mask,
+        "dna_tokenized": bool(dna_tokenized),
+        "dna_checksum_mode": bool(dna_checksum_mode),
+        "dna_token_layout": {
+            "mag": [0, 48],
+            "phase": [48, 112],
+            "residual": [112, 176],
+            "support": [176, 240],
+        },
+        "fft_triplet_packet_format": "[support_or_residual_slot, normalized_magnitude, phase_sincos]",
+        "fft_shape_charges": ttn_root_charge if ttn_folded else shape_charges,
+        "fft_shape_charge_names": [
+            "Q_DC",
+            "Q_lowfreq_energy",
+            "Q_phase_coherence",
+            "Q_residual_energy",
+            "Q_support_entropy",
+            "Q_motif_consistency",
+        ],
+        "fft_direct_complex_x0": bool(direct_complex),
+        "fft_codec_format": "complex_ri" if direct_complex else "mag_phase_sincos",
+        "fft_codec_variant": (
+            "direct_complex_oscillator"
+            if direct_complex
+            else "ttn_folded_instruction_genome"
+            if ttn_folded
+            else ("dna_token_genome" if dna_tokenized else ("core_residual_genome" if dna_instruction else "fixed_core"))
+        ),
+        "as_0_ttn": bool(ttn_folded),
+        "as_ttn_unfold_decoder": bool(ttn_unfold_decoder),
+        "as_ttn_root_tensor": ttn_root_tensor,
+        "as_ttn_root_dim": int(ttn_root_tensor.shape[1]),
+        "as_ttn_internal_bond_dim": int(ttn_internal_bonds.shape[1]),
+        "as_ttn_charge_dim": int(ttn_root_charge.shape[1]),
+        "as_flat_baseline_psnr": 16.9995,
+        "as_flat_baseline_oracle_psnr": 25.0480,
+        "fft_oracle_psnr": float(-10.0 * jnp.log10(oracle_mse + 1e-8)),
+        "fast_codec_probe": True,
+        "source_names": base_info["source_names"],
+        "patch_grid": [4, 4],
+        "patch_shape": [4, 4],
+    }
+    return payload_seqs, source_features, graph_features, layer_features, transform_info
+
+
 def build_tunneling_kernel(features, barrier_base, barrier_alpha, tunnel_temp):
     diffs = features[:, None, :] - features[None, :, :]
     dist = jnp.sqrt(jnp.sum(diffs * diffs, axis=-1) + 1e-8)
@@ -1059,12 +1969,34 @@ def semantic_mixtures(key, n_states, n_samples, alpha):
 
 
 def recovery_state_weights(args, key, n_states, n_samples, alpha):
+    if getattr(args, "aq_yinyang_4", False) and getattr(args, "yinyang_ordered_recovery", False):
+        idx = jnp.arange(n_samples) % n_states
+        return jax.nn.one_hot(idx, n_states, dtype=jnp.float32)
     if (
         getattr(args, "aq_1a_tf", False)
         or getattr(args, "aq_1a_tf_s29", False)
         or getattr(args, "aq_1b", False)
         or getattr(args, "aq_1c", False)
         or getattr(args, "aq_seq_0", False)
+        or getattr(args, "as_0b", False)
+        or getattr(args, "as_0", False)
+        or getattr(args, "aq_yinyang_4", False)
+        or getattr(args, "aq_yinyang_3", False)
+        or getattr(args, "aq_yinyang_2", False)
+        or getattr(args, "aq_yinyang_1", False)
+        or getattr(args, "aq_yinyang_0", False)
+        or getattr(args, "aq_hybrid_0", False)
+        or getattr(args, "aq_dna_0", False)
+        or getattr(args, "aq_yinyang_1", False)
+        or getattr(args, "aq_yinyang_0", False)
+        or getattr(args, "aq_fft_7", False)
+        or getattr(args, "aq_fft_6", False)
+        or getattr(args, "aq_fft_5", False)
+        or getattr(args, "aq_fft_4", False)
+        or getattr(args, "aq_fft_3", False)
+        or getattr(args, "aq_fft_2", False)
+        or getattr(args, "aq_fft_1", False)
+        or getattr(args, "aq_fft_0", False)
         or getattr(args, "aq_img_0", False)
         or getattr(args, "aq_img_1", False)
         or getattr(args, "aq_img_1_lite", False)
@@ -1118,6 +2050,25 @@ def build_dynamics_bundle(args, ctrl_cfg, nodes, motif_entropy, motif_features, 
     }
 
 
+def shape_charge_node_field(nodes, charges, sequence_length):
+    centers = (nodes[:, 0] + nodes[:, 1]).astype(jnp.float32) / (2.0 * float(sequence_length))
+    spans = (nodes[:, 1] - nodes[:, 0]).astype(jnp.float32) / float(sequence_length)
+    generators = jnp.stack(
+        [
+            jnp.ones_like(centers),
+            centers,
+            jnp.sin(2.0 * jnp.pi * centers),
+            jnp.cos(2.0 * jnp.pi * centers),
+            spans,
+            jnp.sin(4.0 * jnp.pi * centers),
+        ],
+        axis=0,
+    )
+    charge_centered = charges - jnp.mean(charges)
+    field = charge_centered @ generators
+    return field / (jnp.std(field) + 1e-8)
+
+
 def signatures_for_weights(
     args,
     weights_batch,
@@ -1127,6 +2078,8 @@ def signatures_for_weights(
     control_name,
     key_control,
     dynamics_bundle=None,
+    shape_charge_table=None,
+    complex_x0_table=None,
 ):
     def one_signature(weights, sample_idx):
         entropy_values = weights @ motif_entropy
@@ -1146,6 +2099,12 @@ def signatures_for_weights(
         omega = args.omega_scale * (crofton + 0.05 * jnp.log1p(nodes[:, 1] - nodes[:, 0]))
         semantic_phase = motif_entropy.T @ phase_weights
         semantic_phase = semantic_phase / (jnp.std(semantic_phase) + 1e-8)
+        if ctrl_cfg.get("shape_charge_control", False) and shape_charge_table is not None:
+            charges = weights @ shape_charge_table
+            charge_field = shape_charge_node_field(nodes, charges, args.sequence_length)
+            eta = jnp.float32(ctrl_cfg.get("shape_charge_eta", 0.28))
+            semantic_phase = semantic_phase + eta * charge_field
+            omega = omega * (1.0 + 0.04 * eta * charge_field)
         if control_name == "entangled_phase_noise":
             semantic_phase = semantic_phase + args.recovery_noise * jax.random.normal(
                 jax.random.fold_in(key_control, 30_000 + sample_idx),
@@ -1154,6 +2113,15 @@ def signatures_for_weights(
 
         x0 = jnp.sqrt(crofton + 1e-3) * jnp.exp(1j * semantic_phase)
         x0 = x0.astype(jnp.complex64)
+        payload_mag = None
+        if complex_x0_table is not None:
+            complex_payload = (weights @ complex_x0_table).astype(jnp.complex64)
+            if ctrl_cfg.get("complex_pair_norm", False):
+                payload_mag = jnp.abs(complex_payload).astype(jnp.float32)
+                complex_payload = complex_payload / (payload_mag + 1e-8)
+            complex_payload = complex_payload / (jnp.linalg.norm(complex_payload) + 1e-8)
+            payload_width = complex_x0_table.shape[1]
+            x0 = x0.at[:payload_width].set(complex_payload)
         x0 = x0 / (jnp.linalg.norm(x0) + 1e-8)
         if dynamics_bundle is not None and dynamics_bundle.get("projection_enabled", False):
             alpha = dynamics_bundle["projection_alpha"]
@@ -1174,6 +2142,16 @@ def signatures_for_weights(
             int(args.dlinoss_steps),
             jnp.float32(args.dt),
         )
+        if complex_x0_table is not None:
+            payload_width = complex_x0_table.shape[1]
+            recovered_slots = xs[-1, :payload_width]
+            direct_complex_signature = jnp.concatenate([jnp.real(recovered_slots), jnp.imag(recovered_slots)], axis=0)
+            if payload_mag is not None:
+                payload_mag = payload_mag / (jnp.linalg.norm(payload_mag) + 1e-8)
+                direct_complex_signature = jnp.concatenate([direct_complex_signature, payload_mag], axis=0)
+            base_signature = filament_signature(xs, crofton, args.top_frac)
+            signature = jnp.concatenate([base_signature, direct_complex_signature], axis=0)
+            return signature / (jnp.linalg.norm(signature) + 1e-8)
         if ctrl_cfg.get("soft_decode", False):
             return soft_filament_signature(xs, crofton)
         return filament_signature(xs, crofton, args.top_frac)
@@ -1202,16 +2180,24 @@ def evaluate_semantic_recovery(
     clean_entropy = motif_interval_entropy_table(seqs, nodes)
     resolved_alpha = resolve_projection_alpha(ctrl_cfg, noise_level)
     dynamics_bundle = build_dynamics_bundle(args, ctrl_cfg, nodes, clean_entropy, motif_features, clean_entropy, noise_level)
+    shape_charge_table = None
+    if transform_info is not None and "fft_shape_charges" in transform_info:
+        shape_charge_table = transform_info["fft_shape_charges"]
+    complex_x0_table = None
+    if transform_info is not None and transform_info.get("fft_direct_complex_x0", False):
+        complex_x0_table = transform_info["fft_complex_x0_table"]
+    elif transform_info is not None and transform_info.get("direct_complex_x0", False):
+        complex_x0_table = transform_info["direct_complex_x0_table"]
     train_x = signatures_for_weights(
-        args, train_w, nodes, clean_entropy, ctrl_cfg, "structured", key_train, dynamics_bundle
+        args, train_w, nodes, clean_entropy, ctrl_cfg, "structured", key_train, dynamics_bundle, shape_charge_table, complex_x0_table
     )
     clean_test_x = signatures_for_weights(
-        args, test_w, nodes, clean_entropy, ctrl_cfg, "structured", key_test, dynamics_bundle
+        args, test_w, nodes, clean_entropy, ctrl_cfg, "structured", key_test, dynamics_bundle, shape_charge_table, complex_x0_table
     )
     old_noise = args.recovery_noise
     args.recovery_noise = noise_level
     noisy_test_x = signatures_for_weights(
-        args, test_w, nodes, clean_entropy, ctrl_cfg, "entangled_phase_noise", key_noise, dynamics_bundle
+        args, test_w, nodes, clean_entropy, ctrl_cfg, "entangled_phase_noise", key_noise, dynamics_bundle, shape_charge_table, complex_x0_table
     )
     fast_codec_probe = bool(transform_info is not None and transform_info.get("fast_codec_probe", False))
     if fast_codec_probe:
@@ -1222,25 +2208,25 @@ def evaluate_semantic_recovery(
         crofton_random_x = noisy_test_x
     else:
         phase_scramble_x = signatures_for_weights(
-            args, test_w, nodes, clean_entropy, ctrl_cfg, "phase_scramble", key_phase, dynamics_bundle
+            args, test_w, nodes, clean_entropy, ctrl_cfg, "phase_scramble", key_phase, dynamics_bundle, shape_charge_table, complex_x0_table
         )
         shuffled_seqs = apply_sequence_control(seqs, "markov_shuffle", key_shuffle, args.control_block_size)
         shuffled_entropy = motif_interval_entropy_table(shuffled_seqs, nodes)
         topology_shuffle_x = signatures_for_weights(
-            args, test_w, nodes, shuffled_entropy, ctrl_cfg, "structured", key_shuffle, dynamics_bundle
+            args, test_w, nodes, shuffled_entropy, ctrl_cfg, "structured", key_shuffle, dynamics_bundle, shape_charge_table, complex_x0_table
         )
         block_seqs = apply_sequence_control(seqs, "block_permute_size2", key_block, args.control_block_size)
         block_entropy = motif_interval_entropy_table(block_seqs, nodes)
         block_permute_x = signatures_for_weights(
-            args, test_w, nodes, block_entropy, ctrl_cfg, "structured", key_block, dynamics_bundle
+            args, test_w, nodes, block_entropy, ctrl_cfg, "structured", key_block, dynamics_bundle, shape_charge_table, complex_x0_table
         )
         block_inner_seqs = apply_sequence_control(seqs, "block_permute_size2_within_random", key_block_inner, args.control_block_size)
         block_inner_entropy = motif_interval_entropy_table(block_inner_seqs, nodes)
         block_permute_inner_x = signatures_for_weights(
-            args, test_w, nodes, block_inner_entropy, ctrl_cfg, "structured", key_block_inner, dynamics_bundle
+            args, test_w, nodes, block_inner_entropy, ctrl_cfg, "structured", key_block_inner, dynamics_bundle, shape_charge_table, complex_x0_table
         )
         crofton_random_x = signatures_for_weights(
-            args, test_w, nodes, clean_entropy, ctrl_cfg, "random_crofton", key_crofton, dynamics_bundle
+            args, test_w, nodes, clean_entropy, ctrl_cfg, "random_crofton", key_crofton, dynamics_bundle, shape_charge_table, complex_x0_table
         )
     args.recovery_noise = old_noise
 
@@ -1343,7 +2329,395 @@ def evaluate_semantic_recovery(
         delta_recurrence_pred = ridge_decode_jax(train_x, delta_recurrence_y, noisy_test_x, args.decoder_ridge)
 
         pair_idx = jnp.argmax(test_w, axis=1)
-        if transform_info.get("image_patch_codec", False):
+        if transform_info.get("fft_patch_codec", False):
+            patch_pixel_target = test_w @ transform_info["patch_pixels"]
+            sparse_fft_target = test_w @ transform_info["fft_sparse_features"]
+            if transform_info.get("as_ttn_unfold_decoder", False):
+                fft_pred = ridge_decode_jax(
+                    transform_y,
+                    train_w @ transform_info["fft_sparse_features"],
+                    transform_pred,
+                    args.decoder_ridge,
+                )
+            else:
+                fft_pred = ridge_decode_jax(
+                    train_x,
+                    train_w @ transform_info["fft_sparse_features"],
+                    noisy_test_x,
+                    args.decoder_ridge,
+                )
+            shape_charge_pred = None
+            shape_charge_target = None
+            if "fft_shape_charges" in transform_info:
+                shape_charge_y = train_w @ transform_info["fft_shape_charges"]
+                shape_charge_target = test_w @ transform_info["fft_shape_charges"]
+                shape_charge_pred = ridge_decode_jax(train_x, shape_charge_y, noisy_test_x, args.decoder_ridge)
+            codec_format = str(transform_info.get("fft_codec_format", "complex_ri"))
+            if codec_format == "mag_phase_sincos":
+                pred_mag = jnp.clip(fft_pred[:, :16], 0.0)
+                pred_phase_cos = fft_pred[:, 16:32]
+                pred_phase_sin = fft_pred[:, 32:48]
+                pred_phase_norm = jnp.sqrt(pred_phase_cos * pred_phase_cos + pred_phase_sin * pred_phase_sin + 1e-8)
+                pred_phase_cos = pred_phase_cos / pred_phase_norm
+                pred_phase_sin = pred_phase_sin / pred_phase_norm
+                fft_pred_complex = pred_mag * (pred_phase_cos + 1j * pred_phase_sin)
+            else:
+                fft_pred_complex = fft_pred[:, :16] + 1j * fft_pred[:, 16:32]
+                if ctrl_cfg.get("complex_phase_locked", False):
+                    sparse_mag_y = train_w @ jnp.abs(transform_info["fft_sparse"])
+                    pred_mag_locked = ridge_decode_jax(train_x, sparse_mag_y, noisy_test_x, args.decoder_ridge)
+                    pred_mag_locked = jnp.clip(pred_mag_locked, 0.0)
+                    pred_dir = fft_pred_complex / (jnp.abs(fft_pred_complex) + 1e-8)
+                    fft_pred_complex = pred_mag_locked * pred_dir
+                if ctrl_cfg.get("complex_gaugefix", False):
+                    anchor_mag = jnp.abs(fft_pred_complex[:, 0])
+                    pred_mag_tmp = jnp.abs(fft_pred_complex)
+                    top1_anchor = jnp.take_along_axis(
+                        fft_pred_complex,
+                        jnp.argmax(pred_mag_tmp, axis=1, keepdims=True),
+                        axis=1,
+                    )[:, 0]
+                    anchor = jnp.where(anchor_mag > 1e-6, fft_pred_complex[:, 0], top1_anchor)
+                    gauge_rot = jnp.exp(-1j * jnp.angle(anchor))[:, None]
+                    fft_pred_complex = fft_pred_complex * gauge_rot
+                if ctrl_cfg.get("complex_hermitian", False):
+                    fft_pred_complex = hermitian_project_fft4(fft_pred_complex)
+                fft_pred = jnp.concatenate([jnp.real(fft_pred_complex), jnp.imag(fft_pred_complex)], axis=1)
+            patch_pred = jnp.real(jnp.fft.ifft2(fft_pred_complex.reshape((-1, 4, 4))).reshape((-1, 16)))
+            patch_pred = jnp.clip(patch_pred, 0.0, 1.0)
+            pixel_mse = jnp.mean((patch_pred - patch_pixel_target) ** 2)
+            pixel_psnr = -10.0 * jnp.log10(pixel_mse + 1e-8)
+            pixel_direct_y = train_w @ transform_info["patch_pixels"]
+            pixel_direct_pred = ridge_decode_jax(train_x, pixel_direct_y, noisy_test_x, args.decoder_ridge)
+            pixel_direct_pred = jnp.clip(pixel_direct_pred, 0.0, 1.0)
+            pixel_direct_mse = jnp.mean((pixel_direct_pred - patch_pixel_target) ** 2)
+            pixel_direct_psnr = -10.0 * jnp.log10(pixel_direct_mse + 1e-8)
+            palette = jnp.array([0.0, 2.0 / 3.0, 1.0], dtype=jnp.float32)
+            palette_idx = jnp.argmin(jnp.abs(pixel_direct_pred[:, :, None] - palette[None, None, :]), axis=2)
+            palette_pred = palette[palette_idx]
+            palette_mse = jnp.mean((palette_pred - patch_pixel_target) ** 2)
+            palette_psnr = -10.0 * jnp.log10(palette_mse + 1e-8)
+
+            pred_mag = jnp.abs(fft_pred_complex)
+            pred_top_idx = jnp.argsort(pred_mag, axis=1)[:, -int(transform_info.get("fft_total_k", transform_info["fft_top_k"])) :]
+            pred_mask = jnp.sum(jax.nn.one_hot(pred_top_idx, 16, dtype=jnp.float32), axis=1)
+            true_mask = transform_info["fft_top_mask"][pair_idx]
+            core_idx_local = jnp.array(transform_info.get("fft_basis_indices", []), dtype=jnp.int32)
+            core_mask = jnp.sum(jax.nn.one_hot(core_idx_local, 16, dtype=jnp.float32), axis=0)
+            freq_index_recovery = jnp.mean(jnp.sum(pred_mask * true_mask, axis=1) / (jnp.sum(true_mask, axis=1) + 1e-8))
+            coeff_mae = jnp.mean(jnp.abs(fft_pred - sparse_fft_target))
+            coeff_cos = jnp.mean(graph_cosine_batch_jax(fft_pred, sparse_fft_target))
+            true_sparse_complex = transform_info["fft_sparse"][pair_idx]
+            true_sparse_mag = jnp.abs(true_sparse_complex)
+            coeff_mag_cos = jnp.mean(graph_cosine_batch_jax(pred_mag, true_sparse_mag))
+            coeff_real_cos = jnp.mean(graph_cosine_batch_jax(jnp.real(fft_pred_complex), jnp.real(true_sparse_complex)))
+            coeff_imag_cos = jnp.mean(graph_cosine_batch_jax(jnp.imag(fft_pred_complex), jnp.imag(true_sparse_complex)))
+            phase_target = jnp.angle(transform_info["fft_sparse"][pair_idx])
+            phase_pred = jnp.angle(fft_pred_complex)
+            phase_weight = true_mask
+            phase_recovery = jnp.mean(jnp.cos(phase_pred - phase_target) * phase_weight) / (jnp.mean(phase_weight) + 1e-8)
+            gauge_inner = jnp.sum(true_sparse_complex * jnp.conj(fft_pred_complex) * true_mask, axis=1)
+            gauge_theta = jnp.angle(gauge_inner)
+            fft_pred_global_aligned = fft_pred_complex * jnp.exp(1j * gauge_theta)[:, None]
+            phase_pred_global_aligned = jnp.angle(fft_pred_global_aligned)
+            global_phase_aligned_imag_cos = jnp.mean(
+                graph_cosine_batch_jax(jnp.imag(fft_pred_global_aligned), jnp.imag(true_sparse_complex))
+            )
+            global_phase_aligned_phase_cos = (
+                jnp.mean(jnp.cos(phase_pred_global_aligned - phase_target) * phase_weight)
+                / (jnp.mean(phase_weight) + 1e-8)
+            )
+            slot_inner = jnp.sum(true_sparse_complex * jnp.conj(fft_pred_complex) * true_mask, axis=0)
+            slot_theta = jnp.angle(slot_inner)
+            fft_pred_slot_aligned = fft_pred_complex * jnp.exp(1j * slot_theta)[None, :]
+            per_slot_phase_aligned_coeff_cos = jnp.mean(
+                graph_cosine_batch_jax(
+                    jnp.concatenate([jnp.real(fft_pred_slot_aligned), jnp.imag(fft_pred_slot_aligned)], axis=1),
+                    jnp.concatenate([jnp.real(true_sparse_complex), jnp.imag(true_sparse_complex)], axis=1),
+                )
+            )
+            complex_gauge_error = jnp.mean(1.0 - jnp.cos(gauge_theta))
+            true_top1_idx = jnp.argmax(true_sparse_mag, axis=1)
+            pred_top1_idx = jnp.argmax(pred_mag, axis=1)
+            top1_freq_acc = jnp.mean((pred_top1_idx == true_top1_idx).astype(jnp.float32))
+            true_energy = true_sparse_mag * true_sparse_mag
+            topk_energy_recall = jnp.mean(jnp.sum(true_energy * pred_mask, axis=1) / (jnp.sum(true_energy, axis=1) + 1e-8))
+            true_phase_unit = jnp.exp(1j * phase_target)
+            pred_phase_unit = jnp.exp(1j * phase_pred)
+            retained_weight = true_mask
+            retained_den = jnp.sum(retained_weight) + 1e-8
+            angle_error = 1.0 - jnp.cos(phase_pred - phase_target)
+            phase_cos_energy_weighted = jnp.sum(true_energy * jnp.cos(phase_pred - phase_target)) / (
+                jnp.sum(true_energy) + 1e-8
+            )
+            support_weighted_angle_error = jnp.sum(angle_error * retained_weight) / retained_den
+            energy_den = jnp.sum(true_energy) + 1e-8
+            energy_weighted_complex_mse = jnp.sum((jnp.abs(fft_pred_complex - true_sparse_complex) ** 2) * true_energy) / energy_den
+            true_imag_energy = (jnp.imag(true_sparse_complex) ** 2) * retained_weight
+            pred_imag_energy = (jnp.imag(fft_pred_complex) ** 2) * retained_weight
+            quadrature_energy_recall = jnp.sum(pred_imag_energy) / (jnp.sum(true_imag_energy) + 1e-8)
+            imaginary_energy_recall = jnp.sum(jnp.minimum(pred_imag_energy, true_imag_energy)) / (jnp.sum(true_imag_energy) + 1e-8)
+            complex_pair_norm_error = jnp.sum(jnp.abs(pred_mag - true_sparse_mag) * retained_weight) / retained_den
+            phase_error_by_slot = jnp.sum(angle_error * retained_weight, axis=0) / (
+                jnp.sum(retained_weight, axis=0) + 1e-8
+            )
+            hermitian_projected_pred = hermitian_project_fft4(fft_pred_complex)
+            hermitian_error_before = hermitian_error_fft4(fft_pred_complex)
+            hermitian_error_after = hermitian_error_fft4(hermitian_projected_pred)
+            self_conjugate_imag_energy = self_conjugate_imag_energy_fft4(fft_pred_complex)
+            pairwise_conjugate_consistency = 1.0 / (1.0 + hermitian_error_before)
+            dc_mae = jnp.mean(jnp.abs(fft_pred_complex[:, 0] - true_sparse_complex[:, 0]))
+            dc_relative_error = jnp.mean(
+                jnp.abs(fft_pred_complex[:, 0] - true_sparse_complex[:, 0])
+                / (jnp.abs(true_sparse_complex[:, 0]) + 1e-8)
+            )
+            low_freq_idx = jnp.array([0, 1, 4, 5], dtype=jnp.int32)
+            mid_freq_idx = jnp.array([2, 3, 6, 7, 8, 9, 12], dtype=jnp.int32)
+            low_freq_mae = jnp.mean(jnp.abs(fft_pred_complex[:, low_freq_idx] - true_sparse_complex[:, low_freq_idx]))
+            mid_freq_mae = jnp.mean(jnp.abs(fft_pred_complex[:, mid_freq_idx] - true_sparse_complex[:, mid_freq_idx]))
+
+            def psnr_from_fft(fft_values):
+                recon = jnp.real(jnp.fft.ifft2(fft_values.reshape((-1, 4, 4))).reshape((-1, 16)))
+                recon = jnp.clip(recon, 0.0, 1.0)
+                mse = jnp.mean((recon - patch_pixel_target) ** 2)
+                return -10.0 * jnp.log10(mse + 1e-8)
+
+            psnr_true_support = psnr_from_fft(fft_pred_complex * true_mask)
+            psnr_pred_support_true_coeffs = psnr_from_fft(true_sparse_complex * pred_mask)
+            psnr_true_real_pred_imag = psnr_from_fft(
+                (jnp.real(true_sparse_complex) + 1j * jnp.imag(fft_pred_complex)) * true_mask
+            )
+            psnr_pred_real_true_imag = psnr_from_fft(
+                (jnp.real(fft_pred_complex) + 1j * jnp.imag(true_sparse_complex)) * true_mask
+            )
+            psnr_after_global_alignment = psnr_from_fft(fft_pred_global_aligned)
+            psnr_true_magnitude = psnr_from_fft(true_sparse_mag * pred_phase_unit * true_mask)
+            psnr_true_phase = psnr_from_fft(pred_mag * true_phase_unit * true_mask)
+            shape_charge_error = jnp.float32(0.0)
+            shape_charge_cos = jnp.float32(0.0)
+            if shape_charge_pred is not None and shape_charge_target is not None:
+                shape_charge_error = jnp.mean(jnp.linalg.norm(shape_charge_pred - shape_charge_target, axis=1))
+                shape_charge_cos = jnp.mean(graph_cosine_batch_jax(shape_charge_pred, shape_charge_target))
+            as_metrics = {}
+            if transform_info.get("as_0_ttn", False):
+                root_dim = int(transform_info.get("as_ttn_root_dim", 0))
+                root_target = transform_target[:, :root_dim]
+                root_pred = transform_pred[:, :root_dim]
+                root_cos = jnp.mean(graph_cosine_batch_jax(root_pred, root_target))
+                flat_baseline_psnr = jnp.float32(transform_info.get("as_flat_baseline_psnr", 0.0))
+                as_metrics = {
+                    "as_0_ttn_active": True,
+                    "as_root_tensor_cosine": float(root_cos),
+                    "as_charge_conservation_error": float(shape_charge_error),
+                    "as_charge_cosine": float(shape_charge_cos),
+                    "as_unfolded_coeff_psnr": float(pixel_psnr),
+                    "as_flat_baseline_psnr": float(flat_baseline_psnr),
+                    "as_flat_baseline_oracle_psnr": float(transform_info.get("as_flat_baseline_oracle_psnr", 0.0)),
+                    "as_ttn_lift_over_flat_psnr": float(pixel_psnr - flat_baseline_psnr),
+                    "as_decoder_path": "ttn_unfold" if transform_info.get("as_ttn_unfold_decoder", False) else "direct_signature",
+                    "as_ttn_root_dim": int(transform_info.get("as_ttn_root_dim", 0)),
+                    "as_ttn_internal_bond_dim": int(transform_info.get("as_ttn_internal_bond_dim", 0)),
+                    "as_ttn_charge_dim": int(transform_info.get("as_ttn_charge_dim", 0)),
+                }
+
+            motif_chosen = nearest_class_indices_jax(
+                source_pred[:, : transform_info["motif_code_catalog"].shape[1]],
+                transform_info["motif_code_catalog"],
+            )
+            true_motif = transform_info["patch_motif_indices"][pair_idx]
+            motif_exact = jnp.mean((motif_chosen == true_motif).astype(jnp.float32))
+            patch_luma_target = jnp.mean(patch_pixel_target, axis=1)
+            patch_luma_pred = jnp.mean(patch_pred, axis=1)
+            dna_metrics = {}
+            if transform_info.get("dna_checksum_mode", False):
+                mag_mean_pred = jnp.mean(pred_mag, axis=1, keepdims=True)
+                mag_std_pred = jnp.std(pred_mag, axis=1, keepdims=True) + 1e-8
+                mag_pred = jnp.where(
+                    pred_mag > mag_mean_pred + 0.35 * mag_std_pred,
+                    2,
+                    jnp.where(pred_mag > mag_mean_pred, 1, 0),
+                ).astype(jnp.int32)
+                phase_pred_state = jnp.floor(
+                    (jnp.mod(phase_pred + jnp.pi, 2.0 * jnp.pi) / (2.0 * jnp.pi)) * 4.0
+                ).astype(jnp.int32)
+                phase_pred_state = jnp.clip(phase_pred_state, 0, 3)
+                pred_residual_mask = jnp.clip(pred_mask - core_mask[None, :], 0.0, 1.0)
+                pred_residual_mag = pred_mag * pred_residual_mask
+                pred_residual_threshold = jnp.mean(
+                    jnp.where(pred_residual_mask > 0.0, pred_residual_mag, 0.0), axis=1, keepdims=True
+                )
+                residual_pred_state = jnp.where(
+                    core_mask[None, :] > 0.0,
+                    1,
+                    jnp.where(
+                        pred_residual_mask > 0.0,
+                        jnp.where(pred_residual_mag > pred_residual_threshold, 3, 2),
+                        0,
+                    ),
+                ).astype(jnp.int32)
+                pred_dominant_idx = jnp.argmax(pred_mag, axis=1)
+                pred_dominant_mask = jax.nn.one_hot(pred_dominant_idx, 16, dtype=jnp.float32)
+                support_pred_state = jnp.where(
+                    pred_dominant_mask > 0.0,
+                    3,
+                    jnp.where(core_mask[None, :] > 0.0, 2, jnp.where(pred_residual_mask > 0.0, 1, 0)),
+                ).astype(jnp.int32)
+                mag_true = transform_info["dna_mag_state"][pair_idx]
+                phase_true = transform_info["dna_phase_state"][pair_idx]
+                residual_true = transform_info["dna_residual_state"][pair_idx]
+                support_true = transform_info["dna_support_rank_state"][pair_idx]
+                retained = transform_info["dna_retained_mask"][pair_idx]
+                retained_den = jnp.sum(retained) + 1e-8
+
+                mag_acc = jnp.sum(((mag_pred == mag_true).astype(jnp.float32) * retained)) / retained_den
+                phase_acc = jnp.sum(((phase_pred_state == phase_true).astype(jnp.float32) * retained)) / retained_den
+                residual_acc = jnp.sum(((residual_pred_state == residual_true).astype(jnp.float32) * retained)) / retained_den
+                support_acc = jnp.sum(((support_pred_state == support_true).astype(jnp.float32) * retained)) / retained_den
+                packet_match_slot = (
+                    (mag_pred == mag_true)
+                    & (phase_pred_state == phase_true)
+                    & (residual_pred_state == residual_true)
+                    & (support_pred_state == support_true)
+                ).astype(jnp.float32)
+                packet_exact = jnp.sum(packet_match_slot * retained) / retained_den
+
+                motif_flat = jnp.repeat(motif_chosen.astype(jnp.int32), 16)
+                support_flat = support_pred_state.reshape(-1).astype(jnp.int32)
+                residual_flat = residual_pred_state.reshape(-1).astype(jnp.int32)
+                phase_flat = phase_pred_state.reshape(-1).astype(jnp.int32)
+                slot_flat = jnp.tile(jnp.arange(16, dtype=jnp.int32), (phase_pred_state.shape[0],))
+                patch_err = jnp.mean(jnp.abs(patch_pred - patch_pixel_target), axis=1)
+                err_state = (patch_err > jnp.mean(patch_err)).astype(jnp.int32)
+                err_flat = jnp.repeat(err_state, 16)
+
+                mi_header_support, mi_header_support_null, mi_header_support_p = token_mi_against_roll_null(
+                    motif_flat, support_flat, 8, 4
+                )
+                mi_motif_residual, mi_motif_residual_null, mi_motif_residual_p = token_mi_against_roll_null(
+                    motif_flat, residual_flat, 8, 4
+                )
+                mi_phase_error, mi_phase_error_null, mi_phase_error_p = token_mi_against_roll_null(
+                    phase_flat, err_flat, 4, 2
+                )
+                mi_slot_class, mi_slot_class_null, mi_slot_class_p = token_mi_against_roll_null(
+                    slot_flat, motif_flat, 16, 8
+                )
+                dna_metrics = {
+                    "dna_token_active": True,
+                    "dna_mag_state_acc": float(mag_acc),
+                    "dna_phase_state_acc": float(phase_acc),
+                    "dna_residual_state_acc": float(residual_acc),
+                    "dna_support_rank_acc": float(support_acc),
+                    "dna_instruction_packet_exact_match": float(packet_exact),
+                    "dna_mi_header_support": float(mi_header_support),
+                    "dna_mi_header_support_null": float(mi_header_support_null),
+                    "dna_mi_header_support_gap": float(mi_header_support - mi_header_support_null),
+                    "dna_mi_header_support_p_value": float(mi_header_support_p),
+                    "dna_mi_motif_residual": float(mi_motif_residual),
+                    "dna_mi_motif_residual_null": float(mi_motif_residual_null),
+                    "dna_mi_motif_residual_gap": float(mi_motif_residual - mi_motif_residual_null),
+                    "dna_mi_motif_residual_p_value": float(mi_motif_residual_p),
+                    "dna_mi_phase_error": float(mi_phase_error),
+                    "dna_mi_phase_error_null": float(mi_phase_error_null),
+                    "dna_mi_phase_error_gap": float(mi_phase_error - mi_phase_error_null),
+                    "dna_mi_phase_error_p_value": float(mi_phase_error_p),
+                    "dna_mi_slot_class": float(mi_slot_class),
+                    "dna_mi_slot_class_null": float(mi_slot_class_null),
+                    "dna_mi_slot_class_gap": float(mi_slot_class - mi_slot_class_null),
+                    "dna_mi_slot_class_p_value": float(mi_slot_class_p),
+                }
+            transform_metrics = {
+                "fft_patch_motif_recovery": float(motif_exact),
+                "fft_patch_psnr": float(pixel_psnr),
+                "fft_oracle_psnr": float(transform_info.get("fft_oracle_psnr", 0.0)),
+                "fft_coefficient_cosine": float(coeff_cos),
+                "fft_coeff_mag_cosine": float(coeff_mag_cos),
+                "fft_coeff_real_cosine": float(coeff_real_cos),
+                "fft_coeff_imag_cosine": float(coeff_imag_cos),
+                "fft_coefficient_mae": float(coeff_mae),
+                "fft_frequency_index_recovery": float(freq_index_recovery),
+                "fft_phase_recovery": float(phase_recovery),
+                "fft_top1_frequency_accuracy": float(top1_freq_acc),
+                "fft_topk_energy_recall": float(topk_energy_recall),
+                "fft_support_weighted_angle_error": float(support_weighted_angle_error),
+                "fft_energy_weighted_complex_mse": float(energy_weighted_complex_mse),
+                "fft_quadrature_energy_recall": float(quadrature_energy_recall),
+                "fft_imaginary_energy_recall": float(imaginary_energy_recall),
+                "fft_complex_pair_norm_error": float(complex_pair_norm_error),
+                "fft_phase_error_by_coefficient_slot": phase_error_by_slot.tolist(),
+                "fft_hermitian_error_before": float(hermitian_error_before),
+                "fft_hermitian_error_after": float(hermitian_error_after),
+                "fft_self_conjugate_imag_energy": float(self_conjugate_imag_energy),
+                "fft_pairwise_conjugate_consistency": float(pairwise_conjugate_consistency),
+                "fft_phase_cos_energy_weighted": float(phase_cos_energy_weighted),
+                "fft_dc_mae": float(dc_mae),
+                "fft_dc_relative_error": float(dc_relative_error),
+                "fft_low_freq_mae": float(low_freq_mae),
+                "fft_mid_freq_edge_mae": float(mid_freq_mae),
+                "fft_global_phase_aligned_imag_cos": float(global_phase_aligned_imag_cos),
+                "fft_global_phase_aligned_phase_cos": float(global_phase_aligned_phase_cos),
+                "fft_per_slot_phase_aligned_coeff_cos": float(per_slot_phase_aligned_coeff_cos),
+                "fft_complex_gauge_error": float(complex_gauge_error),
+                "fft_psnr_before_alignment": float(pixel_psnr),
+                "fft_psnr_after_alignment": float(psnr_after_global_alignment),
+                "fft_psnr_if_true_support": float(psnr_true_support),
+                "fft_psnr_pred_support_true_coeffs": float(psnr_pred_support_true_coeffs),
+                "fft_psnr_true_real_pred_imag": float(psnr_true_real_pred_imag),
+                "fft_psnr_pred_real_true_imag": float(psnr_pred_real_true_imag),
+                "fft_psnr_if_true_magnitudes": float(psnr_true_magnitude),
+                "fft_psnr_if_true_phases": float(psnr_true_phase),
+                "fft_shape_charge_error": float(shape_charge_error),
+                "fft_shape_charge_cosine": float(shape_charge_cos),
+                "fft_shape_charge_control": bool(ctrl_cfg.get("shape_charge_control", False)),
+                "fft_top_k": int(transform_info["fft_top_k"]),
+                "fft_core_k": int(transform_info.get("fft_core_k", transform_info["fft_top_k"])),
+                "fft_residual_k": int(transform_info.get("fft_residual_k", 0)),
+                "fft_total_k": int(transform_info.get("fft_total_k", transform_info["fft_top_k"])),
+                "fft_codec_variant": str(transform_info.get("fft_codec_variant", "unknown")),
+                "image_patch_motif_recovery": float(motif_exact),
+                "image_patch_psnr": float(pixel_psnr),
+                "image_patch_pixel_mse": float(pixel_mse),
+                "image_patch_pixel_ridge_psnr": float(pixel_direct_psnr),
+                "image_patch_pixel_ridge_mse": float(pixel_direct_mse),
+                "image_patch_palette_prior_psnr": float(palette_psnr),
+                "image_patch_palette_prior_mse": float(palette_mse),
+                "image_patch_catalog_psnr": float(transform_info.get("fft_oracle_psnr", 0.0)),
+                "image_patch_residual_mae": float(coeff_mae),
+                "image_patch_luma_mae": float(jnp.mean(jnp.abs(patch_luma_pred - patch_luma_target))),
+                "source_motif_recovery": float(motif_exact),
+                "target_motif_recovery": float(motif_exact),
+                "derived_next_accuracy": 0.0,
+                "transform_class_recovery": float(freq_index_recovery),
+                "transform_exact_match": float(motif_exact),
+                "L5_transform_recovery": float(jnp.mean(graph_cosine_batch_jax(transform_pred, transform_target))),
+                "delta_graph_cosine": float(jnp.mean(graph_cosine_batch_jax(delta_graph_pred, delta_graph_target))),
+                "delta_phase_cosine": float(jnp.mean(graph_cosine_batch_jax(delta_phase_pred, delta_phase_target))),
+                "delta_recurrence_match": float(jnp.mean(graph_cosine_batch_jax(delta_recurrence_pred, delta_recurrence_target))),
+                "patch_true_indices": pair_idx.tolist(),
+                "patch_true_motif_indices": true_motif.tolist(),
+                "patch_pred_motif_indices": motif_chosen.tolist(),
+                "patch_luma_target": patch_luma_target.tolist(),
+                "patch_luma_pred": patch_luma_pred.tolist(),
+                "source_names": transform_info.get("source_names", []),
+            }
+            if getattr(args, "save_preview_png", False):
+                preview_pred = pixel_direct_pred if getattr(args, "aq_yinyang_3", False) else patch_pred
+                transform_metrics.update(
+                    {
+                        "preview_patch_pixels_target": patch_pixel_target.tolist(),
+                        "preview_patch_pixels_pred": preview_pred.tolist(),
+                        "preview_patch_pixels_pred_ifft": patch_pred.tolist(),
+                        "preview_patch_pixels_pred_pixel_ridge": pixel_direct_pred.tolist(),
+                        "preview_patch_pixels_pred_palette": palette_pred.tolist(),
+                        "preview_patch_indices": pair_idx.tolist(),
+                        "preview_frame_count": int(transform_info.get("frame_count", 0)),
+                        "preview_frame_names": transform_info.get("frame_names", []),
+                        "preview_patch_grid": transform_info.get("patch_grid", [4, 4]),
+                    }
+                )
+            transform_metrics.update(dna_metrics)
+            transform_metrics.update(as_metrics)
+        elif transform_info.get("image_patch_codec", False):
             patch_pixel_y = train_w @ transform_info["patch_pixels"]
             patch_pixel_target = test_w @ transform_info["patch_pixels"]
             pixel_pred = ridge_decode_jax(train_x, patch_pixel_y, noisy_test_x, args.decoder_ridge)
@@ -1400,6 +2774,17 @@ def evaluate_semantic_recovery(
                 "patch_luma_pred": patch_luma_pred.tolist(),
                 "source_names": transform_info.get("source_names", []),
             }
+            if getattr(args, "save_preview_png", False):
+                transform_metrics.update(
+                    {
+                        "preview_patch_pixels_target": patch_pixel_target.tolist(),
+                        "preview_patch_pixels_pred": pixel_pred.tolist(),
+                        "preview_patch_indices": pair_idx.tolist(),
+                        "preview_frame_count": int(transform_info.get("frame_count", 0)),
+                        "preview_frame_names": transform_info.get("frame_names", []),
+                        "preview_patch_grid": transform_info.get("patch_grid", [4, 4]),
+                    }
+                )
         elif transform_info.get("operator_conditioned", False):
             source_idx = transform_info["source_indices"][pair_idx]
             operator_idx = transform_info["operator_indices"][pair_idx]
@@ -1688,6 +3073,40 @@ def evaluate_heldout_transport(
 
 
 def experiment_name(args):
+    if getattr(args, "aq_yinyang_4", False):
+        return "semantic_yinyang_raw_pixel_state_transport_aq_yinyang_4"
+    if getattr(args, "aq_yinyang_3", False):
+        return "semantic_yinyang_one_frame_pixel_decoder_aq_yinyang_3"
+    if getattr(args, "aq_yinyang_2", False):
+        return "semantic_yinyang_one_frame_all_coeff_transport_aq_yinyang_2"
+    if getattr(args, "aq_yinyang_1", False):
+        return "semantic_yinyang_one_frame_transport_aq_yinyang_1"
+    if getattr(args, "aq_yinyang_0", False):
+        return "semantic_yinyang_two_frame_transport_aq_yinyang_0"
+    if getattr(args, "as_0b", False):
+        return "hierarchical_instruction_genome_unfold_decoder_as_0b"
+    if getattr(args, "as_0", False):
+        return "hierarchical_instruction_genome_transport_as_0"
+    if getattr(args, "aq_hybrid_0", False):
+        return "semantic_kspace_hybrid_continuous_checksum_aq_hybrid_0"
+    if getattr(args, "aq_dna_0", False):
+        return "semantic_kspace_dna_token_genome_aq_dna_0"
+    if getattr(args, "aq_fft_2", False):
+        return "semantic_kspace_shape_charge_control_aq_fft_2"
+    if getattr(args, "aq_fft_7", False):
+        return "semantic_kspace_residual_capacity_scaling_aq_fft_7"
+    if getattr(args, "aq_fft_6", False):
+        return "semantic_kspace_hermitian_complex_decoder_aq_fft_6"
+    if getattr(args, "aq_fft_5", False):
+        return "semantic_kspace_gauge_aligned_complex_decoding_aq_fft_5"
+    if getattr(args, "aq_fft_4", False):
+        return "semantic_kspace_complex_orientation_preservation_aq_fft_4"
+    if getattr(args, "aq_fft_3", False):
+        return "semantic_kspace_direct_complex_oscillator_aq_fft_3"
+    if getattr(args, "aq_fft_1", False):
+        return "semantic_kspace_genome_codec_aq_fft_1"
+    if getattr(args, "aq_fft_0", False):
+        return "semantic_kspace_patch_codec_aq_fft_0"
     if getattr(args, "aq_img_1", False):
         return "semantic_image_patch_codec_aq_img_1"
     if getattr(args, "aq_img_1_lite", False):
@@ -1735,6 +3154,15 @@ def run_program_ap(args):
 
     os.makedirs(args.out_dir, exist_ok=True)
     summary_path = os.path.join(args.out_dir, "program_ap_summary.json")
+    if getattr(args, "aq_fft_7", False):
+        args.aq_fft_residual_k = 4
+    if getattr(args, "aq_yinyang_0", False):
+        args.aq_fft_residual_k = 4
+    if getattr(args, "aq_yinyang_3", False) or getattr(args, "aq_yinyang_2", False):
+        args.aq_fft_top_k = 16
+        args.aq_fft_residual_k = 0
+    if getattr(args, "aq_yinyang_1", False):
+        args.aq_fft_residual_k = 4
 
     use_aq_payload = (
         getattr(args, "aq_0b", False)
@@ -1743,8 +3171,26 @@ def run_program_ap(args):
         or getattr(args, "aq_1b", False)
         or getattr(args, "aq_1c", False)
         or getattr(args, "aq_seq_0", False)
+        or getattr(args, "as_0b", False)
+        or getattr(args, "as_0", False)
+        or getattr(args, "aq_yinyang_4", False)
+        or getattr(args, "aq_yinyang_3", False)
+        or getattr(args, "aq_yinyang_2", False)
+        or getattr(args, "aq_yinyang_1", False)
+        or getattr(args, "aq_yinyang_0", False)
+        or getattr(args, "aq_hybrid_0", False)
+        or getattr(args, "aq_dna_0", False)
+        or getattr(args, "aq_fft_7", False)
+        or getattr(args, "aq_fft_6", False)
+        or getattr(args, "aq_fft_5", False)
+        or getattr(args, "aq_fft_4", False)
+        or getattr(args, "aq_fft_3", False)
+        or getattr(args, "aq_fft_2", False)
+        or getattr(args, "aq_fft_1", False)
+        or getattr(args, "aq_fft_0", False)
         or getattr(args, "aq_img_0", False)
         or getattr(args, "aq_img_1", False)
+        or getattr(args, "aq_img_1_lite", False)
     )
     motifs, _ = build_semantic_motifs(args.sequence_length, aq_payload=use_aq_payload)
     motif_names = list(motifs.keys())
@@ -1753,7 +3199,193 @@ def run_program_ap(args):
     graph_features = jnp.stack([motif_transition_graph(seq) for seq in seqs])
     layer_features = build_layer_feature_table(seqs)
     transform_info = None
-    if getattr(args, "aq_img_0", False) or getattr(args, "aq_img_1", False) or getattr(args, "aq_img_1_lite", False):
+    if (
+        getattr(args, "aq_hybrid_0", False)
+        or getattr(args, "aq_yinyang_4", False)
+        or getattr(args, "aq_yinyang_3", False)
+        or getattr(args, "aq_yinyang_2", False)
+        or getattr(args, "aq_yinyang_1", False)
+        or getattr(args, "aq_yinyang_0", False)
+        or getattr(args, "as_0b", False)
+        or getattr(args, "as_0", False)
+        or getattr(args, "aq_dna_0", False)
+        or getattr(args, "aq_fft_7", False)
+        or getattr(args, "aq_fft_6", False)
+        or getattr(args, "aq_fft_5", False)
+        or getattr(args, "aq_fft_4", False)
+        or getattr(args, "aq_fft_3", False)
+        or getattr(args, "aq_fft_2", False)
+        or getattr(args, "aq_fft_1", False)
+        or getattr(args, "aq_fft_0", False)
+    ):
+        if getattr(args, "aq_yinyang_4", False):
+            seqs, features, graph_features, layer_features, transform_info = build_yinyang_raw_patch_payload(
+                args.sequence_length,
+                frame_count=args.yinyang_frame_count,
+                direct_complex=True,
+                frame_size=16,
+                frame_start=args.yinyang_frame_start,
+            )
+        elif getattr(args, "aq_yinyang_3", False) or getattr(args, "aq_yinyang_2", False) or getattr(args, "aq_yinyang_1", False) or getattr(args, "aq_yinyang_0", False):
+            seqs, features, graph_features, layer_features, transform_info = build_yinyang_fft_patch_codec_payload(
+                args.sequence_length,
+                top_k=args.aq_fft_top_k,
+                residual_k=args.aq_fft_residual_k,
+                direct_complex=True,
+                dna_instruction=True,
+                frame_count=1
+                if (getattr(args, "aq_yinyang_3", False) or getattr(args, "aq_yinyang_2", False) or getattr(args, "aq_yinyang_1", False))
+                else 2,
+            )
+        else:
+            seqs, features, graph_features, layer_features, transform_info = build_fft_patch_codec_payload(
+                args.sequence_length,
+                top_k=args.aq_fft_top_k,
+                residual_k=args.aq_fft_residual_k
+                if (
+                    getattr(args, "aq_hybrid_0", False)
+                    or getattr(args, "as_0b", False)
+                    or getattr(args, "as_0", False)
+                    or getattr(args, "aq_dna_0", False)
+                    or getattr(args, "aq_fft_7", False)
+                    or getattr(args, "aq_fft_6", False)
+                    or getattr(args, "aq_fft_5", False)
+                    or getattr(args, "aq_fft_4", False)
+                    or getattr(args, "aq_fft_3", False)
+                    or getattr(args, "aq_fft_2", False)
+                    or getattr(args, "aq_fft_1", False)
+                )
+                else 0,
+                direct_complex=getattr(args, "aq_fft_7", False) or getattr(args, "aq_fft_6", False) or getattr(args, "aq_fft_5", False) or getattr(args, "aq_fft_4", False) or getattr(args, "aq_fft_3", False),
+                dna_instruction=getattr(args, "aq_hybrid_0", False)
+                or getattr(args, "as_0b", False)
+                or getattr(args, "as_0", False)
+                or getattr(args, "aq_dna_0", False)
+                or getattr(args, "aq_fft_7", False)
+                or getattr(args, "aq_fft_6", False)
+                or getattr(args, "aq_fft_5", False)
+                or getattr(args, "aq_fft_4", False)
+                or getattr(args, "aq_fft_3", False)
+                or getattr(args, "aq_fft_2", False)
+                or getattr(args, "aq_fft_1", False),
+                dna_tokenized=getattr(args, "aq_dna_0", False),
+                dna_checksum_mode=getattr(args, "aq_hybrid_0", False) or getattr(args, "aq_dna_0", False),
+                ttn_folded=getattr(args, "as_0", False) or getattr(args, "as_0b", False),
+                ttn_unfold_decoder=getattr(args, "as_0b", False),
+                patch_limit=16,
+            )
+        if getattr(args, "as_0b", False):
+            print("AS-0b ACTIVE:")
+            print("  payload = AQ-FFT-1 instruction packets")
+            print("  geometry = binary TTN over coefficient/residual packets")
+            print("  transported_object = root tensor + selected internal bonds + charge sectors")
+            print("  decoder = recovered TTN state -> coefficient field unfold")
+            print("  baseline = flat AQ-FFT-1 free path")
+            print("  controller = free")
+        if getattr(args, "as_0", False):
+            print("AS-0 ACTIVE:")
+            print("  payload = AQ-FFT-1 instruction packets")
+            print("  geometry = binary TTN over coefficient/residual packets")
+            print("  transported_object = root tensor + selected internal bonds + charge sectors")
+            print("  baseline = flat AQ-FFT-1 free path")
+            print("  controller = free")
+        if getattr(args, "aq_hybrid_0", False):
+            print("AQ-HYBRID-0 ACTIVE:")
+            print("  primary_payload = continuous k-space geometry")
+            print("  token_side_channel = checksum/consistency")
+            print("  patch_order = Hilbert-4x4")
+            print("  kspace_order = zigzag/local fixed core + adaptive residual")
+            print("  token_metrics = enabled")
+            print("  permutation_nulls = enabled")
+        if getattr(args, "aq_dna_0", False):
+            print("AQ-DNA-0 ACTIVE:")
+            print("  tokenization = deterministic GMM-lite bins")
+            print("  patch_order = Hilbert-4x4")
+            print("  kspace_order = zigzag/local fixed core + adaptive residual")
+            print("  token_metrics = enabled")
+            print("  permutation_nulls = enabled")
+            print("  runtime_envelope != AQ-FFT-1")
+        if getattr(args, "aq_yinyang_0", False):
+            print("AQ-YINYANG-0 ACTIVE:")
+            print("  frames = two 16x16 8-bit tai-chi-tu polarity frames")
+            print("  tiling = 4x4 patches per frame, 32 patch states total")
+            print("  codec = direct complex k-space with residual_K=4")
+            print("  previews = reference/recovered/error frame PNGs")
+        if getattr(args, "aq_yinyang_1", False):
+            print("AQ-YINYANG-1 ACTIVE:")
+            print("  frames = one 16x16 8-bit tai-chi-tu frame")
+            print("  tiling = 4x4 patches, 16 patch states total")
+            print("  codec = direct complex k-space with residual_K=4")
+            print("  purpose = isolate codec ceiling before temporal polarity sequence")
+        if getattr(args, "aq_yinyang_2", False):
+            print("AQ-YINYANG-2 ACTIVE:")
+            print("  frames = one 16x16 8-bit tai-chi-tu frame")
+            print("  tiling = 4x4 patches, 16 patch states total")
+            print("  codec = direct complex k-space with all 16 FFT coefficients per patch")
+            print("  purpose = one-image lossless-codec transport gate")
+        if getattr(args, "aq_yinyang_3", False):
+            print("AQ-YINYANG-3 ACTIVE:")
+            print("  frames = one 16x16 8-bit tai-chi-tu frame")
+            print("  tiling = 4x4 patches, 16 patch states total")
+            print("  codec = all 16 FFT coefficients per patch")
+            print("  decoder = direct pixel-space ridge + palette prior diagnostics")
+        if getattr(args, "aq_yinyang_4", False):
+            print("AQ-YINYANG-4 ACTIVE:")
+            print(
+                f"  frames = {args.yinyang_frame_count} 16x16 tai-chi-tu reference PNG frame(s) "
+                f"starting at {args.yinyang_frame_start}"
+            )
+            print(f"  tiling = 4x4 raw pixel patches, {args.yinyang_frame_count * 16} patch states total")
+            print("  codec = no FFT/no folding")
+            print("  transport = direct raw-pixel oscillator slots")
+            print("  controller = complex_pair_norm")
+            print(f"  recovery_order = {'ordered' if args.yinyang_ordered_recovery else 'permuted'}")
+        if getattr(args, "aq_fft_3", False):
+            print("AQ-FFT-3 ACTIVE:")
+            print("  codec = AQ-FFT-1 fixed core + residual K-space")
+            print("  coefficient_encoding = direct complex oscillator slots")
+            print("  direct_complex_x0 = true")
+            print("  decoder_target = sparse FFT Re/Im coefficients")
+            print("  baseline = AQ-FFT-1 flat path at ~17.00 dB")
+        if getattr(args, "aq_fft_4", False):
+            print("AQ-FFT-4 ACTIVE:")
+            print("  codec = AQ-FFT-1 fixed core K=6 + residual K=2")
+            print("  coefficient_encoding = direct complex oscillator slots")
+            print("  controllers = free, complex_pair_norm, complex_phase_locked")
+            print("  diagnostics = complex orientation + error budget")
+            print("  alpha065 = excluded")
+        if getattr(args, "aq_fft_5", False):
+            print("AQ-FFT-5 ACTIVE:")
+            print("  codec = AQ-FFT-4 complex_pair_norm reference")
+            print("  coefficient_encoding = direct complex oscillator slots")
+            print("  controllers = complex_pair_norm, complex_pair_norm_gaugefix")
+            print("  diagnostics = oracle gauge alignment + anchor gauge-fix decoder")
+            print("  alpha065 = excluded")
+        if getattr(args, "aq_fft_6", False):
+            print("AQ-FFT-6 ACTIVE:")
+            print("  codec = AQ-FFT-4 complex_pair_norm reference")
+            print("  coefficient_encoding = direct complex oscillator slots")
+            print("  controllers = complex_pair_norm, complex_pair_norm_hermitian")
+            print("  diagnostics = Hermitian symmetry + energy-weighted phase")
+            print("  alpha065 = excluded")
+        if getattr(args, "aq_fft_7", False):
+            print("AQ-FFT-7 ACTIVE:")
+            print("  codec = complex_pair_norm residual capacity scaling")
+            print("  coefficient_encoding = direct complex oscillator slots")
+            print("  controller = complex_pair_norm")
+            print("  residual_K = 4")
+            print("  baseline = residual_K=2 at ~23.18 dB realized / 25.05 dB oracle")
+            print("  alpha065 = excluded")
+        print("payload_seqs sample:", jax.device_get(seqs[0]).tolist())
+        print("fft basis indices:", transform_info.get("fft_basis_indices", []))
+        print("fft residual-k:", transform_info.get("fft_residual_k", 0))
+        fft_top_sample = transform_info.get("fft_top_indices")
+        if fft_top_sample is not None and jnp.asarray(fft_top_sample).size > 0:
+            print("fft top-k sample:", jax.device_get(fft_top_sample[0]).tolist())
+        else:
+            print("fft top-k sample:", [])
+        motif_names = transform_info["pair_names"]
+    elif getattr(args, "aq_img_0", False) or getattr(args, "aq_img_1", False) or getattr(args, "aq_img_1_lite", False):
         seqs, features, graph_features, layer_features, transform_info = build_image_patch_codec_payload(
             args.sequence_length,
             residual_vector=getattr(args, "aq_img_1", False) or getattr(args, "aq_img_1_lite", False),
@@ -1821,6 +3453,40 @@ def run_program_ap(args):
     records = []
     controllers = {
         "free": {"damping": args.damping, "feedback": 0.00, "tunnel": 0.00, "gate_cost": 0.00},
+        "complex_pair_norm": {
+            "damping": args.damping,
+            "feedback": 0.00,
+            "tunnel": 0.00,
+            "complex_pair_norm": True,
+            "gate_cost": 0.02,
+            "lane": "complex_geometry",
+        },
+        "complex_phase_locked": {
+            "damping": args.damping,
+            "feedback": 0.00,
+            "tunnel": 0.00,
+            "complex_phase_locked": True,
+            "gate_cost": 0.02,
+            "lane": "complex_geometry",
+        },
+        "complex_pair_norm_gaugefix": {
+            "damping": args.damping,
+            "feedback": 0.00,
+            "tunnel": 0.00,
+            "complex_pair_norm": True,
+            "complex_gaugefix": True,
+            "gate_cost": 0.03,
+            "lane": "complex_geometry",
+        },
+        "complex_pair_norm_hermitian": {
+            "damping": args.damping,
+            "feedback": 0.00,
+            "tunnel": 0.00,
+            "complex_pair_norm": True,
+            "complex_hermitian": True,
+            "gate_cost": 0.03,
+            "lane": "complex_geometry",
+        },
         "filament_stabilized": {"damping": args.damping * 0.7, "feedback": 0.18, "tunnel": 1.00, "gate_cost": 0.20},
         "filament_stabilized_v1": {
             "damping": args.damping * 0.70,
@@ -1930,6 +3596,15 @@ def run_program_ap(args):
             "damping_spread": 0.60,
             "gate_cost": 0.25,
             "lane": "fidelity",
+        },
+        "shape_charge_control": {
+            "damping": args.damping,
+            "feedback": 0.00,
+            "tunnel": 0.00,
+            "shape_charge_control": True,
+            "shape_charge_eta": 0.32,
+            "gate_cost": 0.04,
+            "lane": "shape_charge",
         },
         "tunnel_eigen_residual_adaptive": {
             "damping": args.damping * 0.65,
@@ -2062,11 +3737,73 @@ def run_program_ap(args):
     if (
         getattr(args, "aq_1c", False)
         or getattr(args, "aq_seq_0", False)
+        or getattr(args, "as_0b", False)
+        or getattr(args, "as_0", False)
+        or getattr(args, "aq_yinyang_4", False)
+        or getattr(args, "aq_yinyang_3", False)
+        or getattr(args, "aq_yinyang_2", False)
+        or getattr(args, "aq_yinyang_1", False)
+        or getattr(args, "aq_yinyang_0", False)
+        or getattr(args, "aq_hybrid_0", False)
+        or getattr(args, "aq_dna_0", False)
+        or getattr(args, "aq_fft_7", False)
+        or getattr(args, "aq_fft_6", False)
+        or getattr(args, "aq_fft_5", False)
+        or getattr(args, "aq_fft_4", False)
+        or getattr(args, "aq_fft_3", False)
+        or getattr(args, "aq_fft_2", False)
+        or getattr(args, "aq_fft_1", False)
+        or getattr(args, "aq_fft_0", False)
         or getattr(args, "aq_img_0", False)
         or getattr(args, "aq_img_1", False)
         or getattr(args, "aq_img_1_lite", False)
     ):
-        controllers = {"free": controllers["free"]}
+        if (
+            getattr(args, "as_0b", False)
+            or getattr(args, "as_0", False)
+            or getattr(args, "aq_hybrid_0", False)
+            or getattr(args, "aq_dna_0", False)
+        ):
+            controllers = {"free": controllers["free"]}
+        elif getattr(args, "aq_fft_2", False):
+            controllers = {
+                "free": controllers["free"],
+                "shape_charge_control": controllers["shape_charge_control"],
+            }
+        elif getattr(args, "aq_fft_4", False):
+            controllers = {
+                "free": controllers["free"],
+                "complex_pair_norm": controllers["complex_pair_norm"],
+                "complex_phase_locked": controllers["complex_phase_locked"],
+            }
+        elif getattr(args, "aq_fft_5", False):
+            controllers = {
+                "complex_pair_norm": controllers["complex_pair_norm"],
+                "complex_pair_norm_gaugefix": controllers["complex_pair_norm_gaugefix"],
+            }
+        elif getattr(args, "aq_fft_6", False):
+            controllers = {
+                "complex_pair_norm": controllers["complex_pair_norm"],
+                "complex_pair_norm_hermitian": controllers["complex_pair_norm_hermitian"],
+            }
+        elif (
+            getattr(args, "aq_yinyang_4", False)
+            or getattr(args, "aq_yinyang_3", False)
+            or getattr(args, "aq_yinyang_2", False)
+            or getattr(args, "aq_yinyang_1", False)
+            or getattr(args, "aq_yinyang_0", False)
+            or getattr(args, "aq_fft_7", False)
+        ):
+            controllers = {
+                "complex_pair_norm": controllers["complex_pair_norm"],
+            }
+        elif getattr(args, "aq_fft_3", False) or getattr(args, "aq_fft_1", False) or getattr(args, "aq_fft_0", False):
+            controllers = {
+                "free": controllers["free"],
+                "tunnel_eigen_residual_alpha065": controllers["tunnel_eigen_residual_alpha065"],
+            }
+        else:
+            controllers = {"free": controllers["free"]}
 
     for depth in args.depth_sweep:
         max_span = min(args.sequence_length, max(2, args.base_span * (2 ** int(depth))))
@@ -2381,6 +4118,12 @@ def run_program_ap(args):
 
         records.append(depth_record)
 
+    preview_pngs = []
+    if getattr(args, "save_preview_png", False):
+        preview_pngs = write_recovery_preview_pngs(records, args.out_dir)
+        for preview_path in preview_pngs:
+            print(f"[PREVIEW] wrote {preview_path}")
+
     out = {
         "experiment": experiment_name(args),
         "scientific_thread": [
@@ -2394,6 +4137,7 @@ def run_program_ap(args):
         "motifs": motif_names,
         "parameters": vars(args),
         "records": records,
+        "preview_pngs": preview_pngs,
         "runtime_s": round(time.time() - t0, 1),
     }
     with open(summary_path, "w") as f:
@@ -2461,6 +4205,20 @@ def run_program_ap(args):
             or getattr(args, "aq_1b", False)
             or getattr(args, "aq_1c", False)
             or getattr(args, "aq_seq_0", False)
+            or getattr(args, "as_0b", False)
+            or getattr(args, "as_0", False)
+            or getattr(args, "aq_yinyang_3", False)
+            or getattr(args, "aq_yinyang_2", False)
+            or getattr(args, "aq_yinyang_1", False)
+            or getattr(args, "aq_yinyang_0", False)
+            or getattr(args, "aq_fft_7", False)
+            or getattr(args, "aq_fft_6", False)
+            or getattr(args, "aq_fft_5", False)
+            or getattr(args, "aq_fft_4", False)
+            or getattr(args, "aq_fft_3", False)
+            or getattr(args, "aq_fft_2", False)
+            or getattr(args, "aq_fft_1", False)
+            or getattr(args, "aq_fft_0", False)
             or getattr(args, "aq_img_0", False)
             or getattr(args, "aq_img_1", False)
             or getattr(args, "aq_img_1_lite", False)
@@ -2503,8 +4261,19 @@ def run_program_ap(args):
             print("=" * 112)
         if (
             getattr(args, "aq_1a_tf", False)
-            or getattr(args, "aq_1a_tf_s29", False)
-            or getattr(args, "aq_seq_0", False)
+                or getattr(args, "aq_1a_tf_s29", False)
+                or getattr(args, "aq_seq_0", False)
+                or getattr(args, "aq_yinyang_3", False)
+                or getattr(args, "aq_yinyang_2", False)
+                or getattr(args, "aq_yinyang_1", False)
+                or getattr(args, "aq_yinyang_0", False)
+                or getattr(args, "aq_fft_7", False)
+                or getattr(args, "aq_fft_6", False)
+                or getattr(args, "aq_fft_5", False)
+                or getattr(args, "aq_fft_4", False)
+                or getattr(args, "aq_fft_3", False)
+                or getattr(args, "aq_fft_1", False)
+                or getattr(args, "aq_fft_0", False)
             or getattr(args, "aq_img_0", False)
             or getattr(args, "aq_img_1", False)
             or getattr(args, "aq_img_1_lite", False)
@@ -2533,9 +4302,202 @@ def run_program_ap(args):
                                 f"{tf.get('delta_recurrence_match', 0.0):>8.4f}"
                             )
             print("=" * 112)
-        if getattr(args, "aq_img_0", False) or getattr(args, "aq_img_1", False) or getattr(args, "aq_img_1_lite", False):
+        if (
+            getattr(args, "as_0b", False)
+            or getattr(args, "as_0", False)
+            or getattr(args, "aq_hybrid_0", False)
+            or getattr(args, "aq_dna_0", False)
+            or getattr(args, "aq_yinyang_3", False)
+            or getattr(args, "aq_yinyang_2", False)
+            or getattr(args, "aq_yinyang_1", False)
+            or getattr(args, "aq_yinyang_0", False)
+            or getattr(args, "aq_fft_7", False)
+            or getattr(args, "aq_fft_6", False)
+            or getattr(args, "aq_fft_5", False)
+            or getattr(args, "aq_fft_4", False)
+            or getattr(args, "aq_fft_3", False)
+            or getattr(args, "aq_fft_2", False)
+            or getattr(args, "aq_fft_1", False)
+            or getattr(args, "aq_fft_0", False)
+        ):
             print("\n" + "=" * 112)
-            if getattr(args, "aq_img_1_lite", False):
+            if getattr(args, "as_0b", False):
+                title = "AS-0b TTN unfold-decoder instruction genome readout"
+            elif getattr(args, "as_0", False):
+                title = "AS-0 TTN folded instruction genome readout"
+            elif getattr(args, "aq_hybrid_0", False):
+                title = "AQ-HYBRID-0 continuous-geometry + token-checksum readout"
+            elif getattr(args, "aq_dna_0", False):
+                title = "AQ-DNA-0 locality-preserving token genome readout"
+            elif getattr(args, "aq_yinyang_3", False):
+                title = "AQ-YINYANG-3 one-frame pixel-space decoder readout"
+            elif getattr(args, "aq_yinyang_2", False):
+                title = "AQ-YINYANG-2 one-frame all-coefficient visual transport readout"
+            elif getattr(args, "aq_yinyang_1", False):
+                title = "AQ-YINYANG-1 one-frame visual transport readout"
+            elif getattr(args, "aq_yinyang_0", False):
+                title = "AQ-YINYANG-0 two-frame visual transport readout"
+            elif getattr(args, "aq_fft_2", False):
+                title = "AQ-FFT-2 shape-charge controlled k-space codec readout"
+            elif getattr(args, "aq_fft_7", False):
+                title = "AQ-FFT-7 residual-capacity scaling readout"
+            elif getattr(args, "aq_fft_6", False):
+                title = "AQ-FFT-6 Hermitian-constrained complex decoder readout"
+            elif getattr(args, "aq_fft_5", False):
+                title = "AQ-FFT-5 gauge-aligned complex decoder readout"
+            elif getattr(args, "aq_fft_4", False):
+                title = "AQ-FFT-4 complex-orientation preservation codec readout"
+            elif getattr(args, "aq_fft_3", False):
+                title = "AQ-FFT-3 direct-complex oscillator codec readout"
+            elif getattr(args, "aq_fft_1", False):
+                title = "AQ-FFT-1 core+residual genome codec readout"
+            else:
+                title = "AQ-FFT-0 k-space image patch codec readout"
+            print(f"{title:^112}")
+            for rec in records:
+                for _noise_level, seed_map in rec.get("semantic_recovery", {}).items():
+                    for _seed, ctrl_map in seed_map.items():
+                        for ctrl, metrics in ctrl_map.items():
+                            tf = metrics.get("transform_field", {})
+                            print(
+                                f"{ctrl:>23} "
+                                f"K={tf.get('fft_total_k', tf.get('fft_top_k', 0)):>2} "
+                                f"core={tf.get('fft_core_k', tf.get('fft_top_k', 0)):>2} "
+                                f"resid={tf.get('fft_residual_k', 0):>2} "
+                                f"motif={tf.get('fft_patch_motif_recovery', 0.0):.4f}"
+                            )
+                            print(
+                                f"{'':>23} "
+                                f"ifft_psnr={tf.get('fft_patch_psnr', 0.0):.4f} "
+                                f"oracle_psnr={tf.get('fft_oracle_psnr', 0.0):.4f}"
+                            )
+                            if getattr(args, "aq_yinyang_3", False):
+                                print(
+                                    f"{'':>23} "
+                                    f"pixel_ridge_psnr={tf.get('image_patch_pixel_ridge_psnr', 0.0):.4f} "
+                                    f"palette_prior_psnr={tf.get('image_patch_palette_prior_psnr', 0.0):.4f} "
+                                    f"dc_mae={tf.get('fft_dc_mae', 0.0):.4f} "
+                                    f"low_mae={tf.get('fft_low_freq_mae', 0.0):.4f} "
+                                    f"mid_mae={tf.get('fft_mid_freq_edge_mae', 0.0):.4f}"
+                                )
+                            print(
+                                f"{'':>23} "
+                                f"coeff_mag_cos={tf.get('fft_coeff_mag_cosine', 0.0):.4f} "
+                                f"coeff_real_cos={tf.get('fft_coeff_real_cosine', 0.0):.4f} "
+                                f"coeff_imag_cos={tf.get('fft_coeff_imag_cosine', 0.0):.4f}"
+                            )
+                            print(
+                                f"{'':>23} "
+                                f"phase_cos={tf.get('fft_phase_recovery', 0.0):.4f} "
+                                f"freq_idx_overlap={tf.get('fft_frequency_index_recovery', 0.0):.4f} "
+                                f"top1_freq_acc={tf.get('fft_top1_frequency_accuracy', 0.0):.4f} "
+                                f"topK_energy_recall={tf.get('fft_topk_energy_recall', 0.0):.4f}"
+                            )
+                            if getattr(args, "aq_yinyang_3", False) or getattr(args, "aq_yinyang_2", False) or getattr(args, "aq_yinyang_1", False) or getattr(args, "aq_yinyang_0", False) or getattr(args, "aq_fft_7", False) or getattr(args, "aq_fft_6", False) or getattr(args, "aq_fft_5", False) or getattr(args, "aq_fft_4", False):
+                                print(
+                                    f"{'':>23} "
+                                    f"angle_err={tf.get('fft_support_weighted_angle_error', 0.0):.4f} "
+                                    f"energy_mse={tf.get('fft_energy_weighted_complex_mse', 0.0):.4f} "
+                                    f"quad_recall={tf.get('fft_quadrature_energy_recall', 0.0):.4f} "
+                                    f"imag_recall={tf.get('fft_imaginary_energy_recall', 0.0):.4f} "
+                                    f"pair_norm_err={tf.get('fft_complex_pair_norm_error', 0.0):.4f}"
+                                )
+                            if getattr(args, "aq_yinyang_3", False) or getattr(args, "aq_yinyang_2", False) or getattr(args, "aq_yinyang_1", False) or getattr(args, "aq_yinyang_0", False) or getattr(args, "aq_fft_7", False) or getattr(args, "aq_fft_6", False):
+                                print(
+                                    f"{'':>23} "
+                                    f"herm_before={tf.get('fft_hermitian_error_before', 0.0):.4f} "
+                                    f"herm_after={tf.get('fft_hermitian_error_after', 0.0):.4f} "
+                                    f"self_imag_E={tf.get('fft_self_conjugate_imag_energy', 0.0):.4f} "
+                                    f"pair_consistency={tf.get('fft_pairwise_conjugate_consistency', 0.0):.4f} "
+                                    f"phase_Ew={tf.get('fft_phase_cos_energy_weighted', 0.0):.4f}"
+                                )
+                            if getattr(args, "aq_fft_5", False):
+                                print(
+                                    f"{'':>23} "
+                                    f"aligned_imag_cos={tf.get('fft_global_phase_aligned_imag_cos', 0.0):.4f} "
+                                    f"aligned_phase_cos={tf.get('fft_global_phase_aligned_phase_cos', 0.0):.4f} "
+                                    f"slot_aligned_coeff_cos={tf.get('fft_per_slot_phase_aligned_coeff_cos', 0.0):.4f} "
+                                    f"gauge_err={tf.get('fft_complex_gauge_error', 0.0):.4f}"
+                                )
+                                print(
+                                    f"{'':>23} "
+                                    f"psnr_before_align={tf.get('fft_psnr_before_alignment', 0.0):.4f} "
+                                    f"psnr_after_align={tf.get('fft_psnr_after_alignment', 0.0):.4f}"
+                                )
+                            if getattr(args, "aq_fft_4", False):
+                                print(
+                                    f"{'':>23} "
+                                    f"budget oracle={tf.get('fft_oracle_psnr', 0.0):.4f} "
+                                    f"true_support_pred_coeffs={tf.get('fft_psnr_if_true_support', 0.0):.4f} "
+                                    f"pred_support_true_coeffs={tf.get('fft_psnr_pred_support_true_coeffs', 0.0):.4f} "
+                                    f"true_real_pred_imag={tf.get('fft_psnr_true_real_pred_imag', 0.0):.4f} "
+                                    f"pred_real_true_imag={tf.get('fft_psnr_pred_real_true_imag', 0.0):.4f} "
+                                    f"final={tf.get('fft_patch_psnr', 0.0):.4f}"
+                                )
+                            if getattr(args, "aq_yinyang_3", False) or getattr(args, "aq_yinyang_2", False) or getattr(args, "aq_yinyang_1", False) or getattr(args, "aq_yinyang_0", False) or getattr(args, "aq_fft_7", False) or getattr(args, "aq_fft_6", False) or getattr(args, "aq_fft_5", False) or getattr(args, "aq_fft_4", False) or getattr(args, "aq_fft_3", False):
+                                print(
+                                    f"{'':>23} "
+                                    f"codec_variant={tf.get('fft_codec_variant', 'unknown')} "
+                                    f"direct_complex_x0=1"
+                                )
+                            if getattr(args, "aq_fft_2", False):
+                                print(
+                                    f"{'':>23} "
+                                    f"shape_err={tf.get('fft_shape_charge_error', 0.0):.4f} "
+                                    f"shape_cos={tf.get('fft_shape_charge_cosine', 0.0):.4f} "
+                                    f"psnr_true_support={tf.get('fft_psnr_if_true_support', 0.0):.4f} "
+                                    f"psnr_true_mag={tf.get('fft_psnr_if_true_magnitudes', 0.0):.4f} "
+                                    f"psnr_true_phase={tf.get('fft_psnr_if_true_phases', 0.0):.4f}"
+                                )
+                            if getattr(args, "as_0b", False) or getattr(args, "as_0", False):
+                                print(
+                                    f"{'':>23} "
+                                    f"root_cos={tf.get('as_root_tensor_cosine', 0.0):.4f} "
+                                    f"charge_err={tf.get('as_charge_conservation_error', 0.0):.4f} "
+                                    f"charge_cos={tf.get('as_charge_cosine', 0.0):.4f}"
+                                )
+                                print(
+                                    f"{'':>23} "
+                                    f"flat_psnr={tf.get('as_flat_baseline_psnr', 0.0):.4f} "
+                                    f"ttn_lift={tf.get('as_ttn_lift_over_flat_psnr', 0.0):.4f} "
+                                    f"decoder={tf.get('as_decoder_path', 'unknown')} "
+                                    f"root_dim={tf.get('as_ttn_root_dim', 0)} "
+                                    f"bond_dim={tf.get('as_ttn_internal_bond_dim', 0)}"
+                                )
+                            if getattr(args, "aq_hybrid_0", False) or getattr(args, "aq_dna_0", False):
+                                print(
+                                    f"{'':>23} "
+                                    f"packet_exact={tf.get('dna_instruction_packet_exact_match', 0.0):.4f} "
+                                    f"mag_acc={tf.get('dna_mag_state_acc', 0.0):.4f} "
+                                    f"phase_acc={tf.get('dna_phase_state_acc', 0.0):.4f} "
+                                    f"resid_acc={tf.get('dna_residual_state_acc', 0.0):.4f} "
+                                    f"rank_acc={tf.get('dna_support_rank_acc', 0.0):.4f}"
+                                )
+                                print(
+                                    f"{'':>23} "
+                                    f"MI_header_support_gap={tf.get('dna_mi_header_support_gap', 0.0):.4f} "
+                                    f"MI_motif_resid_gap={tf.get('dna_mi_motif_residual_gap', 0.0):.4f} "
+                                    f"MI_phase_error_gap={tf.get('dna_mi_phase_error_gap', 0.0):.4f} "
+                                    f"MI_slot_class_gap={tf.get('dna_mi_slot_class_gap', 0.0):.4f}"
+                                )
+                                print(
+                                    f"{'':>23} "
+                                    f"p_header_support={tf.get('dna_mi_header_support_p_value', 1.0):.4f} "
+                                    f"p_motif_resid={tf.get('dna_mi_motif_residual_p_value', 1.0):.4f} "
+                                    f"p_phase_error={tf.get('dna_mi_phase_error_p_value', 1.0):.4f} "
+                                    f"p_slot_class={tf.get('dna_mi_slot_class_p_value', 1.0):.4f}"
+                                )
+            print("=" * 112)
+        if (
+            getattr(args, "aq_yinyang_4", False)
+            or getattr(args, "aq_img_0", False)
+            or getattr(args, "aq_img_1", False)
+            or getattr(args, "aq_img_1_lite", False)
+        ):
+            print("\n" + "=" * 112)
+            if getattr(args, "aq_yinyang_4", False):
+                title = "AQ-YINYANG-4 raw-pixel image-state transport readout"
+            elif getattr(args, "aq_img_1_lite", False):
                 title = "AQ-IMG-1-LITE vector-residual image patch codec readout"
             else:
                 title = "AQ-IMG-1 vector-residual image patch codec readout" if getattr(args, "aq_img_1", False) else "AQ-IMG-0 image patch codec readout"
@@ -2704,6 +4666,11 @@ if __name__ == "__main__":
     parser.add_argument("--require-tpu", action="store_true")
     parser.add_argument("--smoke-test", action="store_true")
     parser.add_argument(
+        "--save-preview-png",
+        action="store_true",
+        help="Save compact target/recovered/error PNG contact sheets for AQ image and FFT patch codecs.",
+    )
+    parser.add_argument(
         "--ap-focused",
         action="store_true",
         help="Run the fast TPU/JAX recovery path: semantic recovery only, no CPU-heavy held-out sweep.",
@@ -2804,11 +4771,161 @@ if __name__ == "__main__":
         help="Run Program AQ-IMG-1-LITE: fast 8-patch vector residual codec gate.",
     )
     parser.add_argument(
+        "--aq-fft-0",
+        dest="aq_fft_0",
+        action="store_true",
+        help="Run Program AQ-FFT-0: noise-free fixed-basis FFT/k-space image patch codec gate with sin/cos phase channels.",
+    )
+    parser.add_argument(
+        "--aq-fft-1",
+        dest="aq_fft_1",
+        action="store_true",
+        help="Run Program AQ-FFT-1: fixed core plus sparse residual k-space genome codec gate.",
+    )
+    parser.add_argument(
+        "--aq-fft-2",
+        dest="aq_fft_2",
+        action="store_true",
+        help="Run Program AQ-FFT-2: shape-charge controlled fixed-core plus residual k-space codec gate.",
+    )
+    parser.add_argument(
+        "--aq-fft-3",
+        dest="aq_fft_3",
+        action="store_true",
+        help="Run Program AQ-FFT-3: direct complex FFT coefficients injected into D-LinOSS oscillator slots.",
+    )
+    parser.add_argument(
+        "--aq-fft-4",
+        dest="aq_fft_4",
+        action="store_true",
+        help="Run Program AQ-FFT-4: complex-orientation preservation gate for direct complex k-space transport.",
+    )
+    parser.add_argument(
+        "--aq-fft-5",
+        dest="aq_fft_5",
+        action="store_true",
+        help="Run Program AQ-FFT-5: gauge-aligned complex decoding gate for direct complex k-space transport.",
+    )
+    parser.add_argument(
+        "--aq-fft-6",
+        dest="aq_fft_6",
+        action="store_true",
+        help="Run Program AQ-FFT-6: Hermitian-constrained complex decoder gate for real-image k-space transport.",
+    )
+    parser.add_argument(
+        "--aq-fft-7",
+        dest="aq_fft_7",
+        action="store_true",
+        help="Run Program AQ-FFT-7: residual capacity scaling gate for complex_pair_norm k-space transport.",
+    )
+    parser.add_argument(
+        "--aq-yinyang-0",
+        dest="aq_yinyang_0",
+        action="store_true",
+        help="Run Program AQ-YINYANG-0: two-frame tai-chi-tu visual transport and unfolding gate.",
+    )
+    parser.add_argument(
+        "--aq-yinyang-1",
+        dest="aq_yinyang_1",
+        action="store_true",
+        help="Run Program AQ-YINYANG-1: one-frame tai-chi-tu visual transport and codec ceiling gate.",
+    )
+    parser.add_argument(
+        "--aq-yinyang-2",
+        dest="aq_yinyang_2",
+        action="store_true",
+        help="Run Program AQ-YINYANG-2: one-frame tai-chi-tu visual transport with all 16 FFT coefficients per patch.",
+    )
+    parser.add_argument(
+        "--aq-yinyang-3",
+        dest="aq_yinyang_3",
+        action="store_true",
+        help="Run Program AQ-YINYANG-3: one-frame all-coefficient visual transport with direct pixel-space ridge decoding.",
+    )
+    parser.add_argument(
+        "--aq-yinyang-4",
+        dest="aq_yinyang_4",
+        action="store_true",
+        help="Run Program AQ-YINYANG-4: one-frame raw-pixel image-state transport with direct complex oscillator slots.",
+    )
+    parser.add_argument(
+        "--yinyang-frame-start",
+        type=int,
+        default=1,
+        help="One-based starting frame index for AQ-YINYANG-4 taichi reference PNG input selection.",
+    )
+    parser.add_argument(
+        "--yinyang-frame-count",
+        type=int,
+        default=1,
+        help="Number of consecutive 16x16 taichi reference PNG frames for AQ-YINYANG-4.",
+    )
+    parser.add_argument(
+        "--yinyang-ordered-recovery",
+        action="store_true",
+        help="Recover AQ-YINYANG-4 patch states in raster/frame order instead of a randomized state permutation.",
+    )
+    parser.add_argument(
+        "--write-yinyang-reference-pngs",
+        action="store_true",
+        help="Write local AQ-YINYANG-0 reference frames to --out-dir and exit.",
+    )
+    parser.add_argument(
+        "--aq-dna-0",
+        dest="aq_dna_0",
+        action="store_true",
+        help="Run Program AQ-DNA-0: true locality-preserving discrete token genome gate.",
+    )
+    parser.add_argument(
+        "--aq-hybrid-0",
+        dest="aq_hybrid_0",
+        action="store_true",
+        help="Run Program AQ-HYBRID-0: continuous geometry payload with token checksum diagnostics.",
+    )
+    parser.add_argument(
+        "--as-0",
+        dest="as_0",
+        action="store_true",
+        help="Run Program AS-0: TTN folded instruction genome ceiling against the flat AQ-FFT-1 baseline.",
+    )
+    parser.add_argument(
+        "--as-0b",
+        dest="as_0b",
+        action="store_true",
+        help="Run Program AS-0b: recover TTN folded state, then unfold it into the coefficient field.",
+    )
+    parser.add_argument(
+        "--aq-fft-top-k",
+        type=int,
+        default=6,
+        help="Number of fixed low-frequency 2D FFT basis slots retained per patch for AQ-FFT.",
+    )
+    parser.add_argument(
+        "--aq-fft-residual-k",
+        type=int,
+        default=2,
+        help="Number of adaptive residual k-space instruction slots used by AQ-FFT-1/AQ-FFT-2.",
+    )
+    parser.add_argument(
         "--aq0-include-adaptive-v2",
         action="store_true",
         help="Optional AQ-0 comparison arm: include tunnel_eigen_residual_adaptive_v2_shifted.",
     )
     args = parser.parse_args()
+
+    if args.write_yinyang_reference_pngs:
+        written = write_yinyang_reference_pngs(args.out_dir)
+        for path in written:
+            print(f"[YINYANG REF] wrote {path}")
+        if (
+            not args.aq_yinyang_0
+            and not args.aq_yinyang_1
+            and not args.aq_yinyang_2
+            and not args.aq_yinyang_3
+            and not args.aq_yinyang_4
+            and not args.require_tpu
+        ):
+            raise SystemExit(0)
 
     if args.ap_focused:
         args.depth_sweep = [3]
@@ -3044,10 +5161,266 @@ if __name__ == "__main__":
         else:
             print("[AQ-IMG-0] noise-free 4x4 image patch semantic codec gate")
 
+    if args.aq_dna_0:
+        args.sequence_length = 16
+        args.depth_sweep = [3]
+        args.seeds = []
+        args.dlinoss_steps = min(args.dlinoss_steps, 16)
+        args.include_controls = False
+        args.run_heldout_transport = False
+        args.heldout_include_controls = False
+        args.run_semantic_recovery = True
+        args.recovery_train_states = 16
+        args.recovery_test_states = 16
+        args.recovery_noise_sweep = [0.00]
+        args.recovery_seeds = [11]
+        args.control_block_size = 2
+        print(
+            f"[AQ-DNA-0] TRUE token-genome gate with core-K={args.aq_fft_top_k} "
+            f"residual-K={args.aq_fft_residual_k}"
+        )
+
+    if args.as_0b:
+        args.sequence_length = 16
+        args.depth_sweep = [3]
+        args.seeds = []
+        args.dlinoss_steps = min(args.dlinoss_steps, 16)
+        args.include_controls = False
+        args.run_heldout_transport = False
+        args.heldout_include_controls = False
+        args.run_semantic_recovery = True
+        args.recovery_train_states = 16
+        args.recovery_test_states = 16
+        args.recovery_noise_sweep = [0.00]
+        args.recovery_seeds = [11]
+        args.control_block_size = 2
+        print(
+            f"[AS-0b] TTN unfold-decoder ceiling with core-K={args.aq_fft_top_k} "
+            f"residual-K={args.aq_fft_residual_k}"
+        )
+
+    if args.as_0:
+        args.sequence_length = 16
+        args.depth_sweep = [3]
+        args.seeds = []
+        args.dlinoss_steps = min(args.dlinoss_steps, 16)
+        args.include_controls = False
+        args.run_heldout_transport = False
+        args.heldout_include_controls = False
+        args.run_semantic_recovery = True
+        args.recovery_train_states = 16
+        args.recovery_test_states = 16
+        args.recovery_noise_sweep = [0.00]
+        args.recovery_seeds = [11]
+        args.control_block_size = 2
+        print(
+            f"[AS-0] TTN folded instruction genome ceiling with core-K={args.aq_fft_top_k} "
+            f"residual-K={args.aq_fft_residual_k}"
+        )
+
+    if args.aq_hybrid_0:
+        args.sequence_length = 16
+        args.depth_sweep = [3]
+        args.seeds = []
+        args.dlinoss_steps = min(args.dlinoss_steps, 16)
+        args.include_controls = False
+        args.run_heldout_transport = False
+        args.heldout_include_controls = False
+        args.run_semantic_recovery = True
+        args.recovery_train_states = 16
+        args.recovery_test_states = 16
+        args.recovery_noise_sweep = [0.00]
+        args.recovery_seeds = [11]
+        args.control_block_size = 2
+        print(
+            f"[AQ-HYBRID-0] continuous-geometry + token-checksum gate with core-K={args.aq_fft_top_k} "
+            f"residual-K={args.aq_fft_residual_k}"
+        )
+
+    if args.aq_yinyang_0:
+        args.sequence_length = 16
+        args.depth_sweep = [3]
+        args.seeds = []
+        args.dlinoss_steps = min(args.dlinoss_steps, 16)
+        args.include_controls = False
+        args.run_heldout_transport = False
+        args.heldout_include_controls = False
+        args.run_semantic_recovery = True
+        args.recovery_train_states = 16
+        args.recovery_test_states = 16
+        args.recovery_noise_sweep = [0.00]
+        args.recovery_seeds = [11]
+        args.control_block_size = 2
+        args.aq_fft_residual_k = 4
+        args.save_preview_png = True
+        print(
+            f"[AQ-YINYANG-0] two-frame visual transport gate "
+            f"with core-K={args.aq_fft_top_k} residual-K={args.aq_fft_residual_k}"
+        )
+
+    if args.aq_yinyang_1:
+        args.sequence_length = 16
+        args.depth_sweep = [3]
+        args.seeds = []
+        args.dlinoss_steps = min(args.dlinoss_steps, 16)
+        args.include_controls = False
+        args.run_heldout_transport = False
+        args.heldout_include_controls = False
+        args.run_semantic_recovery = True
+        args.recovery_train_states = 16
+        args.recovery_test_states = 16
+        args.recovery_noise_sweep = [0.00]
+        args.recovery_seeds = [11]
+        args.control_block_size = 2
+        args.aq_fft_residual_k = 4
+        args.save_preview_png = True
+        print(
+            f"[AQ-YINYANG-1] one-frame visual transport codec-ceiling gate "
+            f"with core-K={args.aq_fft_top_k} residual-K={args.aq_fft_residual_k}"
+        )
+
+    if args.aq_yinyang_2:
+        args.sequence_length = 16
+        args.depth_sweep = [3]
+        args.seeds = []
+        args.dlinoss_steps = min(args.dlinoss_steps, 16)
+        args.include_controls = False
+        args.run_heldout_transport = False
+        args.heldout_include_controls = False
+        args.run_semantic_recovery = True
+        args.recovery_train_states = 16
+        args.recovery_test_states = 16
+        args.recovery_noise_sweep = [0.00]
+        args.recovery_seeds = [11]
+        args.control_block_size = 2
+        args.aq_fft_top_k = 16
+        args.aq_fft_residual_k = 0
+        args.save_preview_png = True
+        print(
+            f"[AQ-YINYANG-2] one-frame all-coefficient visual transport gate "
+            f"with core-K={args.aq_fft_top_k} residual-K={args.aq_fft_residual_k}"
+        )
+
+    if args.aq_yinyang_3:
+        args.sequence_length = 16
+        args.depth_sweep = [3]
+        args.seeds = []
+        args.dlinoss_steps = min(args.dlinoss_steps, 16)
+        args.include_controls = False
+        args.run_heldout_transport = False
+        args.heldout_include_controls = False
+        args.run_semantic_recovery = True
+        args.recovery_train_states = 16
+        args.recovery_test_states = 16
+        args.recovery_noise_sweep = [0.00]
+        args.recovery_seeds = [11]
+        args.control_block_size = 2
+        args.aq_fft_top_k = 16
+        args.aq_fft_residual_k = 0
+        args.save_preview_png = True
+        print(
+            f"[AQ-YINYANG-3] one-frame all-coefficient pixel decoder gate "
+            f"with core-K={args.aq_fft_top_k} residual-K={args.aq_fft_residual_k}"
+        )
+
+    if args.aq_yinyang_4:
+        yinyang_state_count = max(1, int(args.yinyang_frame_count)) * 16
+        args.sequence_length = 16
+        args.depth_sweep = [3]
+        args.seeds = []
+        args.dlinoss_steps = min(args.dlinoss_steps, 16)
+        args.include_controls = False
+        args.run_heldout_transport = False
+        args.heldout_include_controls = False
+        args.run_semantic_recovery = True
+        args.recovery_train_states = yinyang_state_count
+        args.recovery_test_states = yinyang_state_count
+        args.recovery_noise_sweep = [0.00]
+        args.recovery_seeds = [11]
+        args.control_block_size = 2
+        args.save_preview_png = True
+        print(
+            f"[AQ-YINYANG-4] {args.yinyang_frame_count}-frame 16x16 reference PNG raw-pixel "
+            f"direct oscillator transport gate"
+        )
+
+    if args.aq_fft_7 or args.aq_fft_6 or args.aq_fft_5 or args.aq_fft_4 or args.aq_fft_3 or args.aq_fft_2 or args.aq_fft_1 or args.aq_fft_0:
+        args.sequence_length = 16
+        args.depth_sweep = [3]
+        args.seeds = []
+        args.dlinoss_steps = min(args.dlinoss_steps, 16)
+        args.include_controls = False
+        args.run_heldout_transport = False
+        args.heldout_include_controls = False
+        args.run_semantic_recovery = True
+        args.recovery_train_states = 16
+        args.recovery_test_states = 16
+        args.recovery_noise_sweep = [0.00]
+        args.recovery_seeds = [11]
+        args.control_block_size = 2
+        if args.aq_fft_7:
+            args.aq_fft_residual_k = 4
+            print(
+                f"[AQ-FFT-7] noise-free residual capacity scaling gate "
+                f"with core-K={args.aq_fft_top_k} residual-K={args.aq_fft_residual_k}"
+            )
+        elif args.aq_fft_6:
+            print(
+                f"[AQ-FFT-6] noise-free Hermitian-constrained complex decoder gate "
+                f"with core-K={args.aq_fft_top_k} residual-K={args.aq_fft_residual_k}"
+            )
+        elif args.aq_fft_5:
+            print(
+                f"[AQ-FFT-5] noise-free gauge-aligned complex decoding gate "
+                f"with core-K={args.aq_fft_top_k} residual-K={args.aq_fft_residual_k}"
+            )
+        elif args.aq_fft_4:
+            print(
+                f"[AQ-FFT-4] noise-free complex-orientation preservation k-space gate "
+                f"with core-K={args.aq_fft_top_k} residual-K={args.aq_fft_residual_k}"
+            )
+        elif args.aq_fft_3:
+            print(
+                f"[AQ-FFT-3] noise-free direct-complex oscillator k-space gate "
+                f"with core-K={args.aq_fft_top_k} residual-K={args.aq_fft_residual_k}"
+            )
+        elif args.aq_fft_2:
+            print(
+                f"[AQ-FFT-2] noise-free shape-charge controlled k-space gate "
+                f"with core-K={args.aq_fft_top_k} residual-K={args.aq_fft_residual_k}"
+            )
+        elif args.aq_fft_1:
+            print(
+                f"[AQ-FFT-1] noise-free core+residual k-space genome gate "
+                f"with core-K={args.aq_fft_top_k} residual-K={args.aq_fft_residual_k}"
+            )
+        else:
+            print(f"[AQ-FFT-0] noise-free 4x4 k-space patch codec gate with top-K={args.aq_fft_top_k}")
+
     if args.smoke_test:
         aq_tf_mode = args.aq_1a_tf or args.aq_1a_tf_s29
-        aq_l5_mode = aq_tf_mode or args.aq_1b or args.aq_1c or args.aq_seq_0 or args.aq_img_0 or args.aq_img_1 or args.aq_img_1_lite
-        args.sequence_length = 8 if (args.aq_0b or aq_l5_mode) else 12
+        aq_l5_mode = (
+            aq_tf_mode
+            or args.aq_1b
+            or args.aq_1c
+            or args.aq_seq_0
+            or args.as_0
+            or args.aq_hybrid_0
+            or args.aq_dna_0
+            or args.aq_fft_7
+            or args.aq_fft_6
+            or args.aq_fft_5
+            or args.aq_fft_4
+            or args.aq_fft_3
+            or args.aq_fft_2
+            or args.aq_fft_1
+            or args.aq_fft_0
+            or args.aq_yinyang_4
+            or args.aq_img_0
+            or args.aq_img_1
+            or args.aq_img_1_lite
+        )
+        args.sequence_length = 16 if (args.as_0b or args.as_0 or args.aq_hybrid_0 or args.aq_dna_0 or args.aq_yinyang_4 or args.aq_fft_7 or args.aq_fft_6 or args.aq_fft_5 or args.aq_fft_4 or args.aq_fft_3 or args.aq_fft_2 or args.aq_fft_1 or args.aq_fft_0) else (8 if (args.aq_0b or aq_l5_mode) else 12)
         args.depth_sweep = [2]
         args.seeds = [11]
         args.dlinoss_steps = 4 if (args.aq_0b or aq_l5_mode) else 12
@@ -3058,10 +5431,10 @@ if __name__ == "__main__":
         args.run_semantic_recovery = True
         args.n_train_states = 2 if (args.aq_0b or aq_l5_mode) else 3
         args.n_test_states = 1 if (args.aq_0b or aq_l5_mode) else 2
-        args.recovery_train_states = 16 if (args.aq_1c or args.aq_img_0 or args.aq_img_1) else (8 if args.aq_img_1_lite else (4 if aq_l5_mode else (2 if args.aq_0b else 3)))
-        args.recovery_test_states = 16 if (args.aq_1c or args.aq_img_0 or args.aq_img_1) else (8 if args.aq_img_1_lite else (4 if aq_l5_mode else (1 if args.aq_0b else 2)))
+        args.recovery_train_states = 16 if (args.aq_1c or args.as_0b or args.as_0 or args.aq_hybrid_0 or args.aq_dna_0 or args.aq_yinyang_4 or args.aq_fft_7 or args.aq_fft_6 or args.aq_fft_5 or args.aq_fft_4 or args.aq_fft_3 or args.aq_fft_2 or args.aq_fft_1 or args.aq_fft_0 or args.aq_img_0 or args.aq_img_1) else (8 if args.aq_img_1_lite else (4 if aq_l5_mode else (2 if args.aq_0b else 3)))
+        args.recovery_test_states = 16 if (args.aq_1c or args.as_0b or args.as_0 or args.aq_hybrid_0 or args.aq_dna_0 or args.aq_yinyang_4 or args.aq_fft_7 or args.aq_fft_6 or args.aq_fft_5 or args.aq_fft_4 or args.aq_fft_3 or args.aq_fft_2 or args.aq_fft_1 or args.aq_fft_0 or args.aq_img_0 or args.aq_img_1) else (8 if args.aq_img_1_lite else (4 if aq_l5_mode else (1 if args.aq_0b else 2)))
         args.recovery_noise_sweep = [0.30] if aq_l5_mode else ([0.00] if args.aq_0b else [0.18])
-        args.recovery_noise_sweep = [0.00] if (args.aq_1c or args.aq_seq_0 or args.aq_img_0 or args.aq_img_1 or args.aq_img_1_lite) else args.recovery_noise_sweep
+        args.recovery_noise_sweep = [0.00] if (args.aq_1c or args.aq_seq_0 or args.as_0b or args.as_0 or args.aq_hybrid_0 or args.aq_dna_0 or args.aq_yinyang_4 or args.aq_fft_7 or args.aq_fft_6 or args.aq_fft_5 or args.aq_fft_4 or args.aq_fft_3 or args.aq_fft_2 or args.aq_fft_1 or args.aq_fft_0 or args.aq_img_0 or args.aq_img_1 or args.aq_img_1_lite) else args.recovery_noise_sweep
         args.recovery_seeds = [11] if (args.aq_0b or aq_l5_mode) else args.recovery_seeds
         args.control_block_size = 2 if (args.aq_0b or aq_l5_mode) else 3
         print("[SMOKE TEST]")

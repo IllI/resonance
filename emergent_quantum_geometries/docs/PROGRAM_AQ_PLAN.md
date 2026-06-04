@@ -14,6 +14,31 @@ compress -> transport -> decompress
 
 The target is a semantically sufficient subspace, not the full Hilbert space.
 
+## Current Foundation
+
+After the operator and shape-charge detours, the current mathematically supported AQ claim is narrower than the most ambitious hypothesis:
+
+> folded semantic source-state recovery is real; lawful sequential semantic reconstruction is promising; operator transport and high-resolution media reconstruction remain open problems.
+
+The runs that currently provide the strongest foundation are:
+
+1. `AQ-0b`:
+   explicit `8`-motif semantic states are recoverable at the noise-free ceiling with strong `L1`-`L4` recovery and low leakage.
+
+2. `AQ-IMG-0`:
+   semantic image-patch identity is perfectly recoverable, while pixel fidelity is limited by encoder/decoder resolution rather than by collapse of semantic transport.
+
+3. `AQ-FFT-1`:
+   the fixed-core plus sparse-residual k-space codec cleanly separates codec capacity from transport fidelity, which gives AQ a solid mathematical diagnostic frame for media-like payloads.
+
+4. `AQ-SEQ-0`:
+   recovered source states plus a simple transition gate can derive the next semantic state exactly, even when direct next-state decoding is weaker.
+
+The runs that do **not** currently support a strong claim are:
+
+1. operator-family transport (`AQ-1b`, `AQ-1c`)
+2. global shape-charge stabilization as the main missing ingredient (`AQ-FFT-2`)
+
 ## Runtime Principle
 
 AQ is a rapid-prototyping line, not a durability run. Keep TPU runs small enough to turn over quickly:
@@ -23,6 +48,620 @@ AQ is a rapid-prototyping line, not a durability run. Keep TPU runs small enough
 - save compact transport artifacts and metadata only
 - move decoder comparisons to offline CPU
 - avoid IBM-lite and new adversaries until the semantic payload works
+
+## AQ-FFT-1 Codec Pivot
+
+AQ-FFT-0 separated the problem cleanly: semantic headers recovered perfectly, but fixed low-frequency `K=6` had a low image reconstruction ceiling (`oracle_psnr` about `11.83 dB`). The next run should therefore test codec capacity, not controller robustness.
+
+AQ-FFT-1 combines:
+
+- fixed low-frequency k-space core
+- sparse adaptive residual k-space coefficients
+- phase-safe `sin(phi), cos(phi)` channels
+- a DNA-like instruction grammar used as a codec analogy only
+
+The useful idea from DNA-style encoding is modular reconstruction instruction, not biological consciousness. In AQ terms:
+
+| analogy | AQ-FFT-1 field |
+| --- | --- |
+| base token | frequency slot |
+| codon | coefficient instruction packet |
+| gene | patch reconstruction program |
+| regulatory marker | semantic header / checksum |
+| expression | inverse FFT reconstruction |
+
+First gate:
+
+- mode: `--aq-fft-1`
+- core: `--aq-fft-top-k 6`
+- residual: `--aq-fft-residual-k 2`
+- noise: `0.00`
+- depth: `3`
+- seed: `11`
+- controllers: `free`, `tunnel_eigen_residual_alpha065`
+
+Interpretation rule:
+
+- if oracle PSNR rises and realized PSNR follows, the core+residual genome is the right direction
+- if oracle PSNR rises but realized PSNR does not, recovery of residual instructions is the bottleneck
+- if oracle PSNR does not rise, the patch codec still lacks capacity
+
+AQ-FFT-1 result:
+
+- run record: `emergent_quantum_geometries/docs/PROGRAM_AQ_FFT1_REMOTE_ANALYSIS_2026-06-01.md`
+- `oracle_psnr` rose from AQ-FFT-0's `~11.83 dB` to `25.05 dB`
+- realized `ifft_psnr` rose to `17.00 dB` under `free`
+- motif/header recovery stayed at `1.0000`
+- `phase_cos` stayed around `0.89`
+- `top1_freq_acc` reached `1.0000`, while full frequency-index overlap stayed at `0.7578`
+
+Methodological read:
+
+- the codec-capacity problem improved materially
+- the new bottleneck is residual instruction realization, not semantic header transport
+- `free` slightly beat `alpha065` at `noise=0.00`, which suggests projection helps less at the clean codec ceiling than it does under noisy conditions
+
+## AQ-FFT-2 Shape-Charge Control
+
+The next run applies the tensor-network feedback lesson from recent lattice/tensor-network work: do not ask a shallow decoder to rediscover geometry after transport. Build problem geometry and approximately conserved observables into the transport path.
+
+AQ-FFT-2 keeps the AQ-FFT-1 codec:
+
+- fixed core: `K=6`
+- adaptive residual: `residual_K=2`
+- phase-safe `sin(phi), cos(phi)`
+- DNA-like instruction grammar as a codec analogy
+
+The triplet/codon analogy is kept concrete: each coefficient packet is treated as a small three-part instruction,
+
+$$
+(\text{slot/support}, |F|, [\cos\phi,\sin\phi])
+$$
+
+whose combined effect is a recoverable complex "shape charge" for that frequency slot. This is not a claim about literal quarks or DNA chemistry; it is a compact way to test whether grouped support, magnitude, and phase channels behave better than isolated scalar residuals.
+
+The new addition is a `shape_charge_control` arm. It stabilizes six explicit observables during D-LinOSS signature formation:
+
+| charge | meaning |
+| --- | --- |
+| `Q_DC` | DC / luminance energy |
+| `Q_lowfreq_energy` | low-frequency energy |
+| `Q_phase_coherence` | retained-coefficient phase coherence |
+| `Q_residual_energy` | adaptive residual energy |
+| `Q_support_entropy` | coefficient support spread |
+| `Q_motif_consistency` | semantic header consistency |
+
+These charges act like semantic/frequency analogues of conserved quantities. The implementation maps the charge vector into a node-wise conjugate field:
+
+$$
+h_Q(n) = \mathrm{normalize}\left((Q - \bar{Q})G(n)\right)
+$$
+
+and perturbs the D-LinOSS phase/frequency generator:
+
+$$
+\phi(n) \leftarrow \phi(n) + \eta h_Q(n)
+$$
+
+$$
+\omega(n) \leftarrow \omega(n)\left(1 + 0.04\eta h_Q(n)\right)
+$$
+
+This is the practical AQ analogue of adaptive conjugate-field control: the run tries to keep shape observables from drifting during transport instead of relying only on post-hoc regression.
+
+First gate:
+
+- mode: `--aq-fft-2`
+- core: `--aq-fft-top-k 6`
+- residual: `--aq-fft-residual-k 2`
+- noise: `0.00`
+- depth: `3`
+- seed: `11`
+- controllers: `free`, `shape_charge_control`
+
+Success criteria:
+
+- realized PSNR beats AQ-FFT-1's `17.00 dB`
+- `fft_shape_charge_error` decreases versus `free`
+- residual/imaginary coefficient recovery improves
+- motif/header recovery remains `1.0000`
+
+AQ-FFT-2 result:
+
+- run record: `emergent_quantum_geometries/docs/PROGRAM_AQ_FFT2_REMOTE_ANALYSIS_2026-06-01.md`
+- the shape-charge-control hypothesis failed
+- `shape_charge_control` did not improve `ifft_psnr`, shape-charge error, support overlap, or top-K energy recall
+- `shape_charge_control` slightly worsened phase and imaginary-coefficient recovery
+
+Methodological conclusion:
+
+- the bottleneck was not failure to preserve low-dimensional global shape summaries
+- the bottleneck remains coefficient-level residual instruction realization
+- the AQ-FFT-2 field acted more like an open-loop bias than a true adaptive feedback controller
+- AQ should not currently treat global shape-charge control as the main path forward
+
+Updated read:
+
+- AQ-FFT-1 remains the stronger mathematical decomposition of the media-side problem
+- AQ-FFT-2 is useful mainly as a negative result: global charge summaries are too coarse to recover the missing slotwise complex detail
+
+## AQ-DNA-0 Locality-Preserving Instruction Genome
+
+The next run should not be another global charge-control variant. AQ-FFT-2 showed that low-dimensional shape summaries are already recoverable and are not the scarce object.
+
+AQ-DNA-0 instead targets the actual bottleneck:
+
+> recover slotwise residual instructions by converting continuous coefficient details into local, quantized, locality-preserving tokens before folding.
+
+Run record/spec:
+
+- `emergent_quantum_geometries/docs/PROGRAM_AQ_DNA0_RUN_SPEC_2026-06-01.md`
+
+Core encoding:
+
+```text
+coefficient packet =
+  patch_id
+  frequency_slot
+  magnitude_state
+  phase_state
+  residual_state
+  support_rank_state
+  motif_header
+  checksum
+```
+
+The important methodological changes are:
+
+- replace raw residual regression with mixture-style token states
+- preserve image locality with a `4 x 4` Hilbert patch order
+- preserve k-space locality with fixed zigzag / local frequency order
+- validate token dependencies with mutual information and permutation controls
+
+First gate:
+
+- mode: `--aq-dna-0`
+- depth: `3`
+- noise: `0.00`
+- seed: `11`
+- controller: `free`
+- patch grid: `4 x 4`
+- patch size: `4 x 4`
+- codec basis: AQ-FFT-1 `K=6`, `residual_K=2`
+
+Primary metrics:
+
+- motif/header recovery
+- token exact recovery
+- magnitude-state accuracy
+- phase-state accuracy
+- residual-state accuracy
+- support/rank-state accuracy
+- realized PSNR and oracle PSNR
+- `MI(header; support)`
+- `MI(motif; residual_state)`
+- `MI(phase_state; reconstruction_error)`
+- `MI(slot; local_patch_class)`
+- observed MI minus shuffled/null MI
+
+Success criteria:
+
+- semantic header remains `1.0000`
+- token classes recover above chance
+- observed token MI beats shuffled/null MI
+- realized PSNR beats motif-only reconstruction and ideally meets or exceeds AQ-FFT-1's `17.00 dB`
+
+Interpretation:
+
+- if token MI survives above null, AQ has evidence that the folded state carries meaningful semantic/frequency dependencies
+- if PSNR also improves, the locality-preserving instruction genome becomes the next media-side path
+- if token MI fails, repair the token grammar or decoder before adding noise, controllers, or larger payloads
+
+AQ-DNA-0 true gate result:
+
+- run record: `emergent_quantum_geometries/docs/PROGRAM_AQ_DNA0_REMOTE_ANALYSIS_2026-06-01.md`
+- the run executed the real AQ-DNA-0 token branch
+- token metrics and permutation/null diagnostics were enabled
+- controller set stayed at `free` only
+
+Observed result:
+
+- motif/header recovery stayed `1.0000`
+- `oracle_psnr` stayed `25.0480 dB`
+- realized `ifft_psnr` stayed `16.9995 dB`
+- `phase_cos` stayed about `0.893`
+- `freq_idx_overlap` stayed `0.7578`
+- `topK_energy_recall` stayed `0.8738`
+- instruction packet exact match reached `0.9062`
+- token accuracies were high: magnitude `0.9688`, phase `0.9453`, residual `0.9531`, support-rank `0.9531`
+- token MI gaps over permutation nulls stayed weak: `-0.0022`, `+0.0210`, `+0.0082`, `0.0000` bits
+
+Methodological conclusion:
+
+- discrete coefficient-packet labels are recoverable
+- but locality-preserving tokenization did not improve realized reconstruction or produce strong dependency signal over null permutations
+- AQ-DNA-0 is therefore a successful implementation gate but not yet a successful transport-improvement gate
+- the next correction should target structural locality/dependency in the transport path, not another controller or noise sweep
+
+## AQ-HYBRID-0 Continuous Geometry + Token Checksum
+
+The attached implementation feedback sharpens the next move:
+
+> tokenization may be obscuring the continuous D-LinOSS/k-space geometry rather than improving it.
+
+AQ-DNA-0 showed that hard packet labels are easy to recover, but they did not improve reconstruction or carry meaningful dependency signal above null. That suggests the token labels are not the right primary variables.
+
+The next run should therefore keep continuous geometry primary and demote tokens to checksum/constraint status.
+
+Run spec:
+
+- `emergent_quantum_geometries/docs/PROGRAM_AQ_HYBRID0_RUN_SPEC_2026-06-01.md`
+
+Core design:
+
+```text
+primary payload:
+  continuous sparse k-space coefficient geometry
+  sin/cos phase channels
+  residual coefficient geometry
+  semantic motif header
+
+side channel:
+  magnitude token
+  phase token
+  residual token
+  support/rank token
+  checksum agreement
+```
+
+The decoder reconstructs from continuous coefficients first:
+
+$$
+\hat{p} =
+\Re\left(\mathcal{F}^{-1}_2(\hat{F})\right)
+$$
+
+Then token states check consistency:
+
+$$
+\Pr[q(\hat{F}_i)=c_i]
+$$
+
+Primary question:
+
+> does continuous D-LinOSS geometry carry stronger recoverable dependency than hard token labels?
+
+First gate:
+
+- mode: `--aq-hybrid-0`
+- noise: `0.00`
+- seed: `11`
+- controller: `free`
+- fixed core: `K=6`
+- residual: `residual_K=2`
+- no alpha sweep
+- no noise sweep
+- no larger payload
+
+Required comparison:
+
+- continuous MI gap versus token MI gap
+- packet-window consistency versus isolated packet consistency
+- realized PSNR versus AQ-FFT-1/AQ-DNA-0 plateau of about `17.0 dB`
+
+Decision rule:
+
+- if continuous MI beats token MI and PSNR rises, continue hybrid geometry-first encoding
+- if continuous MI beats token MI but PSNR does not rise, keep the hybrid direction and improve decoder/window modeling
+- if neither continuous MI nor window consistency beats null, locality is still not structurally active in the transport path
+
+Status update:
+
+- AQ-HYBRID-0 is useful as a precursor idea, but it is no longer the immediate next run.
+- The next run should test whether coefficient packets need a hierarchical tensor representation rather than another flat-sequence or checksum variant.
+
+## Program AS: Hierarchical Instruction Genome Transport
+
+Program AS keeps the AQ-FFT-1 instruction packets but changes their geometry:
+
+```text
+instruction genome
+  -> TTN fold encoder
+  -> root tensor + selected internal bonds + charge sectors
+  -> D-LinOSS transport
+  -> TTN unfold decoder
+  -> coefficient field
+  -> inverse FFT patch
+```
+
+The conceptual shift is:
+
+```text
+from: transport tokens, decode shape
+to: fold tokens into shape, transport shape, unfold tokens/field
+```
+
+AS-0 starts with a binary TTN rather than a full MERA. TTN is cheaper, easier to inspect, and sufficient for the first ceiling gate.
+
+Payload:
+
+- semantic header
+- fixed k-space core
+- sparse residual instructions
+- phase-safe `sin(phi), cos(phi)` channels
+- checksum
+
+TTN leaf tokens:
+
+- coefficient packets
+- residual packets
+
+Internal TTN tensors encode:
+
+- local packet correlations
+- local packet differences
+- local packet products
+
+The root tensor is the folded semantic shape / channel state.
+
+Each internal bond also carries a charge vector:
+
+| charge | meaning |
+| --- | --- |
+| `Q_DC` | luminance/DC charge |
+| `Q_lowfreq_energy` | low-frequency energy |
+| `Q_phase_coherence` | phase coherence |
+| `Q_residual_support` | sparse residual support |
+| `Q_motif_consistency` | semantic motif consistency |
+| `Q_checksum_parity` | checksum parity |
+
+The TTN tests an approximate conservation rule:
+
+```math
+Q_{parent} \approx Q_{left} + Q_{right}
+```
+
+This is the practical multi-scale gauge: the transported object is not every packet independently, but a compressed folded state with selected bond messages.
+
+## AS-0 Run Spec
+
+Mode:
+
+```bash
+--as-0
+```
+
+Runtime:
+
+- noise: `0.00`
+- seed: `11`
+- controller: `free`
+- patch grid: `4 x 4`
+- patch size: `4 x 4`
+- fixed core: `K=6`
+- residual: `residual_K=2`
+- depth: `3`
+- no alpha sweep
+- no noise sweep
+- no larger payload
+
+Comparison:
+
+- flat AQ-FFT-1 free baseline
+- TTN-folded AQ-FFT genome
+
+Baseline:
+
+- flat realized PSNR: `~17.00 dB`
+- flat oracle PSNR: `~25.05 dB`
+
+Primary metrics:
+
+- `fft_patch_psnr`
+- `fft_oracle_psnr`
+- `as_root_tensor_cosine`
+- `as_charge_conservation_error`
+- `as_charge_cosine`
+- `as_unfolded_coeff_psnr`
+- `as_ttn_lift_over_flat_psnr`
+- `fft_coefficient_cosine`
+- `fft_coeff_mag_cosine`
+- `fft_coeff_real_cosine`
+- `fft_coeff_imag_cosine`
+- `fft_phase_recovery`
+- `fft_topk_energy_recall`
+- semantic header / motif recovery
+
+Success condition:
+
+- semantic header remains `1.0000`
+- TTN realized PSNR exceeds the flat `~17.0 dB` baseline
+- charge recovery remains coherent
+- coefficient recovery improves enough to explain the PSNR lift
+
+Interpretation:
+
+- if TTN improves PSNR or coefficient recovery, the missing ingredient was multi-scale shape encoding rather than another controller
+- if TTN preserves root/charge structure but PSNR stays flat, the unfold decoder is the likely bottleneck
+- if root and charge recovery fail, the TTN representation is too compressed or poorly aligned with D-LinOSS signatures
+
+Next step only if AS-0 helps:
+
+- compare TTN against a small MERA-style disentangler
+- use disentanglers to suppress local packet redundancy before coarse-graining
+- keep runtime compact before adding noise or controllers
+
+## AS-0 and AS-0b Results
+
+Run record/spec:
+
+- `emergent_quantum_geometries/docs/PROGRAM_AS0_RUN_SPEC_2026-06-01.md`
+
+AS-0 result:
+
+- `ifft_psnr = 16.9995 dB`
+- `oracle_psnr = 25.0480 dB`
+- `as_ttn_lift_over_flat_psnr ~= 0.0000 dB`
+- `as_root_tensor_cosine = 0.9518`
+- `as_charge_cosine = 0.9962`
+- `as_charge_conservation_error = 0.1877`
+- `coeff_imag_cos = 0.6284`
+- motif/header recovery stayed `1.0000`
+
+AS-0b corrected the decoder path so reconstruction actually used the recovered TTN state:
+
+```text
+noisy D-LinOSS signature
+  -> recovered TTN root/bonds/charges
+  -> TTN unfold decoder
+  -> sparse FFT coefficients
+  -> inverse FFT patch
+```
+
+AS-0b result:
+
+- `ifft_psnr = 16.9932 dB`
+- `flat_psnr = 16.9995 dB`
+- `ttn_lift = -0.0063 dB`
+- `root_cos = 0.9518`
+- `charge_cos = 0.9962`
+- `charge_err = 0.1877`
+- `coeff_imag_cos = 0.6280`
+- motif/header recovery stayed `1.0000`
+
+Methodological conclusion:
+
+- Program AS worked operationally: TTN root state, bond/charge summaries, and semantic headers all remained recoverable
+- Program AS did not work as a reconstruction improvement: neither AS-0 nor AS-0b lifted realized PSNR above the flat AQ-FFT-1 baseline
+- the corrected AS-0b result matters most because it rules out the simple decoder-wiring explanation
+- the bottleneck is still slotwise residual instruction realization, especially the weak imaginary/residual coefficient channel
+- TTN folding therefore appears transport-compatible but not reconstructively sufficient in the current AQ-FFT regime
+
+Updated decision:
+
+- do not treat TTN/MERA depth as the immediate next lever
+- do not run a MERA follow-up just because AS-0 was implemented
+- keep hierarchical folded states as a useful analysis representation, but shift the next correction back to coefficient-body representation and decoder design
+
+What now looks solid:
+
+- semantic/header transport is stable
+- global folded summaries can survive transport
+- the oracle-to-realized gap is not mainly a root/charge preservation problem
+
+What did not work:
+
+- hierarchical folding did not improve support overlap, energy recall, or realized PSNR
+- unfolding the TTN state did not recover more fine coefficient detail than the direct flat decoder
+
+## AQ-FFT-3 Direct Complex Oscillator Codec
+
+The next correction is at the encoding level.
+
+Run spec:
+
+- `emergent_quantum_geometries/docs/PROGRAM_AQ_FFT3_RUN_SPEC_2026-06-02.md`
+
+The repeated AQ-FFT/AS failure pattern is:
+
+| metric | value |
+| --- | ---: |
+| `coeff_real_cos` | `~0.861` |
+| `coeff_imag_cos` | `~0.628` |
+| `phase_cos` | `~0.893` |
+| realized PSNR | `~17.0 dB` |
+| oracle PSNR | `~25.05 dB` |
+
+The likely representational bug is that AQ-FFT-1 split a complex coefficient into separate magnitude and phase channels:
+
+```math
+F_k = |F_k|e^{i\phi_k}
+```
+
+and decoded the imaginary component as:
+
+```math
+\operatorname{Im}(\hat{F}_k)=|\hat{F}_k|\sin(\hat{\phi}_k)
+```
+
+If magnitude and phase errors are correlated, this product can make the imaginary channel worse than either recovered component alone. AQ-FFT-3 therefore injects the complex coefficient directly into D-LinOSS:
+
+```math
+x_0[k] = F_k
+```
+
+and recovers:
+
+```math
+\hat{F}_k = \hat{x}[k]
+```
+
+First gate:
+
+- mode: `--aq-fft-3`
+- noise: `0.00`
+- seed: `11`
+- controller comparison: `free`, `tunnel_eigen_residual_alpha065`
+- fixed core: `K=6`
+- residual: `residual_K=2`
+- no noise sweep
+- no larger payload
+
+Success target:
+
+- lift `coeff_imag_cosine` above the AQ-FFT-1/AS plateau of `~0.628`
+- lift realized PSNR above the flat AQ-FFT-1 baseline of `~17.0 dB`
+- preserve motif/header recovery
+
+Interpretation:
+
+- if imaginary recovery improves, the magnitude/phase split was the main representational bug
+- if imaginary recovery does not improve, inspect D-LinOSS damping and signature extraction for asymmetric loss of imaginary components
+- use QMI/MPS diagnostics from Sanz Larrarte et al. to locate where magnitude-phase or real-imaginary dependency is lost, not as another transport representation
+
+AQ-FFT-3 result:
+
+- run record: `emergent_quantum_geometries/docs/PROGRAM_AQ_FFT3_REMOTE_ANALYSIS_2026-06-02.md`
+- `free` reached `ifft_psnr = 20.6478 dB`
+- `alpha065` reached `ifft_psnr = 18.2753 dB`
+- `oracle_psnr` stayed `25.0480 dB`
+- motif/header recovery stayed `1.0000`
+- `coeff_real_cos` stayed strong at about `0.87`
+- `coeff_imag_cos` fell to about `0.51`
+- `phase_cos` fell to about `0.49`
+
+Methodological conclusion:
+
+- AQ-FFT-3 is a real positive result for reconstruction
+- it shows that direct complex injection improves realized reconstruction much more than AQ-FFT-1 did
+- so the old magnitude/phase split really was harming the unfold path
+
+But AQ-FFT-3 is not yet a full complex-field win:
+
+- the imaginary channel stayed weak
+- phase fidelity dropped sharply
+- `free` again beat `alpha065` at the noise-free ceiling
+
+The mathematical reason PSNR can jump while the imaginary channel remains weak is that PSNR is dominated by total coefficient energy error:
+
+```math
+\mathrm{MSE}(p,\hat{p}) \propto \sum_k |F_k-\hat{F}_k|^2
+```
+
+In these tiny `4 x 4` patches, most image energy lives in the DC and low-frequency core. If AQ-FFT-3 improves those dominant components, especially the real-dominant low-frequency directions, PSNR can improve substantially even while lower-energy quadrature structure remains poorly preserved.
+
+So AQ-FFT-3 improved transport of the coefficient body in an energy-weighted reconstruction sense, but did not yet preserve the full complex orientation of the retained modes.
+
+Updated read:
+
+- AQ is moving closer to reconstruction of the unfolded semantic space
+- the folded semantic/header state is stable
+- the coefficient body is now reconstructable enough to materially lift image-domain PSNR
+- the next bottleneck is preserving complex orientation, not merely coefficient support or semantic identity
+
+The practical implication is important:
+
+> AQ is no longer only showing that a folded semantic state survives transport. It is now showing that the transported folded state can support a stronger partial reconstruction of the unfolded field.
 
 ## Phase 0: AP-U Calibration
 
@@ -876,6 +1515,68 @@ Practical conclusion:
 - do not promote the current AQ-IMG-1 vector-residual branch
 - the next fair comparison should hold the patch roster constant and compare scalar-residual versus vector-residual coding on the same repeated small patch set
 
+### AQ-FFT-0 k-space codec gate
+
+The next representational correction is to stop asking a symbolic residual grammar to behave like a media codec.
+
+AQ-IMG showed that motif identity is recoverable, but pixel reconstruction is bottlenecked by the residual code. The more natural representation for recoverable image content is k-space / FFT coefficients:
+
+$$
+p \leftrightarrow F = \mathcal{F}_2(p)
+$$
+
+D-LinOSS already evolves complex oscillator amplitudes and phases:
+
+$$
+\dot{x}(t) = A x(t),
+\qquad
+A_{ii} = -\gamma_i + i \omega_i.
+$$
+
+So the next compact gate should transport the frequency-domain object directly instead of routing image content through a symbolic residual.
+
+Implemented mode:
+
+- `--aq-fft-0`
+- `--aq-fft-top-k` (default `6`)
+
+Payload:
+
+$$
+[\text{motif header}, \operatorname{Re}(\tilde{F}), \operatorname{Im}(\tilde{F}), \Omega_K]
+$$
+
+where \(\tilde{F}\) keeps only the top-\(K\) coefficients and \(\Omega_K\) is the frequency-position mask.
+
+Run shape:
+
+- patch grid: `4 x 4`
+- patch size: `4 x 4`
+- patch count: `16`
+- noise: `0.00`
+- seed: `11`
+- controllers: `free`, `tunnel_eigen_residual_alpha065`
+
+Primary metrics:
+
+- `fft_coefficient_cosine`
+- `fft_frequency_index_recovery`
+- `fft_phase_recovery`
+- `fft_patch_psnr`
+- `fft_oracle_psnr`
+- motif recovery as a secondary interpretability check
+
+Success criteria:
+
+- beat AQ-IMG-1-LITE PSNR (`9.7162 dB`)
+- ideally approach or exceed `22-25 dB` with `K=6`
+- keep motif recovery from collapsing into one prototype basin
+- show whether alpha065 helps or distorts k-space reconstruction at the noise-free ceiling
+
+Design note:
+
+AQ-FFT-0 is still a hybrid gate: it keeps the motif header and uses the existing folded recovery infrastructure. A later structural redesign can make kinematic nodes represent frequency positions directly rather than symbolic sequence intervals. That redesign should wait until the hybrid top-\(K\) coefficient path proves that k-space payloads improve reconstruction.
+
 Future operator work should move to waveform/layer operators rather than arbitrary class operators:
 
 - null subtraction: \(s - P_{\mathrm{null}}s\)
@@ -923,6 +1624,263 @@ TPU should save only compact artifacts:
 - hard-control outputs
 
 Do not run heavy decoder comparisons on TPU.
+
+## AQ-FFT-4: Complex Orientation Preservation Gate
+
+AQ-FFT-3 established a useful but incomplete result: direct complex oscillator injection raised realized PSNR while leaving the imaginary and phase channels weak. The next gate keeps the same codec capacity and asks whether the remaining gap is caused by failure to preserve complex orientation.
+
+Run:
+
+```bash
+--aq-fft-4
+```
+
+Fixed envelope:
+
+- noise: `0.00`
+- seed: `11`
+- depth: `3`
+- fixed core: `K=6`
+- residual: `residual_K=2`
+- controllers: `free`, `complex_pair_norm`, `complex_phase_locked`
+
+Do not add:
+
+- larger `K`
+- noise
+- `alpha065`
+- video
+
+Mathematical target:
+
+```math
+F_k = a_k + ib_k
+```
+
+should survive as a coupled quadrature pair, not as scalar magnitude and scalar phase targets that can drift independently.
+
+AQ-FFT-4 adds:
+
+- `support_weighted_angle_error`
+- `energy_weighted_complex_mse`
+- `quadrature_energy_recall`
+- `imaginary_energy_recall`
+- `complex_pair_norm_error`
+- `phase_error_by_coefficient_slot`
+
+It also prints a PSNR error budget:
+
+- `oracle_psnr`
+- `true_support_pred_coeffs`
+- `pred_support_true_coeffs`
+- `true_real_pred_imag`
+- `pred_real_true_imag`
+- `final`
+
+Decision rule:
+
+- if `complex_pair_norm` improves phase and imaginary cosine, the issue was complex-orientation preservation in the transported signature
+- if `complex_phase_locked` improves PSNR, the decoder was violating pair-norm geometry
+- if neither improves, the likely bottleneck is D-LinOSS signature extraction or a need for a genuinely complex-equivariant decoder
+
+## AQ-FFT-5: Gauge-Aligned Complex Decoding
+
+AQ-FFT-4 established `complex_pair_norm` as the current reference codec:
+
+- `ifft_psnr = 23.1818 dB`
+- `oracle_psnr = 25.0480 dB`
+- motif/header recovery = `1.0000`
+- phase and imaginary cosine remained near `0.51`
+
+AQ-FFT-5 asks whether the weak phase/imaginary scores are caused by a recoverable complex gauge rotation.
+
+Oracle diagnostic:
+
+```math
+\theta^*=\arg\left(\sum_k F_{\mathrm{true},k}\overline{F_{\mathrm{pred},k}}\right)
+```
+
+Aligned field:
+
+```math
+\hat{F}^{aligned}_k=e^{i\theta^*}\hat{F}_k
+```
+
+Mode:
+
+```bash
+--aq-fft-5
+```
+
+Controllers:
+
+- `complex_pair_norm`
+- `complex_pair_norm_gaugefix`
+
+New metrics:
+
+- `global_phase_aligned_imag_cos`
+- `global_phase_aligned_phase_cos`
+- `per_slot_phase_aligned_coeff_cos`
+- `complex_gauge_error`
+- `PSNR_before_alignment`
+- `PSNR_after_alignment`
+
+Success rule:
+
+- if aligned phase/imaginary metrics jump, Bob needs gauge fixing rather than more transport capacity
+- if aligned metrics stay low, the quadrature information is degraded and the next step is a complex-equivariant decoder or BP/charge decoder
+
+Do not increase `K`, add noise, or run video until this gate is resolved.
+
+## AQ-FFT-6: Hermitian-Constrained Complex Decoder
+
+AQ-FFT-5 ruled out a global gauge rotation as the cause of weak imaginary and phase cosine. AQ-FFT-6 tests whether local real-image FFT structure is the missing constraint.
+
+For real-valued patches:
+
+```math
+F[-k] = \overline{F[k]}
+```
+
+Mode:
+
+```bash
+--aq-fft-6
+```
+
+Controllers:
+
+- `complex_pair_norm`
+- `complex_pair_norm_hermitian`
+
+The Hermitian decoder projects:
+
+```math
+\hat{F}_{sym}[k] = \frac{1}{2}\left(\hat{F}[k] + \overline{\hat{F}[-k]}\right)
+```
+
+and forces self-conjugate slots real.
+
+New metrics:
+
+- `hermitian_error_before`
+- `hermitian_error_after`
+- `self_conjugate_imag_energy`
+- `pairwise_conjugate_consistency`
+- `phase_cos_energy_weighted`
+
+Decision rule:
+
+- if Hermitian error drops and PSNR stays high or improves, keep the constrained decoder
+- if raw phase stays low but energy-weighted phase is high, the weak phase metric is mostly low-energy slot noise
+- if Hermitian constraints do not help, move to a complex-equivariant decoder or BP/charge decoder before increasing residual payload
+
+## AQ-FFT-7: Residual Capacity Scaling
+
+AQ-FFT-6 showed that Hermitian mismatch is not the active bottleneck and that energy-weighted phase is already excellent. AQ-FFT-7 therefore promotes reconstruction and energy-weighted metrics over raw phase/imaginary cosine.
+
+Mode:
+
+```bash
+--aq-fft-7
+```
+
+Run shape:
+
+- noise: `0.00`
+- seed: `11`
+- depth: `3`
+- fixed core: `K=6`
+- residual: `residual_K=4`
+- controller: `complex_pair_norm`
+
+Reference:
+
+- residual_K=2 realized PSNR near `23.18 dB`
+- residual_K=2 oracle PSNR near `25.05 dB`
+
+Primary metrics:
+
+- `ifft_psnr`
+- `oracle_psnr`
+- `phase_cos_energy_weighted`
+- `energy_weighted_complex_mse`
+- `topK_energy_recall`
+- motif/header recovery
+
+Decision rule:
+
+- if realized PSNR follows the oracle upward, proceed to noise with the larger residual body
+- if oracle rises but realized PSNR does not, decoder capacity is the next bottleneck
+
+### AQ-FFT-7 Outcome
+
+AQ-FFT-7 completed successfully with residual_K=4.
+
+Run record:
+
+- `emergent_quantum_geometries/docs/PROGRAM_AQ_FFT7_REMOTE_ANALYSIS_2026-06-02.md`
+
+Observed:
+
+| codec | residual K | realized PSNR | oracle PSNR | motif/header | energy-weighted phase |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| `complex_pair_norm` | `2` | `~23.18 dB` | `~25.05 dB` | `1.0000` | `~0.9992` |
+| `complex_pair_norm` | `4` | `26.3560 dB` | `31.1144 dB` | `1.0000` | `0.9992` |
+
+This is the current strongest AQ-FFT result.
+
+The experimentally defensible claim is:
+
+> In this simulator, D-LinOSS complex oscillator transport can preserve a folded semantic/header state while carrying enough continuous k-space coefficient structure to reconstruct an unfolded `4 x 4` image patch field. Reconstruction improves when sparse residual k-space capacity is increased, while semantic/header recovery remains perfect.
+
+Important boundary:
+
+- This supports simulated folded-state recovery in a quantum-like complex oscillator state space.
+- It does not establish physical quantum teleportation.
+- It does not yet establish noisy robustness.
+- It is one-seed clean-ceiling evidence and should be repeated before stronger claims.
+
+Next gate:
+
+- AQ-FFT-8 should hold residual_K=4 fixed and add `noise=0.30`
+- compare `free`, `alpha065`, and `shape_charge_control`
+
+### Visual Recovery Preview
+
+AQ image/FFT modes can now emit compact PNG contact sheets with:
+
+- row 1: original target patches
+- row 2: recovered patches after decoding/inverse FFT
+- row 3: amplified absolute error
+
+This is enabled with:
+
+```text
+--save-preview-png
+```
+
+For the ready-node launcher, pass it through without changing the TRC-safe launch path:
+
+```powershell
+$env:PROGRAM_AP_EXTRA_ARGS='--save-preview-png'
+```
+
+The previews are generated on the TPU VM in the normal result directory and are recorded in `program_ap_summary.json` under `preview_pngs`. They are intentionally tiny diagnostic artifacts, not bulk result folders.
+
+### AQ-YINYANG-0 Candidate
+
+A useful next visual target is an 8-bit alternating yin-yang sequence:
+
+- generate a small grayscale yin-yang frame, initially `16 x 16`
+- alternate yin/yang polarity across frames
+- tile each frame into `4 x 4` patches
+- encode each patch through the AQ-FFT complex k-space codec
+- transport/fold/recover the patch field
+- emit target/recovered/error PNG previews
+
+This should be a separate mode rather than an alias of the existing patch roster. The scientific question is whether the current folded semantic/k-space codec can recover a coherent recognizable visual symbol under temporal polarity changes, not merely whether it can reconstruct the existing synthetic patch catalog.
 
 ## Phase 2: Offline CPU Decoding
 
@@ -1011,3 +1969,87 @@ The niche is semantic compression plus noisy transport plus adversarial recovery
 7. `AQ-offline`: compare ridge, MPS, and tunnel-eigen unfolded decoders
 
 Only after these pass should we schedule a larger robustness or durability run.
+
+## AQ-YINYANG-1 Visual Codec Gate
+
+Added 2026-06-03: `AQ-YINYANG-1` is the one-frame follow-up to the two-frame tai-chi-tu visual recovery run. It keeps the successful `complex_pair_norm` k-space path but removes the alternating second frame so that the next result can distinguish a sparse-codec ceiling from a transport/unfolding failure.
+
+Expected interpretation is documented in:
+
+- `emergent_quantum_geometries/docs/PROGRAM_AQ_YINYANG1_EXPECTATIONS_2026-06-03.md`
+
+The key gate is whether the recovered PNG tracks the sparse oracle. If oracle PSNR remains low and realized PSNR stays within about 2 dB of it, the visible blur belongs to the image semanticization layer. If oracle PSNR is high but realized PSNR remains low, the problem is in D-LinOSS recovery or coefficient unfolding.
+
+## AQ-YINYANG Findings
+
+Added 2026-06-03:
+
+- `AQ-YINYANG-1` showed that the sparse `10 / 16` coefficient codec could not represent the crisp symbolic image well enough; `oracle_psnr = 17.0387 dB`
+- `AQ-YINYANG-2` retained all `16 / 16` FFT coefficients per patch and raised `oracle_psnr` to `80.0000 dB`
+- `AQ-YINYANG-2` still reconstructed at `ifft_psnr = 21.4153 dB`, with perfect semantic identity and high coefficient cosine recovery
+- `AQ-YINYANG-3` added direct pixel-space ridge decoding and showed essentially no lift: `pixel_ridge_psnr = 21.4213 dB`
+
+Detailed run note:
+
+- `emergent_quantum_geometries/docs/PROGRAM_AQ_YINYANG_FINDINGS_2026-06-03.md`
+
+Current conclusion:
+
+> One-frame image encoding is not the blocker once all patch coefficients are retained. The remaining blocker is deeper than a simple coefficient-vs-pixel loss mismatch: the transported folded complex state is close in direction, but not yet numerically calibrated or locally consistent enough for pixel-faithful reconstruction.
+
+## AQ-YINYANG-4 Raw-State Visual Gate
+
+Added 2026-06-03:
+
+`AQ-YINYANG-4` tested a simpler visual sanity path by bypassing the FFT body and transporting raw `4 x 4` pixel patch states from the user-provided `taichi_16x16_frame_1.png`.
+
+Observed:
+
+- motif recovery: `1.0000`
+- pixel PSNR: `30.0046 dB`
+- luma MAE: `0.0123`
+- noisy cosine: `0.9978`
+
+The first preview export revealed a visualization bug: target and recovered PNGs were assembled in randomized test-sample order rather than raster patch order. The preview writer now uses `patch_true_indices` to reorder patches before frame assembly.
+
+Corrected local images:
+
+- `tpu_previews/yinyang_ref16_frame1_ordered/aq_frame_depth3_noise0.0_seed11_complex_pair_norm_taichi_16x16_frame_1_target.png`
+- `tpu_previews/yinyang_ref16_frame1_ordered/aq_frame_depth3_noise0.0_seed11_complex_pair_norm_taichi_16x16_frame_1_recovered.png`
+- `tpu_previews/yinyang_ref16_frame1_ordered/aq_frame_depth3_noise0.0_seed11_complex_pair_norm_taichi_16x16_frame_1_compare.png`
+
+Interpretation:
+
+> At the one-frame `16` patch-state scale, D-LinOSS can recover a raw patchwise image state strongly enough for a recognizable visual reconstruction. This validates the raw transport/recovery path, but it deliberately bypasses the harder folded k-space codec.
+
+Follow-up completed:
+
+- `taichi_16x16_frame_2.png` also passed the one-frame raw-state control
+- motif recovery: `1.0000`
+- pixel PSNR: `29.8073 dB`
+- luma MAE: `0.0133`
+- noisy cosine: `0.9963`
+
+Ordered two-frame follow-up:
+
+- input frames: `taichi_16x16_frame_1.png` and `taichi_16x16_frame_2.png`
+- recovery mode: ordered frame/raster patch order
+- patch states: `32`
+- motif recovery: `1.0000`
+- pixel PSNR: `25.0450 dB`
+- luma MAE: `0.0194`
+- noisy cosine: `0.9843`
+- control margin: `+0.0533`
+
+This means the ordered visual-sequence gate passed in the narrow sense that:
+
+- the frame-ordering bug is fixed
+- both recovered frames correspond to the intended target polarity sequence
+- the failure mode is no longer patch scramble or frame confusion
+
+What remains open is joint quality under a larger shared roster. The two-frame run is visibly worse than the two one-frame controls, so the next problem is roster-size / joint-decoding degradation, not basic raw-state transport.
+
+Implementation note:
+
+- raw `AQ-YINYANG-4` now marks itself as a `fast_codec_probe`
+- future sanity runs should keep the PNG outputs while skipping the extra adversarial-control signature burden that slowed the previous image checks

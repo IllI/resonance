@@ -1,14 +1,16 @@
 # Program AP ready-node launcher.
 # TRC/Egress discipline:
 # - Use only an already READY TRC-covered TPU VM.
-# - Upload only program_ap_tunnel_eigen_recovery.py.
+# - Upload only program_ap_tunnel_eigen_recovery.py plus explicit taichi_*.png inputs.
 # - Do not download Europe result folders; inspect summaries remotely.
 
 $Project = "time-emission"
 $Zone = if ($env:PROGRAM_AP_ZONE) { $env:PROGRAM_AP_ZONE } else { "europe-west4-a" }
 $NodeId = if ($env:PROGRAM_AP_NODE) { $env:PROGRAM_AP_NODE } else { "program-ap-eu-node-v1" }
 $ProgramMode = if ($env:PROGRAM_AP_MODE) { $env:PROGRAM_AP_MODE } else { "--ap-s" }
+$ProgramExtraArgs = if ($env:PROGRAM_AP_EXTRA_ARGS) { $env:PROGRAM_AP_EXTRA_ARGS } else { "" }
 $SrcDir = "$PSScriptRoot\emergent_quantum_geometries"
+$YinyangReferenceDir = "$PSScriptRoot\tpu_previews\yinyang_reference_v2"
 $RemoteDir = "/home/cityz/program_ap"
 $RemoteOutDir = "$RemoteDir/program_ap_results"
 $LogFile = "prog_ap_run.log"
@@ -25,9 +27,13 @@ if ($Zone -notin $AllowedZones) {
     exit 1
 }
 
-$AllowedModes = @("--ap-focused", "--ap-lite", "--ap-r", "--ap-s", "--ap-s-mech", "--ap-s-fidelity", "--ap-t", "--ap-u", "--aq-0", "--aq-0b", "--aq-1a-tf", "--aq-1a-tf-s29", "--aq-1b", "--aq-1c", "--aq-seq-0", "--aq-img-0", "--aq-img-1", "--aq-img-1-lite")
+$AllowedModes = @("--ap-focused", "--ap-lite", "--ap-r", "--ap-s", "--ap-s-mech", "--ap-s-fidelity", "--ap-t", "--ap-u", "--aq-0", "--aq-0b", "--aq-1a-tf", "--aq-1a-tf-s29", "--aq-1b", "--aq-1c", "--aq-seq-0", "--aq-img-0", "--aq-img-1", "--aq-img-1-lite", "--aq-fft-0", "--aq-fft-1", "--aq-fft-2", "--aq-fft-3", "--aq-fft-4", "--aq-fft-5", "--aq-fft-6", "--aq-fft-7", "--aq-yinyang-0", "--aq-yinyang-1", "--aq-yinyang-2", "--aq-yinyang-3", "--aq-yinyang-4", "--aq-dna-0", "--aq-hybrid-0", "--as-0", "--as-0b")
 if ($ProgramMode -notin $AllowedModes) {
     Write-Host "[ERROR] PROGRAM_AP_MODE must be one of: $($AllowedModes -join ', ')"
+    exit 1
+}
+if (-not [string]::IsNullOrWhiteSpace($ProgramExtraArgs) -and $ProgramExtraArgs -match '[;&|`<>$]') {
+    Write-Host "[ERROR] PROGRAM_AP_EXTRA_ARGS contains shell control characters."
     exit 1
 }
 
@@ -65,13 +71,28 @@ if ($LASTEXITCODE -ne 0) {
     exit 1
 }
 
+if (Test-Path $YinyangReferenceDir) {
+    $ReferencePngs = Get-ChildItem -Path $YinyangReferenceDir -Filter "taichi_*.png" -File
+    if ($ReferencePngs.Count -gt 0) {
+        Write-Host "[SCP] Uploading explicit yin-yang reference PNG inputs..."
+        "y" | gcloud compute tpus tpu-vm ssh $NodeId --project=$Project --zone=$Zone --quiet --command="mkdir -p $RemoteDir/yinyang_reference_v2"
+        foreach ($png in $ReferencePngs) {
+            "y" | gcloud compute tpus tpu-vm scp $png.FullName "$NodeId`:$RemoteDir/yinyang_reference_v2/" --project=$Project --zone=$Zone --quiet
+            if ($LASTEXITCODE -ne 0) {
+                Write-Host "[ERROR] Reference PNG upload failed: $($png.Name)"
+                exit 1
+            }
+        }
+    }
+}
+
 Write-Host "[RUN] Launching Program AP on TPU with mode $ProgramMode..."
 $GitCommit = (git -C $PSScriptRoot rev-parse --short HEAD 2>$null)
 if ([string]::IsNullOrWhiteSpace($GitCommit)) {
     $GitCommit = "unknown"
 }
 $RemoteTimeout = if ($env:PROGRAM_AP_TIMEOUT_SECONDS) { $env:PROGRAM_AP_TIMEOUT_SECONDS } elseif ($ProgramMode -like "*-lite") { "900" } else { "" }
-$PythonCmd = "python3 -u $RemoteDir/emergent_quantum_geometries/program_ap_tunnel_eigen_recovery.py --require-tpu $ProgramMode --out-dir $RemoteOutDir --git-commit $GitCommit"
+$PythonCmd = "python3 -u $RemoteDir/emergent_quantum_geometries/program_ap_tunnel_eigen_recovery.py --require-tpu $ProgramMode --out-dir $RemoteOutDir --git-commit $GitCommit $ProgramExtraArgs"
 if (-not [string]::IsNullOrWhiteSpace($RemoteTimeout)) {
     Write-Host "[RUN] Applying remote timeout guard: ${RemoteTimeout}s"
     $PythonCmd = "timeout ${RemoteTimeout}s $PythonCmd"
