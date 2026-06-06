@@ -1,0 +1,32 @@
+{
+  "experiment": "SO3_kernel_galerkin_sweep",
+  "m": 3,
+  "test_degree": 2,
+  "seed": 42,
+  "dataset_source": "haar",
+  "dataset_rationale": "Haar-uniform synthetic SO(3) nodes are the primary validation set because Collins' estimates are stated against SO(3) fill distance and Haar measure. Real pose datasets such as ModelNet40-C are downstream non-uniform stress tests, not the calibration dataset for Corollary 6.6.8.",
+  "operator": "sobolev",
+  "aux_dim": 0,
+  "jax_backend": "tpu",
+  "jax_devices": [
+    "TPU_0(process=0,(0,0,0,0))",
+    "TPU_1(process=0,(1,0,0,0))",
+    "TPU_2(process=0,(0,1,0,0))",
+    "TPU_3(process=0,(1,1,0,0))",
+    "TPU_4(process=0,(0,2,0,0))",
+    "TPU_5(process=0,(1,2,0,0))",
+    "TPU_6(process=0,(0,3,0,0))",
+    "TPU_7(process=0,(1,3,0,0))"
+  ],
+  "dtype": "<class 'jax.numpy.float32'>",
+  "runtime_seconds": 14.122748136520386,
+  "results": [
+    {
+      "n_Xi": 50,
+      "N": 3,
+      "q": 5,
+      "n_Lambda": 250,
+      "l2_error": 0.13109491765499115
+    }
+  ]
+}

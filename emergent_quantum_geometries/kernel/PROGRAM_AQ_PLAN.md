@@ -45,7 +45,7 @@ with coefficients determined by the augmented linear system:
 
 $$K_{\Xi,m-2} \begin{pmatrix} a \\ b \end{pmatrix} = \begin{pmatrix} c \\ 0 \end{pmatrix}, \qquad K_{\Xi,m-2} = \begin{pmatrix} K_\Xi & P \\ P^T & 0 \end{pmatrix}$$
 
-where $K_\Xi = [\Phi_m(\xi,\eta)]_{\xi,\eta \in \Xi}$ and $P = [D^\ell_{j,k}(\xi)]_{\xi \in \Xi,\, \ell \leq m-2}$ is the $n \times (m-1)^2$ Vandermonde-type matrix of low-degree Wigner-D evaluations.
+where $K_\Xi = [\Phi_m(\xi,\eta)]_{\xi,\eta \in \Xi}$ and $P = [D^\ell_{j,k}(\xi)]_{\xi \in \Xi,\, \ell \leq m-2}$ is the Vandermonde-type matrix of low-degree Wigner-D evaluations. Its column count is $\dim(\Pi_{m-2}) = \sum_{\ell=0}^{m-2}(2\ell+1)^2$.
 
 **We choose $m = 3$** for our primary experiment:
 - Auxiliary space $\Pi_1$: constant + 9 degree-1 Wigner-D functions, $\dim(\Pi_1) = 4$ (since $(m-1)^2 = 4$; concretely the $\ell=0$ constant and $\ell=1$ functions $D^1_{j,k}$, $(2\cdot1+1)^2 = 9$, but $\dim(\Pi_1) = 1 + 9 = 10$... correction: $\dim(\Pi_L) = \sum_{\ell=0}^{L}(2\ell+1)^2$, so $\dim(\Pi_1) = 1 + 9 = 10$)
@@ -132,35 +132,44 @@ $$\left\| u - \tilde{u}^\Lambda_\Xi \right\|_{L^2} \leq C \left( h_\Xi^{m-1} + h
 
 **Our target:** if this bound is small, the approximation was close enough. We verify by comparing to the known $u$.
 
+For the Chapter 6 truncated experiment, Remark 6.6.9 gives the oversampling exponent
+
+$$p = 3 + \frac{9}{m-1}$$
+
+so for $m=3$, $p=7.5$. This is the exponent needed for the quadratization term to match the Galerkin term in the theorem.
+
 ---
 
-## 5. Quadrature Setup: 10× Oversampling
+## 5. Quadrature Setup: TPU Pilot and Theorem-Scale Oversampling
 
-We fix $|\Lambda| = 10 \cdot |\Xi|$ throughout. Since $\mathrm{SO}(3)$ has dimension $d=3$:
+For smoke and pilot TPU runs we can use fixed ratios such as $|\Lambda| = 5|\Xi|, 10|\Xi|, 20|\Xi|$ to verify the implementation and gather empirical scaling. Since $\mathrm{SO}(3)$ has dimension $d=3$:
 
 $$h_\Xi \sim |\Xi|^{-1/3}, \qquad h_\Lambda \sim (10\,|\Xi|)^{-1/3} = 10^{-1/3} h_\Xi \approx 0.464\, h_\Xi$$
 
-The ratio $h_\Lambda / h_\Xi \approx 0.464$ is fixed regardless of $|\Xi|$, so the quadratization error term scales as:
+For a fixed oversampling ratio $q=|\Lambda|/|\Xi|$, the ratio $h_\Lambda / h_\Xi \sim q^{-1/3}$ is fixed regardless of $|\Xi|$, so the Chapter 6 quadratization error term scales as:
 
-$$h_\Xi^{-7-2m} \cdot (0.464\, h_\Xi)^{m-1} = 0.464^{m-1} \cdot h_\Xi^{m-8-m} = 0.464^{m-1} \cdot h_\Xi^{-8}$$
+$$h_\Xi^{-7-2m} \cdot (q^{-1/3} h_\Xi)^{m-1} = q^{-(m-1)/3} \cdot h_\Xi^{-8-m}$$
 
-For $m=3$: quadratization error $\sim 0.215 \cdot h_\Xi^{-8}$, Galerkin error $\sim h_\Xi^2$. These balance at $h_\Xi^{10} \sim 0.215$, i.e. $h_\Xi \sim 0.70$, which corresponds to very sparse sampling. At the dense end ($|\Xi| \sim 10{,}000$, $h_\Xi \sim 0.046$), the quadratization error is negligible relative to Galerkin error. **10× oversampling is practically sufficient and verifiable on TPU.**
+For $m=3$ this is $q^{-2/3} h_\Xi^{-11}$, while the Galerkin term is $h_\Xi^2$. Therefore fixed 10x oversampling is useful as an engineering pilot, but it is not the theorem-scale oversampling regime. To probe Remark 6.6.9 directly, drive $h_\Lambda$ according to $h_\Lambda \le h_\Xi^{7.5}$, subject to TPU memory.
 
 ---
 
-## 6. Open-Source SO(3) Datasets
+## 6. Dataset Choice
 
-The experiment does **not require external datasets** — all sample points $\Xi$ and $\Lambda$ are generated synthetically from the Haar measure. However, the following open-source SO(3)-valued datasets could serve as realistic (non-uniform) node configurations for downstream validation:
+The primary validation dataset should be generated synthetically from the Haar measure on $\mathrm{SO}(3)$. This is the best dataset for Collins' theorem because the theorem is stated in terms of SO(3) fill distance, separation, and Haar-measure quadrature, and because the exact Wigner-D solution is known.
+
+External datasets are useful only after the theorem-facing run works. They can stress non-uniform coverage, symmetry, and real-world pose noise, but they should not replace Haar-uniform nodes for the mathematical validation.
 
 | Dataset | Points | SO(3) Values | Use case |
 |---|---|---|---|
-| **ModelNet40-C** ([github](https://github.com/jiachens/ModelNet40-C)) | ~10K objects | Per-object orientation labels | Realistic non-uniform $\Xi$ |
-| **Pascal3D+** | ~11K images | 6-DOF pose (includes SO(3)) | Applied PDE source points |
+| **Haar synthetic SO(3)** | arbitrary | exact generated rotations | Primary theorem validation |
+| **SYMSOL / symmetric solids pose data** | large synthetic pose sets | random rotations with object symmetries | Best downstream ambiguity/symmetry stress test |
+| **Pascal3D+ / BOP-style pose datasets** | thousands to millions | object pose rotations | Applied non-uniform $\Xi$ after pose extraction |
 | **Cryo-EM particle orientations** (EMPIAR) | $10^4$–$10^6$ | SO(3) viewing angles | High-density quadrature test |
 | **Hitchhiker's Guide** ([github](https://github.com/martius-lab/hitchhiking-rotations)) | Synthetic | Various SO(3) representations | Representation benchmarks |
-| **SYMSOL** (Google Research) | ~50K | Discrete + continuous symmetry groups | Equivariance testing |
+| **ModelNet40-C** ([github](https://github.com/jiachens/ModelNet40-C)) | point-cloud corruption benchmark | not native SO(3) labels | Not a primary SO(3) node dataset |
 
-**Recommendation:** Use Haar-measure uniform sampling for the mathematical validation (controlled $h_\Xi$), then optionally test with cryo-EM orientations as a stress test with non-uniform coverage.
+**Recommendation:** Use Haar-measure uniform sampling for the mathematical validation. After that, use SYMSOL or pose-estimation datasets as realistic non-uniform stress tests. Treat ModelNet40-C as a point-cloud robustness benchmark, not as an SO(3) quadrature dataset.
 
 ---
 
@@ -175,6 +184,14 @@ $$\varphi_1 \sim U[0, 2\pi],\quad \theta = \arccos(1 - 2u),\; u \sim U[0,1],\qua
 **Test PDE:** $L_3 u = f$ with $f = D^L_{0,0}$ for $L = 5, 10, 20$.
 
 **Exact solution:** $u = \hat{\phi}_3(L) \cdot D^L_{0,0}$, computed analytically.
+
+The current TPU-first script defaults to the Chapter 6 positive definite truncated/Sobolev kernel path:
+
+```
+--dataset-source haar --operator sobolev --aux-dim 0
+```
+
+This keeps the kernel coefficients and PDE operator paired as $\lambda_\ell = \mu_\ell^{-1}$, with $\mu_\ell = (1+\ell(\ell+1))^m$, so the known exact solution remains $u=\mu_L^{-1}D^L_{0,0}$.
 
 ### 7.2 Kernel and Stiffness Matrix
 
