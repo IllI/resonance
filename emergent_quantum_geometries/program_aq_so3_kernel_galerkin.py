@@ -504,6 +504,7 @@ def run_sweeps(args):
                         )
 
                     try:
+                        run_t0 = time.time()
                         exp_result = run_experiment(
                             Xi_angles,
                             Lambda_angles,
@@ -519,9 +520,13 @@ def run_sweeps(args):
                             diagnostics=args.diagnostics,
                             moment_degree=moment_degree,
                         )
+                        case_runtime = time.time() - run_t0
                         err = exp_result["l2_error"]
                         actual_lambda = exp_result["n_Lambda_actual"]
-                        print(f"  -> L2 Error: {err:.6e} (actual |Lambda|={actual_lambda})")
+                        print(
+                            f"  -> L2 Error: {err:.6e} "
+                            f"(actual |Lambda|={actual_lambda}, runtime={case_runtime:.2f}s)"
+                        )
                         row = {
                             "seed": int(seed),
                             "n_Xi": int(n_Xi),
@@ -530,6 +535,7 @@ def run_sweeps(args):
                             "q_actual": float(actual_lambda / n_Xi),
                             "n_Lambda": int(n_Lambda),
                             "n_Lambda_actual": int(actual_lambda),
+                            "case_runtime_seconds": case_runtime,
                             "quadrature_meta": quadrature_meta,
                         }
                         row.update(exp_result)
