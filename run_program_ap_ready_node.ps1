@@ -27,7 +27,7 @@ if ($Zone -notin $AllowedZones) {
     exit 1
 }
 
-$AllowedModes = @("--ap-focused", "--ap-lite", "--ap-r", "--ap-s", "--ap-s-mech", "--ap-s-fidelity", "--ap-t", "--ap-u", "--aq-0", "--aq-0b", "--aq-1a-tf", "--aq-1a-tf-s29", "--aq-1b", "--aq-1c", "--aq-seq-0", "--aq-stream-0", "--aq-stream-1", "--aq-stream-2", "--aq-img-0", "--aq-img-1", "--aq-img-1-lite", "--aq-fft-0", "--aq-fft-1", "--aq-fft-2", "--aq-fft-3", "--aq-fft-4", "--aq-fft-5", "--aq-fft-6", "--aq-fft-7", "--aq-yinyang-0", "--aq-yinyang-1", "--aq-yinyang-2", "--aq-yinyang-3", "--aq-yinyang-4", "--aq-dna-0", "--aq-hybrid-0", "--as-0", "--as-0b")
+$AllowedModes = @("--ap-focused", "--ap-lite", "--ap-r", "--ap-s", "--ap-s-mech", "--ap-s-fidelity", "--ap-t", "--ap-u", "--aq-0", "--aq-0b", "--aq-1a-tf", "--aq-1a-tf-s29", "--aq-1b", "--aq-1c", "--aq-seq-0", "--aq-stream-0", "--aq-stream-1", "--aq-stream-2", "--aq-stream-3-iso", "--aq-stream-4", "--aq-stream-5", "--aq-stream-7", "--aq-stream-7b", "--aq-stream-8", "--aq-img-0", "--aq-img-1", "--aq-img-1-lite", "--aq-fft-0", "--aq-fft-1", "--aq-fft-2", "--aq-fft-3", "--aq-fft-4", "--aq-fft-5", "--aq-fft-6", "--aq-fft-7", "--aq-yinyang-0", "--aq-yinyang-1", "--aq-yinyang-2", "--aq-yinyang-3", "--aq-yinyang-4", "--aq-dna-0", "--aq-hybrid-0", "--as-0", "--as-0b")
 if ($ProgramMode -notin $AllowedModes) {
     Write-Host "[ERROR] PROGRAM_AP_MODE must be one of: $($AllowedModes -join ', ')"
     exit 1

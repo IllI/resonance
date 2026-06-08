@@ -1,7 +1,7 @@
 # Program AQ Confidence TPU Run
 
 Date: 2026-06-06  
-Script: `emergent_quantum_geometries/program_aq_so3_kernel_galerkin.py`  
+Script: `emergent_quantum_geometries/kernel/program_aq_so3_kernel_galerkin.py`  
 Result file: `emergent_quantum_geometries/program_aq_tpu_confidence/summary.json`
 
 ## Purpose
@@ -43,7 +43,7 @@ The first case includes most JAX/XLA compilation cost; subsequent cases reuse co
 ## Command
 
 ```bash
-python3 -u program_aq_so3_kernel_galerkin.py \
+python3 -u kernel/program_aq_so3_kernel_galerkin.py \
   --quadrature-source euler-grid \
   --validation-source euler-grid \
   --diagnostics \

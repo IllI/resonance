@@ -1048,8 +1048,8 @@ def load_yinyang_reference_frames(frame_size=32, frame_count=2, frame_start=1):
         return None, None
     start = max(0, int(frame_start) - 1)
     selected_names = names[start : start + int(frame_count)]
-    if len(selected_names) < int(frame_count):
-        raise ValueError(f"Requested {frame_count} frame(s) from frame_start={frame_start}, but only found {len(names)} matching PNGs")
+    if not selected_names:
+        return None, None
     frames = []
     for name in selected_names:
         frame = read_png_luma(os.path.join(ref_dir, name))
@@ -1057,6 +1057,24 @@ def load_yinyang_reference_frames(frame_size=32, frame_count=2, frame_start=1):
             raise ValueError(f"Reference frame {name} has shape {frame.shape}, expected {(int(frame_size), int(frame_size))}")
         frames.append(jnp.asarray(frame, dtype=jnp.float32))
     return jnp.stack(frames), selected_names
+
+
+def synthesize_yinyang_transition_frames(frames, target_count):
+    frames = jnp.asarray(frames, dtype=jnp.float32)
+    if int(frames.shape[0]) >= int(target_count):
+        return frames[: int(target_count)]
+    if int(frames.shape[0]) < 2:
+        return frames
+    frame0 = frames[0]
+    frame1 = frames[1]
+    extra = [
+        jnp.clip(jnp.rot90(frame0, 1) * 0.97 + 0.02, 0.0, 1.0),
+        jnp.clip(jnp.roll(frame1, shift=(1, -1), axis=(0, 1)) * 0.92 + 0.04, 0.0, 1.0),
+        jnp.clip(jnp.flipud(frame0) * 0.95 + 0.03, 0.0, 1.0),
+        jnp.clip(jnp.fliplr(frame1) * 0.90 + 0.05, 0.0, 1.0),
+    ]
+    pool = [frame0, frame1] + extra
+    return jnp.stack(pool[: int(target_count)])
 
 
 def build_yinyang_fft_patch_codec_payload(
@@ -1222,6 +1240,16 @@ def build_yinyang_raw_patch_payload(seq_len, frame_count=1, direct_complex=True,
     else:
         reference_names = [os.path.splitext(name)[0] for name in reference_names]
         reference_source = "taichi_reference_png"
+        if int(frames.shape[0]) < int(frame_count):
+            frames = synthesize_yinyang_transition_frames(frames, int(frame_count))
+            synthetic_names = []
+            if int(frame_count) >= 3:
+                synthetic_names.append("frame_02_synthetic_rotate")
+            if int(frame_count) >= 4:
+                synthetic_names.append("frame_03_synthetic_shift")
+            if int(frame_count) > 4:
+                synthetic_names.extend([f"frame_{idx:02d}_synthetic_extra" for idx in range(4, int(frame_count))])
+            reference_names = reference_names + synthetic_names[: max(0, int(frame_count) - len(reference_names))]
     frame_count, frame_size, _ = frames.shape
     patch_side = 4
     patch_rows = frame_size // patch_side
@@ -1283,7 +1311,7 @@ def build_yinyang_raw_patch_payload(seq_len, frame_count=1, direct_complex=True,
         "patch_grid": [int(patch_rows), int(patch_cols)],
         "patch_shape": [patch_side, patch_side],
         "frame_count": int(frame_count),
-        "frame_names": reference_names,
+        "frame_names": reference_names[: int(frame_count)],
         "frame_shape": [int(frame_size), int(frame_size)],
         "frame_reference_source": reference_source,
         "direct_complex_x0": bool(direct_complex),
@@ -1314,6 +1342,32 @@ def parse_stream_gain_specs(gain_text):
     return specs
 
 
+def parse_int_specs(text):
+    values = []
+    for raw in str(text).split(","):
+        raw = raw.strip()
+        if not raw:
+            continue
+        values.append(int(raw))
+    return values or [4]
+
+
+def latent_patch_basis(patch_side=4, latent_dim=8):
+    entries = []
+    coords = jnp.arange(int(patch_side), dtype=jnp.float32)
+    yy, xx = jnp.meshgrid(coords, coords, indexing="ij")
+    for ky in range(int(patch_side)):
+        for kx in range(int(patch_side)):
+            by = jnp.cos(jnp.pi * (2.0 * yy + 1.0) * float(ky) / (2.0 * float(patch_side)))
+            bx = jnp.cos(jnp.pi * (2.0 * xx + 1.0) * float(kx) / (2.0 * float(patch_side)))
+            basis = (by * bx).reshape((-1,))
+            basis = basis / (jnp.linalg.norm(basis) + 1e-8)
+            entries.append((ky + kx, ky * ky + kx * kx, ky, kx, basis))
+    entries = sorted(entries, key=lambda item: (item[0], item[1], item[2], item[3]))
+    keep = entries[: int(latent_dim)]
+    return jnp.stack([item[4] for item in keep]).astype(jnp.float32)
+
+
 def augment_yinyang_stream_payload(
     seqs,
     source_features,
@@ -1322,6 +1376,16 @@ def augment_yinyang_stream_payload(
     transform_info,
     gain_sweep=False,
     operator_sweep=False,
+    latent_operator_sweep=False,
+    reconstruction_operator_sweep=False,
+    adelta_operator_sweep=False,
+    patch_local_operator_sweep=False,
+    patch_local_grid_sweep=False,
+    heldout_operator_sweep=False,
+    latent_dim=8,
+    local_latent_dim=4,
+    local_latent_dims=None,
+    hybrid_alpha_specs=None,
     gain_specs=None,
 ):
     patch_pixels = transform_info["patch_pixels"]
@@ -1390,27 +1454,676 @@ def augment_yinyang_stream_payload(
     if not gain_sweep:
         pair_payloads = {"entangled_pair_stream": pair_payload(0.25)}
     operator_payloads = {}
+    def operator_payload(gain):
+        op_scale = jnp.float32(gain)
+        return jnp.concatenate(
+            [
+                anchor_pixels,
+                mode_features,
+                op_scale * delta_to_current,
+                op_scale * (anchor_pixels * delta_to_current),
+                pair_corr_scalar,
+            ],
+            axis=1,
+        ).astype(jnp.complex64)
+
     if operator_sweep:
-        def operator_payload(gain):
-            op_scale = jnp.float32(gain)
+        operator_payloads = {
+            f"delta_operator_gain_{label}": operator_payload(gain) for label, gain in pair_gain_specs
+        }
+    latent_operator_payloads = {}
+    latent_operator_pixel_tables = {}
+    latent_operator_meta = {}
+    latent_transition_target = None
+    if (
+        latent_operator_sweep
+        or reconstruction_operator_sweep
+        or adelta_operator_sweep
+        or patch_local_operator_sweep
+        or patch_local_grid_sweep
+        or heldout_operator_sweep
+    ) and frame_count >= 2:
+        patch_side = int(transform_info.get("patch_shape", [4, 4])[0])
+        frame0_pixels = patch_pixels[:patch_count]
+        frame1_pixels = patch_pixels[patch_count : 2 * patch_count]
+        if reconstruction_operator_sweep or adelta_operator_sweep:
+            pixel_mean = jnp.mean(patch_pixels, axis=0, keepdims=True)
+            centered_pixels = patch_pixels - pixel_mean
+            if adelta_operator_sweep:
+                delta_centered_for_basis = (frame1_pixels - frame0_pixels) - jnp.mean(
+                    frame1_pixels - frame0_pixels, axis=0, keepdims=True
+                )
+                basis_samples = jnp.concatenate(
+                    [
+                        jnp.sqrt(jnp.float32(0.50)) * centered_pixels,
+                        jnp.sqrt(jnp.float32(0.35)) * delta_centered_for_basis,
+                    ],
+                    axis=0,
+                )
+            else:
+                basis_samples = centered_pixels
+            _u_basis, _s_basis, vh_basis = jnp.linalg.svd(basis_samples, full_matrices=False)
+            basis = vh_basis[: int(latent_dim)].astype(jnp.float32)
+        else:
+            pixel_mean = jnp.zeros((1, int(patch_pixels.shape[1])), dtype=jnp.float32)
+            basis = latent_patch_basis(patch_side=patch_side, latent_dim=int(latent_dim))
+        x1 = (frame0_pixels - pixel_mean) @ basis.T
+        x2 = (frame1_pixels - pixel_mean) @ basis.T
+        anchor_latent = (anchor_pixels - pixel_mean) @ basis.T
+        latent_transition_target = (patch_pixels - pixel_mean) @ basis.T
+        static_delta_pixels = jnp.clip(anchor_pixels + delta_to_current, 0.0, 1.0)
+
+        diag_num = jnp.sum(x1 * x2, axis=0)
+        diag_den = jnp.sum(x1 * x1, axis=0) + 1e-6
+        diag_scale = diag_num / diag_den
+        diag_latent = jnp.where(frame_ids[:, None] == 0, anchor_latent, anchor_latent * diag_scale[None, :])
+        diag_pixels = jnp.clip(diag_latent @ basis, 0.0, 1.0)
+
+        u, _s, vh = jnp.linalg.svd(x2.T @ x1, full_matrices=False)
+        unitary_t = u @ vh
+        unitary_latent_f1 = anchor_latent @ unitary_t.T
+        unitary_latent = jnp.where(frame_ids[:, None] == 0, anchor_latent, unitary_latent_f1)
+        unitary_pixels = jnp.clip(unitary_latent @ basis, 0.0, 1.0)
+
+        x1_aug = jnp.concatenate([x1, jnp.ones((patch_count, 1), dtype=jnp.float32)], axis=1)
+        affine_w = jnp.linalg.solve(
+            x1_aug.T @ x1_aug + 1e-4 * jnp.eye(int(x1_aug.shape[1]), dtype=jnp.float32),
+            x1_aug.T @ x2,
+        )
+        affine_latent_f1 = jnp.concatenate(
+            [anchor_latent, jnp.ones((n_states, 1), dtype=jnp.float32)], axis=1
+        ) @ affine_w
+        affine_latent = jnp.where(frame_ids[:, None] == 0, anchor_latent, affine_latent_f1)
+        affine_pixels = jnp.clip(affine_latent @ basis + pixel_mean, 0.0, 1.0)
+
+        def apply_latent_transition(t_row, scale_vec=None):
+            predicted_x2 = x1 @ t_row
+            if scale_vec is not None:
+                predicted_x2 = predicted_x2 * scale_vec[None, :]
+            bias = jnp.mean(x2 - predicted_x2, axis=0, keepdims=True)
+            generated_f1 = anchor_latent @ t_row
+            if scale_vec is not None:
+                generated_f1 = generated_f1 * scale_vec[None, :]
+            generated_f1 = generated_f1 + bias
+            generated_latent = jnp.where(frame_ids[:, None] == 0, anchor_latent, generated_f1)
+            generated_pixels = jnp.clip(generated_latent @ basis + pixel_mean, 0.0, 1.0)
+            t_eff = t_row if scale_vec is None else t_row * scale_vec[None, :]
+            rollout_latent = (generated_f1 @ t_row)
+            if scale_vec is not None:
+                rollout_latent = rollout_latent * scale_vec[None, :]
+            rollout_latent = rollout_latent + bias
+            rollout_consistency = 1.0 / (1.0 + jnp.mean(jnp.square(rollout_latent - generated_f1)))
+            return generated_pixels, generated_latent, t_eff, bias, rollout_consistency
+
+        adelta_diag_t = jnp.diag(diag_scale)
+        adelta_diag_pixels, adelta_diag_latent, adelta_diag_teff, adelta_diag_b, adelta_diag_rollout = apply_latent_transition(
+            adelta_diag_t
+        )
+
+        h_u, _h_s, h_vh = jnp.linalg.svd(x1.T @ x2, full_matrices=False)
+        hamiltonian_t = h_u @ h_vh
+        adelta_ham_pixels, adelta_ham_latent, adelta_ham_teff, adelta_ham_b, adelta_ham_rollout = apply_latent_transition(
+            hamiltonian_t
+        )
+
+        ham_pre = x1 @ hamiltonian_t
+        luma_scale = jnp.clip(
+            jnp.abs(jnp.sum(ham_pre * x2, axis=0) / (jnp.sum(ham_pre * ham_pre, axis=0) + 1e-6)),
+            0.25,
+            4.0,
+        )
+        (
+            adelta_ham_luma_pixels,
+            adelta_ham_luma_latent,
+            adelta_ham_luma_teff,
+            adelta_ham_luma_b,
+            adelta_ham_luma_rollout,
+        ) = apply_latent_transition(hamiltonian_t, luma_scale)
+
+        delta_pixels = frame1_pixels - frame0_pixels
+        delta_mean = jnp.mean(delta_pixels, axis=0, keepdims=True)
+        delta_centered = delta_pixels - delta_mean
+        _u_delta, _s_delta, vh_delta = jnp.linalg.svd(delta_centered, full_matrices=False)
+        rank = max(1, min(int(latent_dim) // 2, int(vh_delta.shape[0])))
+        delta_basis = vh_delta[:rank]
+        low_rank_delta = delta_mean + (delta_centered @ delta_basis.T) @ delta_basis
+        low_rank_f1 = jnp.clip(frame0_pixels + low_rank_delta, 0.0, 1.0)
+        low_rank_pixels_by_patch = jnp.concatenate([frame0_pixels, low_rank_f1], axis=0)
+        low_rank_pixels = low_rank_pixels_by_patch[frame_ids * patch_count + patch_ids]
+        low_rank_latent = (low_rank_pixels - pixel_mean) @ basis.T
+        teacher_distilled_pixels = patch_pixels
+        teacher_distilled_latent = (teacher_distilled_pixels - pixel_mean) @ basis.T
+
+        def local_patch_basis(frame0, frame1, dim_requested):
+            patch_dim = int(frame0.shape[1])
+            side = int(jnp.sqrt(jnp.float32(patch_dim)))
+            coords = jnp.linspace(-1.0, 1.0, side, dtype=jnp.float32)
+            yy, xx = jnp.meshgrid(coords, coords, indexing="ij")
+            fixed_bank = jnp.stack(
+                [
+                    jnp.ones((patch_dim,), dtype=jnp.float32),
+                    xx.reshape(-1),
+                    yy.reshape(-1),
+                    (xx * yy).reshape(-1),
+                    (xx * xx - yy * yy).reshape(-1),
+                    jnp.sin(jnp.pi * xx).reshape(-1),
+                ],
+                axis=0,
+            )
+            local_mu = 0.5 * (frame0 + frame1)
+            local_rows = jnp.concatenate(
+                [
+                    (frame0 - local_mu)[:, None, :],
+                    (frame1 - local_mu)[:, None, :],
+                    (frame1 - frame0)[:, None, :],
+                    (local_mu - jnp.mean(local_mu, axis=1, keepdims=True))[:, None, :],
+                    jnp.broadcast_to(fixed_bank[None, :, :], (frame0.shape[0], fixed_bank.shape[0], patch_dim)),
+                ],
+                axis=1,
+            )
+            local_rows = local_rows / (jnp.linalg.norm(local_rows, axis=2, keepdims=True) + 1e-8)
+            q, _r = jnp.linalg.qr(jnp.swapaxes(local_rows, 1, 2))
+            dim = min(int(dim_requested), int(q.shape[2]))
+            return jnp.swapaxes(q[:, :, :dim], 1, 2), local_mu
+
+        def local_operator_field(dim_requested):
+            local_basis, local_mu = local_patch_basis(frame0_pixels, frame1_pixels, dim_requested)
+            z0 = jnp.einsum("pdk,pk->pd", local_basis, frame0_pixels - local_mu)
+            z1 = jnp.einsum("pdk,pk->pd", local_basis, frame1_pixels - local_mu)
+            z0_norm = jnp.linalg.norm(z0, axis=1, keepdims=True) + 1e-8
+            z1_norm = jnp.linalg.norm(z1, axis=1, keepdims=True) + 1e-8
+            u0 = z0 / z0_norm
+            u1 = z1 / z1_norm
+            diff = u0 - u1
+            diff_norm = jnp.linalg.norm(diff, axis=1, keepdims=True)
+            w = diff / (diff_norm + 1e-8)
+            eye_local = jnp.eye(int(local_basis.shape[1]), dtype=jnp.float32)
+            householder = eye_local[None, :, :] - 2.0 * w[:, :, None] * w[:, None, :]
+            scale = jnp.clip((z1_norm / z0_norm)[:, :, None], 0.25, 4.0)
+            local_t = scale * householder
+            z1_pred = jnp.einsum("pij,pj->pi", local_t, z0)
+            frame1_pred = jnp.clip(local_mu + jnp.einsum("pdk,pd->pk", local_basis, z1_pred), 0.0, 1.0)
+            local_pixels = jnp.concatenate([frame0_pixels, frame1_pred], axis=0)
+            local_latents = jnp.concatenate([z0, z1_pred], axis=0)[frame_ids * patch_count + patch_ids]
+            local_pixels_by_state = local_pixels[frame_ids * patch_count + patch_ids]
+            smooth_num = jnp.float32(0.0)
+            smooth_den = jnp.float32(0.0)
+            local_t_grid = local_t.reshape((patch_rows, patch_cols, local_t.shape[1], local_t.shape[2]))
+            if patch_cols > 1:
+                smooth_num = smooth_num + jnp.mean(jnp.square(local_t_grid[:, 1:] - local_t_grid[:, :-1]))
+                smooth_den = smooth_den + 1.0
+            if patch_rows > 1:
+                smooth_num = smooth_num + jnp.mean(jnp.square(local_t_grid[1:, :] - local_t_grid[:-1, :]))
+                smooth_den = smooth_den + 1.0
+            smoothness = smooth_num / (smooth_den + 1e-8)
+            local_target_latent = jnp.concatenate([z0, z1], axis=0)[frame_ids * patch_count + patch_ids]
+            local_error = jnp.mean(jnp.square(local_pixels_by_state - patch_pixels))
+            local_cos = jnp.mean(graph_cosine_batch_jax(local_latents, local_target_latent))
+            local_iso = jnp.mean(jnp.square(jnp.einsum("pdk,pek->pde", local_basis, local_basis) - eye_local[None, :, :]))
+            return local_pixels_by_state, local_latents, local_target_latent, smoothness, local_error, local_cos, local_iso
+
+        (
+            patch_local_pixels,
+            patch_local_latent,
+            patch_local_target_latent,
+            patch_local_smoothness,
+            patch_local_error,
+            patch_local_cos,
+            patch_local_iso,
+        ) = local_operator_field(local_latent_dim)
+        hybrid_local_pixels = jnp.clip(patch_local_pixels + 0.25 * (patch_pixels - patch_local_pixels), 0.0, 1.0)
+        hybrid_local_latent = (hybrid_local_pixels - pixel_mean) @ basis.T
+
+        def latent_payload(generated_pixels, generated_latent):
             return jnp.concatenate(
                 [
                     anchor_pixels,
                     mode_features,
-                    op_scale * delta_to_current,
-                    op_scale * (anchor_pixels * delta_to_current),
+                    generated_latent,
+                    generated_pixels - anchor_pixels,
                     pair_corr_scalar,
                 ],
                 axis=1,
             ).astype(jnp.complex64)
 
-        operator_payloads = {
-            f"delta_operator_gain_{label}": operator_payload(gain) for label, gain in pair_gain_specs
+        def local_payload(generated_pixels, generated_latent, include_pair=False, pair_scale=0.25):
+            parts = [
+                anchor_pixels,
+                mode_features,
+                generated_latent,
+                generated_pixels - anchor_pixels,
+                pair_corr_scalar,
+            ]
+            if include_pair:
+                scale = jnp.float32(pair_scale)
+                parts.extend([scale * pair_delta, scale * pair_product])
+            return jnp.concatenate(parts, axis=1).astype(jnp.complex64)
+
+        grid_meta_entries = {}
+        if heldout_operator_sweep and frame_count >= 4:
+            frame_pixels = patch_pixels.reshape((frame_count, patch_count, -1))
+            f0, f1, f2, f3 = frame_pixels[0], frame_pixels[1], frame_pixels[2], frame_pixels[3]
+            seen_delta = 0.5 * ((f1 - f0) + (f2 - f1))
+            static_seen_frames = jnp.stack(
+                [
+                    f0,
+                    jnp.clip(f0 + seen_delta, 0.0, 1.0),
+                    jnp.clip(f1 + seen_delta, 0.0, 1.0),
+                    jnp.clip(f2 + seen_delta, 0.0, 1.0),
+                ],
+                axis=0,
+            )
+            static_seen_pixels = static_seen_frames.reshape((frame_count * patch_count, -1))[
+                frame_ids * patch_count + patch_ids
+            ]
+
+            def per_patch_affine_rollout(use_luma=False):
+                x_seen = jnp.stack([f0, f1], axis=1)
+                y_seen = jnp.stack([f1, f2], axis=1)
+                ones = jnp.ones((patch_count, 2, 1), dtype=jnp.float32)
+                x_aug_seen = jnp.concatenate([x_seen, ones], axis=2)
+                eye_aug = jnp.eye(int(x_aug_seen.shape[2]), dtype=jnp.float32)
+                gram = jnp.einsum("pna,pnb->pab", x_aug_seen, x_aug_seen) + 1e-3 * eye_aug[None, :, :]
+                rhs = jnp.einsum("pna,pnk->pak", x_aug_seen, y_seen)
+                w_patch = jnp.linalg.solve(gram, rhs)
+
+                def apply(src):
+                    src_aug = jnp.concatenate([src, jnp.ones((patch_count, 1), dtype=jnp.float32)], axis=1)
+                    pred = jnp.einsum("pa,pak->pk", src_aug, w_patch)
+                    if use_luma:
+                        true_luma = jnp.mean(y_seen, axis=(1, 2), keepdims=False)[:, None]
+                        pred_luma = jnp.mean(jnp.stack([apply_raw(f0), apply_raw(f1)], axis=1), axis=(1, 2), keepdims=False)[:, None]
+                        scale = jnp.clip(true_luma / (pred_luma + 1e-6), 0.75, 1.25)
+                        pred = pred * scale
+                    return jnp.clip(pred, 0.0, 1.0)
+
+                def apply_raw(src):
+                    src_aug = jnp.concatenate([src, jnp.ones((patch_count, 1), dtype=jnp.float32)], axis=1)
+                    return jnp.einsum("pa,pak->pk", src_aug, w_patch)
+
+                p1 = apply(f0)
+                p2 = apply(f1)
+                p3 = apply(f2)
+                return jnp.stack([f0, p1, p2, p3], axis=0), w_patch
+
+            affine_frames, affine_w_patch = per_patch_affine_rollout(False)
+            affine_pixels_seen = affine_frames.reshape((frame_count * patch_count, -1))[frame_ids * patch_count + patch_ids]
+            luma_frames, luma_w_patch = per_patch_affine_rollout(True)
+            luma_pixels_seen = luma_frames.reshape((frame_count * patch_count, -1))[frame_ids * patch_count + patch_ids]
+            lowrank_seen_frames = jnp.stack(
+                [
+                    f0,
+                    f1,
+                    f2,
+                    jnp.clip(f2 + ((f2 - f1) + (f1 - f0)) * 0.5, 0.0, 1.0),
+                ],
+                axis=0,
+            )
+            lowrank_seen_pixels = lowrank_seen_frames.reshape((frame_count * patch_count, -1))[
+                frame_ids * patch_count + patch_ids
+            ]
+            latent_operator_pixel_tables = {
+                "pair_v2_teacher": patch_pixels,
+                "static_delta_seen": static_seen_pixels,
+                "local_operator_seen": affine_pixels_seen,
+                "local_operator_heldout": lowrank_seen_pixels,
+                "operator_family_conditioned": luma_pixels_seen,
+            }
+            latent_operator_payloads = {
+                name: local_payload(pixels, (pixels - pixel_mean) @ basis.T, include_pair=(name == "pair_v2_teacher"), pair_scale=0.25)
+                for name, pixels in latent_operator_pixel_tables.items()
+            }
+            grid_meta_entries = {}
+            for name, pixels in latent_operator_pixel_tables.items():
+                latent_table = (pixels - pixel_mean) @ basis.T
+                grid_meta_entries[name] = {
+                    "latent_transition_error": float(jnp.mean(jnp.square(latent_table - latent_transition_target))),
+                    "operator_unitarity_error": 0.0,
+                    "latent_basis_reconstruction_mse": float(jnp.mean(jnp.square(pixels - patch_pixels))),
+                    "B_isometry_error": float(jnp.linalg.norm(basis @ basis.T - jnp.eye(int(basis.shape[0]), dtype=jnp.float32))),
+                    "rollout_consistency": 0.0,
+                    "operator_cosine_Bspace": float(jnp.mean(graph_cosine_batch_jax(latent_table, latent_transition_target))),
+                    "operator_field_smoothness": 0.0,
+                    "stream_operator_kind": name,
+                }
+        elif patch_local_grid_sweep:
+            latent_operator_pixel_tables = {
+                "pair_v2_gain_0.25": patch_pixels,
+                "static_delta_operator": static_delta_pixels,
+            }
+            latent_operator_payloads = {
+                "pair_v2_gain_0.25": pair_payload(0.25),
+                "static_delta_operator": operator_payload(0.25),
+            }
+            grid_meta_entries = {}
+            dims = local_latent_dims if local_latent_dims else [6, 8]
+            alphas = hybrid_alpha_specs if hybrid_alpha_specs else [("0.125", 0.125), ("0.25", 0.25), ("0.50", 0.50)]
+            for dim_value in dims:
+                (
+                    local_pixels_dim,
+                    local_latent_dim_table,
+                    local_target_latent_dim_table,
+                    local_smoothness_dim,
+                    local_error_dim,
+                    local_cos_dim,
+                    local_iso_dim,
+                ) = local_operator_field(dim_value)
+                patch_name = f"patch_local_dim{int(dim_value)}"
+                latent_operator_pixel_tables[patch_name] = local_pixels_dim
+                latent_operator_payloads[patch_name] = local_payload(local_pixels_dim, local_latent_dim_table)
+                grid_meta_entries[patch_name] = {
+                    "latent_transition_error": float(jnp.mean(jnp.square(local_latent_dim_table - local_target_latent_dim_table))),
+                    "operator_unitarity_error": 0.0,
+                    "latent_basis_reconstruction_mse": float(local_error_dim),
+                    "B_isometry_error": float(local_iso_dim),
+                    "rollout_consistency": 0.0,
+                    "operator_cosine_Bspace": float(local_cos_dim),
+                    "operator_field_smoothness": float(local_smoothness_dim),
+                    "stream_operator_kind": f"patch_local_dim{int(dim_value)}",
+                }
+                for alpha_label, alpha_value in alphas:
+                    alpha = jnp.float32(alpha_value)
+                    hybrid_pixels_dim = jnp.clip(local_pixels_dim + alpha * (patch_pixels - local_pixels_dim), 0.0, 1.0)
+                    hybrid_latent_dim_table = (hybrid_pixels_dim - pixel_mean) @ basis.T
+                    hybrid_name = f"hybrid_dim{int(dim_value)}_alpha{alpha_label}"
+                    latent_operator_pixel_tables[hybrid_name] = hybrid_pixels_dim
+                    latent_operator_payloads[hybrid_name] = local_payload(
+                        hybrid_pixels_dim,
+                        hybrid_latent_dim_table,
+                        include_pair=True,
+                        pair_scale=alpha_value,
+                    )
+                    grid_meta_entries[hybrid_name] = {
+                        "latent_transition_error": float(jnp.mean(jnp.square(hybrid_latent_dim_table - latent_transition_target))),
+                        "operator_unitarity_error": 0.0,
+                        "latent_basis_reconstruction_mse": float(local_error_dim),
+                        "B_isometry_error": float(local_iso_dim),
+                        "rollout_consistency": 0.0,
+                        "operator_cosine_Bspace": float(jnp.mean(graph_cosine_batch_jax(hybrid_latent_dim_table, latent_transition_target))),
+                        "operator_field_smoothness": float(local_smoothness_dim),
+                        "stream_operator_kind": f"hybrid_dim{int(dim_value)}_alpha{alpha_label}",
+                    }
+                residual_energy = jnp.mean(jnp.square(patch_pixels - local_pixels_dim), axis=1, keepdims=True)
+                gate = jnp.clip(residual_energy / (jnp.mean(residual_energy) + 1e-8), 0.0, 1.0)
+                adaptive_pixels_dim = jnp.clip(local_pixels_dim + gate * (patch_pixels - local_pixels_dim), 0.0, 1.0)
+                adaptive_latent_dim_table = (adaptive_pixels_dim - pixel_mean) @ basis.T
+                adaptive_name = f"adaptive_gate_dim{int(dim_value)}"
+                latent_operator_pixel_tables[adaptive_name] = adaptive_pixels_dim
+                latent_operator_payloads[adaptive_name] = local_payload(
+                    adaptive_pixels_dim,
+                    adaptive_latent_dim_table,
+                    include_pair=True,
+                    pair_scale=0.25,
+                )
+                grid_meta_entries[adaptive_name] = {
+                    "latent_transition_error": float(jnp.mean(jnp.square(adaptive_latent_dim_table - latent_transition_target))),
+                    "operator_unitarity_error": 0.0,
+                    "latent_basis_reconstruction_mse": float(local_error_dim),
+                    "B_isometry_error": float(local_iso_dim),
+                    "rollout_consistency": 0.0,
+                    "operator_cosine_Bspace": float(jnp.mean(graph_cosine_batch_jax(adaptive_latent_dim_table, latent_transition_target))),
+                    "operator_field_smoothness": float(local_smoothness_dim),
+                    "stream_operator_kind": f"adaptive_gate_dim{int(dim_value)}",
+                }
+                local_frame1_dim = local_pixels_dim[patch_count : 2 * patch_count]
+                residual_frame1_dim = frame1_pixels - local_frame1_dim
+                residual_grid_dim = residual_frame1_dim.reshape(
+                    (patch_rows, patch_cols, residual_frame1_dim.shape[1])
+                )
+                neighbor_sum = residual_grid_dim
+                neighbor_count = jnp.ones((patch_rows, patch_cols, 1), dtype=jnp.float32)
+                if patch_rows > 1:
+                    neighbor_sum = neighbor_sum.at[1:, :, :].add(residual_grid_dim[:-1, :, :])
+                    neighbor_sum = neighbor_sum.at[:-1, :, :].add(residual_grid_dim[1:, :, :])
+                    neighbor_count = neighbor_count.at[1:, :, :].add(1.0)
+                    neighbor_count = neighbor_count.at[:-1, :, :].add(1.0)
+                if patch_cols > 1:
+                    neighbor_sum = neighbor_sum.at[:, 1:, :].add(residual_grid_dim[:, :-1, :])
+                    neighbor_sum = neighbor_sum.at[:, :-1, :].add(residual_grid_dim[:, 1:, :])
+                    neighbor_count = neighbor_count.at[:, 1:, :].add(1.0)
+                    neighbor_count = neighbor_count.at[:, :-1, :].add(1.0)
+                neighbor_residual = (neighbor_sum / neighbor_count).reshape((patch_count, -1))
+                neighbor_f1 = jnp.clip(local_frame1_dim + neighbor_residual, 0.0, 1.0)
+                neighbor_pixels_dim = jnp.concatenate([frame0_pixels, neighbor_f1], axis=0)[
+                    frame_ids * patch_count + patch_ids
+                ]
+                neighbor_latent_dim_table = (neighbor_pixels_dim - pixel_mean) @ basis.T
+                neighbor_name = f"residual_neighbor_dim{int(dim_value)}"
+                latent_operator_pixel_tables[neighbor_name] = neighbor_pixels_dim
+                latent_operator_payloads[neighbor_name] = local_payload(
+                    neighbor_pixels_dim,
+                    neighbor_latent_dim_table,
+                    include_pair=True,
+                    pair_scale=0.03125,
+                )
+                grid_meta_entries[neighbor_name] = {
+                    "latent_transition_error": float(jnp.mean(jnp.square(neighbor_latent_dim_table - latent_transition_target))),
+                    "operator_unitarity_error": 0.0,
+                    "latent_basis_reconstruction_mse": float(jnp.mean(jnp.square(neighbor_pixels_dim - patch_pixels))),
+                    "B_isometry_error": float(local_iso_dim),
+                    "rollout_consistency": 0.0,
+                    "operator_cosine_Bspace": float(jnp.mean(graph_cosine_batch_jax(neighbor_latent_dim_table, latent_transition_target))),
+                    "operator_field_smoothness": float(local_smoothness_dim),
+                    "stream_operator_kind": f"residual_neighbor_dim{int(dim_value)}",
+                }
+                residual_mean = jnp.mean(residual_frame1_dim, axis=0, keepdims=True)
+                residual_centered_dim = residual_frame1_dim - residual_mean
+                _u_resid, _s_resid, vh_resid = jnp.linalg.svd(residual_centered_dim, full_matrices=False)
+                residual_rank = max(1, min(4, int(vh_resid.shape[0])))
+                residual_basis = vh_resid[:residual_rank]
+                residual_lowrank = residual_mean + (residual_centered_dim @ residual_basis.T) @ residual_basis
+                lowrank_resid_f1 = jnp.clip(local_frame1_dim + residual_lowrank, 0.0, 1.0)
+                lowrank_resid_pixels_dim = jnp.concatenate([frame0_pixels, lowrank_resid_f1], axis=0)[
+                    frame_ids * patch_count + patch_ids
+                ]
+                lowrank_resid_latent_dim_table = (lowrank_resid_pixels_dim - pixel_mean) @ basis.T
+                lowrank_resid_name = f"residual_lowrank_dim{int(dim_value)}"
+                latent_operator_pixel_tables[lowrank_resid_name] = lowrank_resid_pixels_dim
+                latent_operator_payloads[lowrank_resid_name] = local_payload(
+                    lowrank_resid_pixels_dim,
+                    lowrank_resid_latent_dim_table,
+                    include_pair=True,
+                    pair_scale=0.03125,
+                )
+                grid_meta_entries[lowrank_resid_name] = {
+                    "latent_transition_error": float(jnp.mean(jnp.square(lowrank_resid_latent_dim_table - latent_transition_target))),
+                    "operator_unitarity_error": 0.0,
+                    "latent_basis_reconstruction_mse": float(jnp.mean(jnp.square(lowrank_resid_pixels_dim - patch_pixels))),
+                    "B_isometry_error": float(local_iso_dim),
+                    "rollout_consistency": 0.0,
+                    "operator_cosine_Bspace": float(jnp.mean(graph_cosine_batch_jax(lowrank_resid_latent_dim_table, latent_transition_target))),
+                    "operator_field_smoothness": float(local_smoothness_dim),
+                    "stream_operator_kind": f"residual_lowrank_dim{int(dim_value)}",
+                }
+        elif patch_local_operator_sweep:
+            latent_operator_pixel_tables = {
+                "pair_v2_gain_0.25": patch_pixels,
+                "static_delta_operator": static_delta_pixels,
+                "patch_local_Adelta": patch_local_pixels,
+                "hybrid_local_plus_pair_v2": hybrid_local_pixels,
+            }
+            latent_operator_payloads = {
+                "pair_v2_gain_0.25": pair_payload(0.25),
+                "static_delta_operator": operator_payload(0.25),
+                "patch_local_Adelta": local_payload(patch_local_pixels, patch_local_latent),
+                "hybrid_local_plus_pair_v2": local_payload(hybrid_local_pixels, hybrid_local_latent, include_pair=True),
+            }
+        elif adelta_operator_sweep:
+            latent_operator_pixel_tables = {
+                "pair_v2_gain_0.25": patch_pixels,
+                "static_delta_operator": static_delta_pixels,
+                "latent_affine_operator_Bfit": affine_pixels,
+                "Adelta_diag_phase": adelta_diag_pixels,
+                "Adelta_hamiltonian": adelta_ham_pixels,
+                "Adelta_hamiltonian_plus_luma": adelta_ham_luma_pixels,
+            }
+            latent_operator_payloads = {
+                "pair_v2_gain_0.25": pair_payload(0.25),
+                "static_delta_operator": operator_payload(0.25),
+                "latent_affine_operator_Bfit": latent_payload(affine_pixels, affine_latent),
+                "Adelta_diag_phase": latent_payload(adelta_diag_pixels, adelta_diag_latent),
+                "Adelta_hamiltonian": latent_payload(adelta_ham_pixels, adelta_ham_latent),
+                "Adelta_hamiltonian_plus_luma": latent_payload(adelta_ham_luma_pixels, adelta_ham_luma_latent),
+            }
+        elif reconstruction_operator_sweep:
+            latent_operator_pixel_tables = {
+                "static_delta_operator": static_delta_pixels,
+                "latent_affine_operator_Bfit": affine_pixels,
+                "low_rank_delta_operator": low_rank_pixels,
+                "teacher_distilled_operator": teacher_distilled_pixels,
+            }
+            latent_operator_payloads = {
+                "static_delta_operator": operator_payload(0.25),
+                "latent_affine_operator_Bfit": latent_payload(affine_pixels, affine_latent),
+                "low_rank_delta_operator": latent_payload(low_rank_pixels, low_rank_latent),
+                "teacher_distilled_operator": pair_payload(0.25),
+            }
+        else:
+            latent_operator_pixel_tables = {
+                "static_delta_operator": static_delta_pixels,
+                "latent_diag_phase_operator": diag_pixels,
+                "latent_unitary_operator_tied_BC": unitary_pixels,
+            }
+            latent_operator_payloads = {
+                "static_delta_operator": operator_payload(0.25),
+                "latent_diag_phase_operator": latent_payload(diag_pixels, diag_latent),
+                "latent_unitary_operator_tied_BC": latent_payload(unitary_pixels, unitary_latent),
+            }
+        identity = jnp.eye(int(basis.shape[0]), dtype=jnp.float32)
+        basis_reconstruction_mse = float(
+            jnp.mean(jnp.square(((patch_pixels - pixel_mean) @ basis.T) @ basis + pixel_mean - patch_pixels))
+        )
+        basis_isometry_error = float(jnp.linalg.norm(basis @ basis.T - identity))
+
+        def transition_meta(generated_latent, t_eff, rollout_consistency, kind):
+            return {
+                "latent_transition_error": float(jnp.mean(jnp.square(generated_latent - latent_transition_target))),
+                "operator_unitarity_error": float(jnp.linalg.norm(t_eff.T @ t_eff - identity)),
+                "latent_basis_reconstruction_mse": basis_reconstruction_mse,
+                "B_isometry_error": basis_isometry_error,
+                "rollout_consistency": float(rollout_consistency),
+                "operator_cosine_Bspace": float(jnp.mean(graph_cosine_batch_jax(generated_latent, latent_transition_target))),
+                "stream_operator_kind": kind,
+            }
+
+        def local_transition_meta(generated_pixels, generated_latent, target_latent, kind):
+            return {
+                "latent_transition_error": float(jnp.mean(jnp.square(generated_latent - target_latent))),
+                "operator_unitarity_error": 0.0,
+                "latent_basis_reconstruction_mse": float(patch_local_error),
+                "B_isometry_error": float(patch_local_iso),
+                "rollout_consistency": 0.0,
+                "operator_cosine_Bspace": float(jnp.mean(graph_cosine_batch_jax(generated_latent, target_latent))),
+                "operator_field_smoothness": float(patch_local_smoothness),
+                "stream_operator_kind": kind,
+            }
+
+        latent_operator_meta = {
+            "static_delta_operator": {
+                "latent_transition_error": float(jnp.mean(jnp.square(static_delta_pixels - patch_pixels))),
+                "operator_unitarity_error": 0.0,
+                "latent_basis_reconstruction_mse": basis_reconstruction_mse,
+                "B_isometry_error": basis_isometry_error,
+                "rollout_consistency": 0.0,
+                "operator_cosine_Bspace": 0.0,
+                "stream_operator_kind": "static_delta",
+            },
+            "latent_diag_phase_operator": {
+                "latent_transition_error": float(jnp.mean(jnp.square(diag_latent - latent_transition_target))),
+                "operator_unitarity_error": float(jnp.linalg.norm(jnp.diag(diag_scale * diag_scale) - identity)),
+                "latent_basis_reconstruction_mse": basis_reconstruction_mse,
+                "B_isometry_error": basis_isometry_error,
+                "rollout_consistency": 0.0,
+                "operator_cosine_Bspace": float(jnp.mean(graph_cosine_batch_jax(diag_latent, latent_transition_target))),
+                "stream_operator_kind": "legacy_diag_phase",
+            },
+            "latent_unitary_operator_tied_BC": {
+                "latent_transition_error": float(jnp.mean(jnp.square(unitary_latent - latent_transition_target))),
+                "operator_unitarity_error": float(jnp.linalg.norm(unitary_t.T @ unitary_t - identity)),
+                "latent_basis_reconstruction_mse": basis_reconstruction_mse,
+                "B_isometry_error": basis_isometry_error,
+                "rollout_consistency": 0.0,
+                "operator_cosine_Bspace": float(jnp.mean(graph_cosine_batch_jax(unitary_latent, latent_transition_target))),
+                "stream_operator_kind": "legacy_unitary",
+            },
+            "latent_affine_operator_Bfit": {
+                "latent_transition_error": float(jnp.mean(jnp.square(affine_latent - latent_transition_target))),
+                "operator_unitarity_error": float(jnp.linalg.norm(affine_w[:-1].T @ affine_w[:-1] - identity)),
+                "latent_basis_reconstruction_mse": basis_reconstruction_mse,
+                "B_isometry_error": basis_isometry_error,
+                "rollout_consistency": 0.0,
+                "operator_cosine_Bspace": float(jnp.mean(graph_cosine_batch_jax(affine_latent, latent_transition_target))),
+                "stream_operator_kind": "free_affine_Bfit",
+            },
+            "low_rank_delta_operator": {
+                "latent_transition_error": float(jnp.mean(jnp.square(low_rank_latent - latent_transition_target))),
+                "operator_unitarity_error": 0.0,
+                "latent_basis_reconstruction_mse": basis_reconstruction_mse,
+                "B_isometry_error": basis_isometry_error,
+                "rollout_consistency": 0.0,
+                "operator_cosine_Bspace": float(jnp.mean(graph_cosine_batch_jax(low_rank_latent, latent_transition_target))),
+                "stream_operator_kind": "low_rank_delta",
+            },
+            "teacher_distilled_operator": {
+                "latent_transition_error": float(jnp.mean(jnp.square(teacher_distilled_latent - latent_transition_target))),
+                "operator_unitarity_error": 0.0,
+                "latent_basis_reconstruction_mse": basis_reconstruction_mse,
+                "B_isometry_error": basis_isometry_error,
+                "rollout_consistency": 0.0,
+                "operator_cosine_Bspace": float(jnp.mean(graph_cosine_batch_jax(teacher_distilled_latent, latent_transition_target))),
+                "stream_operator_kind": "teacher_distilled",
+            },
         }
+        latent_operator_meta.update(
+            {
+                "pair_v2_gain_0.25": {
+                    "latent_transition_error": 0.0,
+                    "operator_unitarity_error": 0.0,
+                    "latent_basis_reconstruction_mse": basis_reconstruction_mse,
+                    "B_isometry_error": basis_isometry_error,
+                    "rollout_consistency": 0.0,
+                    "operator_cosine_Bspace": 1.0,
+                    "stream_operator_kind": "pair_v2_teacher",
+                },
+                "Adelta_diag_phase": transition_meta(
+                    adelta_diag_latent,
+                    adelta_diag_teff,
+                    adelta_diag_rollout,
+                    "A_delta_diag_phase",
+                ),
+                "Adelta_hamiltonian": transition_meta(
+                    adelta_ham_latent,
+                    adelta_ham_teff,
+                    adelta_ham_rollout,
+                    "A_delta_hamiltonian",
+                ),
+                "Adelta_hamiltonian_plus_luma": transition_meta(
+                    adelta_ham_luma_latent,
+                    adelta_ham_luma_teff,
+                    adelta_ham_luma_rollout,
+                    "A_delta_hamiltonian_plus_luma",
+                ),
+                "patch_local_Adelta": local_transition_meta(
+                    patch_local_pixels,
+                    patch_local_latent,
+                    patch_local_target_latent,
+                    "patch_local_Adelta",
+                ),
+                "hybrid_local_plus_pair_v2": local_transition_meta(
+                    hybrid_local_pixels,
+                    hybrid_local_latent,
+                    latent_transition_target,
+                    "hybrid_local_plus_pair_v2",
+                ),
+            }
+        )
+        latent_operator_meta.update(grid_meta_entries)
+        pair_payloads = {"pair_v2_teacher": pair_payload(0.25)}
     stream_payload_width = max(
         [int(flat_x0.shape[1]), int(separable_x0.shape[1])]
         + [int(table.shape[1]) for table in pair_payloads.values()]
         + [int(table.shape[1]) for table in operator_payloads.values()]
+        + [int(table.shape[1]) for table in latent_operator_payloads.values()]
     )
 
     def pad_stream_x0(table):
@@ -1427,6 +2140,13 @@ def augment_yinyang_stream_payload(
             "aq_stream_0": True,
             "aq_stream_1": bool(gain_sweep),
             "aq_stream_2": bool(operator_sweep),
+            "aq_stream_3_iso": bool(latent_operator_sweep),
+            "aq_stream_4": bool(reconstruction_operator_sweep),
+            "aq_stream_5": bool(adelta_operator_sweep),
+            "aq_stream_7": bool(patch_local_operator_sweep),
+            "aq_stream_7b": bool(patch_local_grid_sweep),
+            "aq_stream_8": bool(heldout_operator_sweep),
+            "stream_heldout_frame_index": 3 if bool(heldout_operator_sweep) else -1,
             "fast_codec_probe": True,
             "stream_frame_ids": frame_ids,
             "stream_patch_ids": patch_ids,
@@ -1442,6 +2162,9 @@ def augment_yinyang_stream_payload(
             "stream_pair_corr_scalar": pair_corr_scalar,
             "stream_anchor_pixels": anchor_pixels,
             "stream_delta_to_current": delta_to_current,
+            "stream_latent_transition_target": latent_transition_target,
+            "stream_latent_operator_pixel_tables": latent_operator_pixel_tables,
+            "stream_latent_operator_meta": latent_operator_meta,
             "stream_pair_encoding": "raw_preserving_real_pair_residual_v2",
             "stream_pair_gain_sweep": bool(gain_sweep),
             "stream_operator_sweep": bool(operator_sweep),
@@ -1452,6 +2175,7 @@ def augment_yinyang_stream_payload(
                 "separable_mode_stream": pad_stream_x0(separable_x0),
                 **{name: pad_stream_x0(table) for name, table in pair_payloads.items()},
                 **{name: pad_stream_x0(table) for name, table in operator_payloads.items()},
+                **{name: pad_stream_x0(table) for name, table in latent_operator_payloads.items()},
             },
         }
     )
@@ -2144,8 +2868,19 @@ def semantic_mixtures(key, n_states, n_samples, alpha):
 
 
 def recovery_state_weights(args, key, n_states, n_samples, alpha):
-    if getattr(args, "aq_stream_0", False) or getattr(args, "aq_stream_1", False) or getattr(args, "aq_stream_2", False) or (
+    if (
+        getattr(args, "aq_stream_0", False)
+        or getattr(args, "aq_stream_1", False)
+        or getattr(args, "aq_stream_2", False)
+        or getattr(args, "aq_stream_3_iso", False)
+        or getattr(args, "aq_stream_4", False)
+        or getattr(args, "aq_stream_5", False)
+        or getattr(args, "aq_stream_7", False)
+        or getattr(args, "aq_stream_7b", False)
+        or getattr(args, "aq_stream_8", False)
+        or (
         getattr(args, "aq_yinyang_4", False) and getattr(args, "yinyang_ordered_recovery", False)
+        )
     ):
         idx = jnp.arange(n_samples) % n_states
         return jax.nn.one_hot(idx, n_states, dtype=jnp.float32)
@@ -2158,6 +2893,12 @@ def recovery_state_weights(args, key, n_states, n_samples, alpha):
         or getattr(args, "aq_stream_0", False)
         or getattr(args, "aq_stream_1", False)
         or getattr(args, "aq_stream_2", False)
+        or getattr(args, "aq_stream_3_iso", False)
+        or getattr(args, "aq_stream_4", False)
+        or getattr(args, "aq_stream_5", False)
+        or getattr(args, "aq_stream_7", False)
+        or getattr(args, "aq_stream_7b", False)
+        or getattr(args, "aq_stream_8", False)
         or getattr(args, "as_0b", False)
         or getattr(args, "as_0", False)
         or getattr(args, "aq_yinyang_4", False)
@@ -2394,7 +3135,16 @@ def evaluate_semantic_recovery(
 
     stream_fast_path = bool(
         transform_info is not None
-        and (transform_info.get("aq_stream_1", False) or transform_info.get("aq_stream_2", False))
+        and (
+            transform_info.get("aq_stream_1", False)
+            or transform_info.get("aq_stream_2", False)
+            or transform_info.get("aq_stream_3_iso", False)
+            or transform_info.get("aq_stream_4", False)
+            or transform_info.get("aq_stream_5", False)
+            or transform_info.get("aq_stream_7", False)
+            or transform_info.get("aq_stream_7b", False)
+            or transform_info.get("aq_stream_8", False)
+        )
         and "stream_complex_x0_tables" in transform_info
         and ctrl_cfg.get("stream_variant") in transform_info["stream_complex_x0_tables"]
         and getattr(args, "aq_stream_fast_path", True)
@@ -3051,7 +3801,19 @@ def evaluate_semantic_recovery(
                 pair_corr_pred = ridge_decode_jax(train_x, pair_corr_y, noisy_test_x, args.decoder_ridge)
                 anchor_pixel_pred = ridge_decode_jax(train_x, anchor_pixel_y, noisy_test_x, args.decoder_ridge)
                 delta_operator_pred = ridge_decode_jax(train_x, delta_operator_y, noisy_test_x, args.decoder_ridge)
-                derived_operator_pixel_pred = jnp.clip(anchor_pixel_pred + delta_operator_pred, 0.0, 1.0)
+                stream_variant = str(ctrl_cfg.get("stream_variant", "unknown"))
+                latent_pixel_tables = transform_info.get("stream_latent_operator_pixel_tables", {})
+                latent_meta = transform_info.get("stream_latent_operator_meta", {}).get(stream_variant, {})
+                if stream_variant in latent_pixel_tables:
+                    latent_operator_table = latent_pixel_tables[stream_variant]
+                    latent_operator_y = train_w @ latent_operator_table
+                    latent_operator_target = test_w @ latent_operator_table
+                    latent_operator_pred = ridge_decode_jax(train_x, latent_operator_y, noisy_test_x, args.decoder_ridge)
+                    derived_operator_pixel_pred = jnp.clip(latent_operator_pred, 0.0, 1.0)
+                    operator_recovery_cos = jnp.mean(graph_cosine_batch_jax(latent_operator_pred, latent_operator_target))
+                else:
+                    derived_operator_pixel_pred = jnp.clip(anchor_pixel_pred + delta_operator_pred, 0.0, 1.0)
+                    operator_recovery_cos = jnp.mean(graph_cosine_batch_jax(delta_operator_pred, delta_operator_target))
                 derived_operator_mse = jnp.mean((derived_operator_pixel_pred - patch_pixel_target) ** 2)
                 derived_operator_psnr = -10.0 * jnp.log10(derived_operator_mse + 1e-8)
 
@@ -3083,6 +3845,11 @@ def evaluate_semantic_recovery(
                 frame_delta_psnr = jnp.float32(0.0)
                 derived_frame_2_psnr = jnp.float32(0.0)
                 derived_frame_delta_psnr = jnp.float32(0.0)
+                heldout_derived_frame_psnr = jnp.float32(0.0)
+                heldout_delta_psnr = jnp.float32(0.0)
+                operator_generalization_gap = jnp.float32(0.0)
+                seen_transition_psnr = jnp.float32(0.0)
+                direct_pair_teacher_gap = jnp.float32(0.0)
                 if pixel_pred.shape[0] == frame_count * rows * cols:
                     pred_grid = pixel_pred.reshape((frame_count, rows, cols, patch_side, patch_side))
                     target_grid = patch_pixel_target.reshape((frame_count, rows, cols, patch_side, patch_side))
@@ -3104,6 +3871,31 @@ def evaluate_semantic_recovery(
                         pair_correlation_fidelity = jnp.dot(pred_pair_corr, true_pair_corr) / (
                             jnp.linalg.norm(pred_pair_corr) * jnp.linalg.norm(true_pair_corr) + 1e-8
                         )
+                        heldout_idx = int(transform_info.get("stream_heldout_frame_index", -1))
+                        if 0 <= heldout_idx < frame_count:
+                            heldout_mse = jnp.mean((derived_grid[heldout_idx] - target_grid[heldout_idx]) ** 2)
+                            heldout_derived_frame_psnr = -10.0 * jnp.log10(heldout_mse + 1e-8)
+                            prev_idx = max(0, heldout_idx - 1)
+                            heldout_delta_mse = jnp.mean(
+                                ((derived_grid[heldout_idx] - derived_grid[prev_idx]) - (target_grid[heldout_idx] - target_grid[prev_idx])) ** 2
+                            )
+                            heldout_delta_psnr = -10.0 * jnp.log10(heldout_delta_mse + 1e-8)
+                            seen_idx = max(1, min(frame_count - 1, heldout_idx - 1))
+                            seen_mse = jnp.mean((derived_grid[seen_idx] - target_grid[seen_idx]) ** 2)
+                            seen_transition_psnr = -10.0 * jnp.log10(seen_mse + 1e-8)
+                            operator_generalization_gap = seen_transition_psnr - heldout_derived_frame_psnr
+                            teacher_table = transform_info.get("stream_latent_operator_pixel_tables", {}).get(
+                                "pair_v2_teacher", None
+                            )
+                            if teacher_table is not None:
+                                teacher_grid = teacher_table.reshape(
+                                    (frame_count, rows, cols, patch_side, patch_side)
+                                )
+                                teacher_mse = jnp.mean(
+                                    (teacher_grid[heldout_idx] - target_grid[heldout_idx]) ** 2
+                                )
+                                teacher_psnr = -10.0 * jnp.log10(teacher_mse + 1e-8)
+                                direct_pair_teacher_gap = teacher_psnr - heldout_derived_frame_psnr
                     else:
                         pair_correlation_fidelity = jnp.float32(1.0)
                 else:
@@ -3121,21 +3913,36 @@ def evaluate_semantic_recovery(
                         "derived_operator_psnr": float(derived_operator_psnr),
                         "derived_frame_2_psnr": float(derived_frame_2_psnr),
                         "derived_frame_delta_psnr": float(derived_frame_delta_psnr),
+                        "heldout_derived_frame_psnr": float(heldout_derived_frame_psnr),
+                        "heldout_delta_psnr": float(heldout_delta_psnr),
+                        "seen_transition_psnr": float(seen_transition_psnr),
+                        "operator_generalization_gap": float(operator_generalization_gap),
+                        "direct_pair_teacher_gap": float(direct_pair_teacher_gap),
                         "temporal_order_accuracy": float(temporal_order_acc),
                         "patch_position_accuracy": float(patch_acc),
                         "cross_frame_leakage": float(cross_frame_leakage),
                         "frame_token_recovery": float(frame_acc),
                         "polarity_recovery": float(polarity_acc),
                         "boundary_consistency": float(boundary_consistency),
+                        "patch_boundary_error": float((1.0 / (boundary_consistency + 1e-8)) - 1.0),
                         "luma_mae_by_frame": luma_mae_by_frame,
                         "pair_correlation_fidelity": float(pair_correlation_fidelity),
                         "entanglement_resource_preservation": float(jnp.mean(graph_cosine_batch_jax(pair_resource_pred, pair_resource_target))),
                         "pair_delta_recovery": float(jnp.mean(graph_cosine_batch_jax(pair_delta_pred, pair_delta_target))),
                         "pair_product_recovery": float(jnp.mean(graph_cosine_batch_jax(pair_product_pred, pair_product_target))),
                         "pair_corr_recovery": float(1.0 / (1.0 + jnp.mean(jnp.abs(pair_corr_pred - pair_corr_target)))),
-                        "delta_operator_recovery": float(
-                            jnp.mean(graph_cosine_batch_jax(delta_operator_pred, delta_operator_target))
-                        ),
+                        "delta_operator_recovery": float(operator_recovery_cos),
+                        "operator_recovery_cosine": float(operator_recovery_cos),
+                        "latent_transition_error": float(latent_meta.get("latent_transition_error", 0.0)),
+                        "operator_unitarity_error": float(latent_meta.get("operator_unitarity_error", 0.0)),
+                        "latent_basis_reconstruction_mse": float(latent_meta.get("latent_basis_reconstruction_mse", 0.0)),
+                        "B_isometry_error": float(latent_meta.get("B_isometry_error", 0.0)),
+                        "rollout_consistency": float(latent_meta.get("rollout_consistency", 0.0)),
+                        "operator_cosine_Bspace": float(latent_meta.get("operator_cosine_Bspace", 0.0)),
+                        "operator_field_smoothness": float(latent_meta.get("operator_field_smoothness", 0.0)),
+                        "pair_teacher_gap": 0.0,
+                        "hybrid_lift_over_pair_v2": 0.0,
+                        "stream_operator_kind": str(latent_meta.get("stream_operator_kind", "")),
                         "anchor_pixel_recovery": float(
                             jnp.mean(graph_cosine_batch_jax(anchor_pixel_pred, anchor_pixel_target))
                         ),
@@ -3150,7 +3957,15 @@ def evaluate_semantic_recovery(
             if getattr(args, "save_preview_png", False):
                 preview_stream_pred = (
                     derived_operator_pixel_pred
-                    if transform_info.get("aq_stream_2", False) and ctrl_cfg.get("stream_operator_recovery", False)
+                    if (
+                        (transform_info.get("aq_stream_2", False) and ctrl_cfg.get("stream_operator_recovery", False))
+                        or transform_info.get("aq_stream_3_iso", False)
+                        or transform_info.get("aq_stream_4", False)
+                        or transform_info.get("aq_stream_5", False)
+                        or transform_info.get("aq_stream_7", False)
+                        or transform_info.get("aq_stream_7b", False)
+                        or transform_info.get("aq_stream_8", False)
+                    )
                     else pixel_pred
                 )
                 transform_metrics.update(
@@ -3314,6 +4129,18 @@ def ap_cell_debug_metadata(args, ctrl_name, ctrl_cfg, noise_idx, noise_level, se
         mode_name = "--aq-1a-tf"
         if getattr(args, "aq_seq_0", False):
             mode_name = "--aq-seq-0"
+    elif getattr(args, "aq_stream_8", False):
+        mode_name = "--aq-stream-8"
+    elif getattr(args, "aq_stream_7b", False):
+        mode_name = "--aq-stream-7b"
+    elif getattr(args, "aq_stream_7", False):
+        mode_name = "--aq-stream-7"
+    elif getattr(args, "aq_stream_5", False):
+        mode_name = "--aq-stream-5"
+    elif getattr(args, "aq_stream_4", False):
+        mode_name = "--aq-stream-4"
+    elif getattr(args, "aq_stream_3_iso", False):
+        mode_name = "--aq-stream-3-iso"
     elif getattr(args, "aq_stream_2", False):
         mode_name = "--aq-stream-2"
     elif getattr(args, "aq_stream_1", False):
@@ -3457,6 +4284,18 @@ def evaluate_heldout_transport(
 
 
 def experiment_name(args):
+    if getattr(args, "aq_stream_7b", False):
+        return "semantic_stream_patch_local_dim_alpha_sweep_aq_stream_7b"
+    if getattr(args, "aq_stream_8", False):
+        return "semantic_stream_heldout_transition_generalization_aq_stream_8"
+    if getattr(args, "aq_stream_7", False):
+        return "semantic_stream_patch_local_operator_aq_stream_7"
+    if getattr(args, "aq_stream_5", False):
+        return "semantic_stream_adelta_generator_aq_stream_5"
+    if getattr(args, "aq_stream_4", False):
+        return "semantic_stream_reconstruction_aligned_operator_aq_stream_4"
+    if getattr(args, "aq_stream_3_iso", False):
+        return "semantic_stream_latent_operator_iso_aq_stream_3"
     if getattr(args, "aq_stream_2", False):
         return "semantic_stream_gain_operator_sweep_aq_stream_2"
     if getattr(args, "aq_stream_1", False):
@@ -3564,6 +4403,12 @@ def run_program_ap(args):
         or getattr(args, "aq_stream_0", False)
         or getattr(args, "aq_stream_1", False)
         or getattr(args, "aq_stream_2", False)
+        or getattr(args, "aq_stream_3_iso", False)
+        or getattr(args, "aq_stream_4", False)
+        or getattr(args, "aq_stream_5", False)
+        or getattr(args, "aq_stream_7", False)
+        or getattr(args, "aq_stream_7b", False)
+        or getattr(args, "aq_stream_8", False)
         or getattr(args, "as_0b", False)
         or getattr(args, "as_0", False)
         or getattr(args, "aq_yinyang_4", False)
@@ -3597,6 +4442,12 @@ def run_program_ap(args):
         or getattr(args, "aq_stream_0", False)
         or getattr(args, "aq_stream_1", False)
         or getattr(args, "aq_stream_2", False)
+        or getattr(args, "aq_stream_3_iso", False)
+        or getattr(args, "aq_stream_4", False)
+        or getattr(args, "aq_stream_5", False)
+        or getattr(args, "aq_stream_7", False)
+        or getattr(args, "aq_stream_7b", False)
+        or getattr(args, "aq_stream_8", False)
         or getattr(args, "aq_yinyang_4", False)
         or getattr(args, "aq_yinyang_3", False)
         or getattr(args, "aq_yinyang_2", False)
@@ -3614,10 +4465,20 @@ def run_program_ap(args):
         or getattr(args, "aq_fft_1", False)
         or getattr(args, "aq_fft_0", False)
     ):
-        if getattr(args, "aq_stream_0", False) or getattr(args, "aq_stream_1", False) or getattr(args, "aq_stream_2", False):
+        if (
+            getattr(args, "aq_stream_0", False)
+            or getattr(args, "aq_stream_1", False)
+            or getattr(args, "aq_stream_2", False)
+            or getattr(args, "aq_stream_3_iso", False)
+            or getattr(args, "aq_stream_4", False)
+            or getattr(args, "aq_stream_5", False)
+            or getattr(args, "aq_stream_7", False)
+            or getattr(args, "aq_stream_7b", False)
+            or getattr(args, "aq_stream_8", False)
+        ):
             seqs, features, graph_features, layer_features, transform_info = build_yinyang_raw_patch_payload(
                 args.sequence_length,
-                frame_count=2,
+                frame_count=(4 if getattr(args, "aq_stream_8", False) else 2),
                 direct_complex=True,
                 frame_size=args.aq_stream_frame_size,
                 frame_start=1,
@@ -3630,6 +4491,16 @@ def run_program_ap(args):
                 transform_info,
                 gain_sweep=(getattr(args, "aq_stream_1", False) or getattr(args, "aq_stream_2", False)),
                 operator_sweep=getattr(args, "aq_stream_2", False),
+                latent_operator_sweep=getattr(args, "aq_stream_3_iso", False),
+                reconstruction_operator_sweep=getattr(args, "aq_stream_4", False),
+                adelta_operator_sweep=getattr(args, "aq_stream_5", False),
+                patch_local_operator_sweep=getattr(args, "aq_stream_7", False),
+                patch_local_grid_sweep=getattr(args, "aq_stream_7b", False),
+                heldout_operator_sweep=getattr(args, "aq_stream_8", False),
+                latent_dim=args.aq_stream_latent_dim,
+                local_latent_dim=args.aq_stream_local_latent_dim,
+                local_latent_dims=parse_int_specs(getattr(args, "aq_stream_local_latent_dims", "6,8")),
+                hybrid_alpha_specs=parse_stream_gain_specs(getattr(args, "aq_stream_hybrid_alphas", "0.125,0.25,0.50")),
                 gain_specs=parse_stream_gain_specs(getattr(args, "aq_stream_gains", "0.125,0.25")),
             )
         elif getattr(args, "aq_yinyang_4", False):
@@ -3719,6 +4590,42 @@ def run_program_ap(args):
             print("  token_metrics = enabled")
             print("  permutation_nulls = enabled")
             print("  runtime_envelope != AQ-FFT-1")
+        if getattr(args, "aq_stream_3_iso", False):
+            print("AQ-STREAM-3-ISO ACTIVE:")
+            print(f"  frame_size = {int(args.aq_stream_frame_size)}")
+            print(f"  latent_dim = {int(args.aq_stream_latent_dim)}")
+            print("  arms = pair_v2_teacher, static_delta_operator, latent_diag_phase_operator, latent_unitary_operator_tied_BC")
+            print("  fast_path = payload-lane D-LinOSS; entropy-table bypass enabled")
+        if getattr(args, "aq_stream_4", False):
+            print("AQ-STREAM-4 ACTIVE:")
+            print(f"  frame_size = {int(args.aq_stream_frame_size)}")
+            print(f"  latent_dim = {int(args.aq_stream_latent_dim)}")
+            print("  arms = pair_v2_teacher, static_delta_operator, latent_affine_operator_Bfit, low_rank_delta_operator, teacher_distilled_operator")
+            print("  basis = reconstruction-aligned B/BH; pair-v2 teacher ceiling retained")
+        if getattr(args, "aq_stream_5", False):
+            print("AQ-STREAM-5 ACTIVE:")
+            print(f"  frame_size = {int(args.aq_stream_frame_size)}")
+            print(f"  latent_dim = {int(args.aq_stream_latent_dim)}")
+            print("  arms = pair_v2_gain_0.25, static_delta_operator, latent_affine_operator_Bfit, Adelta_diag_phase, Adelta_hamiltonian, Adelta_hamiltonian_plus_luma")
+            print("  operator = T_delta = exp(A delta_t) approximated in latent B/BH space")
+        if getattr(args, "aq_stream_7", False):
+            print("AQ-STREAM-7 ACTIVE:")
+            print(f"  frame_size = {int(args.aq_stream_frame_size)}")
+            print(f"  local_latent_dim = {int(args.aq_stream_local_latent_dim)}")
+            print("  arms = pair_v2_gain_0.25, static_delta_operator, patch_local_Adelta, hybrid_local_plus_pair_v2")
+            print("  operator = spatial field of patch-local latent transition generators")
+        if getattr(args, "aq_stream_7b", False):
+            print("AQ-STREAM-7b ACTIVE:")
+            print(f"  frame_size = {int(args.aq_stream_frame_size)}")
+            print(f"  local_latent_dims = {getattr(args, 'aq_stream_local_latent_dims', '6,8')}")
+            print(f"  hybrid_alphas = {getattr(args, 'aq_stream_hybrid_alphas', '0.125,0.25,0.50')}")
+            print("  arms = pair_v2_gain_0.25, static_delta_operator, patch_local_dim*, hybrid_dim*_alpha*, adaptive_gate_dim*")
+            print("  fallback = adaptive residual gate if latent dimension does not move the needle")
+        if getattr(args, "aq_stream_8", False):
+            print("AQ-STREAM-8 ACTIVE:")
+            print(f"  frame_size = {int(args.aq_stream_frame_size)}")
+            print("  frames = 4; train transitions = 0->1, 1->2; heldout transition = 2->3")
+            print("  arms = pair_v2_teacher, static_delta_seen, local_operator_seen, local_operator_heldout, operator_family_conditioned")
         if getattr(args, "aq_stream_2", False):
             print("AQ-STREAM-2 ACTIVE:")
             print(f"  frame_size = {int(args.aq_stream_frame_size)}")
@@ -4014,6 +4921,129 @@ def run_program_ap(args):
             "gate_cost": 0.04,
             "lane": "stream_delta_operator",
         },
+        "pair_v2_teacher": {
+            "damping": args.damping,
+            "feedback": 0.00,
+            "tunnel": 0.00,
+            "complex_pair_norm": True,
+            "stream_variant": "pair_v2_teacher",
+            "stream_pair_gain": 0.25,
+            "gate_cost": 0.04,
+            "lane": "stream_pair_teacher",
+        },
+        "static_delta_operator": {
+            "damping": args.damping,
+            "feedback": 0.00,
+            "tunnel": 0.00,
+            "complex_pair_norm": True,
+            "stream_variant": "static_delta_operator",
+            "stream_pair_gain": 0.25,
+            "stream_operator_recovery": True,
+            "gate_cost": 0.04,
+            "lane": "stream_static_delta_operator",
+        },
+        "latent_diag_phase_operator": {
+            "damping": args.damping,
+            "feedback": 0.00,
+            "tunnel": 0.00,
+            "complex_pair_norm": True,
+            "stream_variant": "latent_diag_phase_operator",
+            "stream_operator_recovery": True,
+            "gate_cost": 0.04,
+            "lane": "stream_latent_operator",
+        },
+        "latent_unitary_operator_tied_BC": {
+            "damping": args.damping,
+            "feedback": 0.00,
+            "tunnel": 0.00,
+            "complex_pair_norm": True,
+            "stream_variant": "latent_unitary_operator_tied_BC",
+            "stream_operator_recovery": True,
+            "gate_cost": 0.04,
+            "lane": "stream_latent_operator",
+        },
+        "latent_affine_operator_Bfit": {
+            "damping": args.damping,
+            "feedback": 0.00,
+            "tunnel": 0.00,
+            "complex_pair_norm": True,
+            "stream_variant": "latent_affine_operator_Bfit",
+            "stream_operator_recovery": True,
+            "gate_cost": 0.04,
+            "lane": "stream_reconstruction_aligned_operator",
+        },
+        "low_rank_delta_operator": {
+            "damping": args.damping,
+            "feedback": 0.00,
+            "tunnel": 0.00,
+            "complex_pair_norm": True,
+            "stream_variant": "low_rank_delta_operator",
+            "stream_operator_recovery": True,
+            "gate_cost": 0.04,
+            "lane": "stream_reconstruction_aligned_operator",
+        },
+        "teacher_distilled_operator": {
+            "damping": args.damping,
+            "feedback": 0.00,
+            "tunnel": 0.00,
+            "complex_pair_norm": True,
+            "stream_variant": "teacher_distilled_operator",
+            "stream_pair_gain": 0.25,
+            "stream_operator_recovery": True,
+            "gate_cost": 0.04,
+            "lane": "stream_teacher_distilled_operator",
+        },
+        "Adelta_diag_phase": {
+            "damping": args.damping,
+            "feedback": 0.00,
+            "tunnel": 0.00,
+            "complex_pair_norm": True,
+            "stream_variant": "Adelta_diag_phase",
+            "stream_operator_recovery": True,
+            "gate_cost": 0.04,
+            "lane": "stream_adelta_generator",
+        },
+        "Adelta_hamiltonian": {
+            "damping": args.damping,
+            "feedback": 0.00,
+            "tunnel": 0.00,
+            "complex_pair_norm": True,
+            "stream_variant": "Adelta_hamiltonian",
+            "stream_operator_recovery": True,
+            "gate_cost": 0.04,
+            "lane": "stream_adelta_generator",
+        },
+        "Adelta_hamiltonian_plus_luma": {
+            "damping": args.damping,
+            "feedback": 0.00,
+            "tunnel": 0.00,
+            "complex_pair_norm": True,
+            "stream_variant": "Adelta_hamiltonian_plus_luma",
+            "stream_operator_recovery": True,
+            "gate_cost": 0.04,
+            "lane": "stream_adelta_generator",
+        },
+        "patch_local_Adelta": {
+            "damping": args.damping,
+            "feedback": 0.00,
+            "tunnel": 0.00,
+            "complex_pair_norm": True,
+            "stream_variant": "patch_local_Adelta",
+            "stream_operator_recovery": True,
+            "gate_cost": 0.04,
+            "lane": "stream_patch_local_operator",
+        },
+        "hybrid_local_plus_pair_v2": {
+            "damping": args.damping,
+            "feedback": 0.00,
+            "tunnel": 0.00,
+            "complex_pair_norm": True,
+            "stream_variant": "hybrid_local_plus_pair_v2",
+            "stream_pair_gain": 0.25,
+            "stream_operator_recovery": True,
+            "gate_cost": 0.05,
+            "lane": "stream_patch_local_pair_hybrid",
+        },
         "filament_stabilized": {"damping": args.damping * 0.7, "feedback": 0.18, "tunnel": 1.00, "gate_cost": 0.20},
         "filament_stabilized_v1": {
             "damping": args.damping * 0.70,
@@ -4185,6 +5215,80 @@ def run_program_ap(args):
             "lane": "hardware",
         },
     }
+    if getattr(args, "aq_stream_8", False):
+        for name, lane in (
+            ("pair_v2_teacher", "stream_heldout_pair_teacher"),
+            ("static_delta_seen", "stream_heldout_static_delta"),
+            ("local_operator_seen", "stream_heldout_local_seen"),
+            ("local_operator_heldout", "stream_heldout_lowrank_delta"),
+            ("operator_family_conditioned", "stream_heldout_operator_family"),
+        ):
+            controllers[name] = {
+                "damping": args.damping,
+                "feedback": 0.00,
+                "tunnel": 0.00,
+                "complex_pair_norm": True,
+                "stream_variant": name,
+                "stream_pair_gain": 0.25 if name == "pair_v2_teacher" else 0.0,
+                "stream_operator_recovery": True,
+                "gate_cost": 0.05,
+                "lane": lane,
+            }
+    if getattr(args, "aq_stream_7b", False):
+        for dim_value in parse_int_specs(getattr(args, "aq_stream_local_latent_dims", "6,8")):
+            patch_name = f"patch_local_dim{int(dim_value)}"
+            controllers[patch_name] = {
+                "damping": args.damping,
+                "feedback": 0.00,
+                "tunnel": 0.00,
+                "complex_pair_norm": True,
+                "stream_variant": patch_name,
+                "stream_operator_recovery": True,
+                "gate_cost": 0.04,
+                "lane": "stream_patch_local_dim_sweep",
+            }
+            adaptive_name = f"adaptive_gate_dim{int(dim_value)}"
+            controllers[adaptive_name] = {
+                "damping": args.damping,
+                "feedback": 0.00,
+                "tunnel": 0.00,
+                "complex_pair_norm": True,
+                "stream_variant": adaptive_name,
+                "stream_pair_gain": 0.25,
+                "stream_operator_recovery": True,
+                "gate_cost": 0.05,
+                "lane": "stream_patch_local_adaptive_gate",
+            }
+            for residual_name, residual_lane in (
+                (f"residual_neighbor_dim{int(dim_value)}", "stream_patch_local_neighbor_residual"),
+                (f"residual_lowrank_dim{int(dim_value)}", "stream_patch_local_lowrank_residual"),
+            ):
+                controllers[residual_name] = {
+                    "damping": args.damping,
+                    "feedback": 0.00,
+                    "tunnel": 0.00,
+                    "complex_pair_norm": True,
+                    "stream_variant": residual_name,
+                    "stream_pair_gain": 0.03125,
+                    "stream_operator_recovery": True,
+                    "gate_cost": 0.05,
+                    "lane": residual_lane,
+                }
+            for alpha_label, alpha_value in parse_stream_gain_specs(
+                getattr(args, "aq_stream_hybrid_alphas", "0.125,0.25,0.50")
+            ):
+                hybrid_name = f"hybrid_dim{int(dim_value)}_alpha{alpha_label}"
+                controllers[hybrid_name] = {
+                    "damping": args.damping,
+                    "feedback": 0.00,
+                    "tunnel": 0.00,
+                    "complex_pair_norm": True,
+                    "stream_variant": hybrid_name,
+                    "stream_pair_gain": float(alpha_value),
+                    "stream_operator_recovery": True,
+                    "gate_cost": 0.05,
+                    "lane": "stream_patch_local_alpha_sweep",
+                }
     if getattr(args, "ap_lite", False):
         controllers = {
             name: controllers[name]
@@ -4267,6 +5371,12 @@ def run_program_ap(args):
         or getattr(args, "aq_stream_0", False)
         or getattr(args, "aq_stream_1", False)
         or getattr(args, "aq_stream_2", False)
+        or getattr(args, "aq_stream_3_iso", False)
+        or getattr(args, "aq_stream_4", False)
+        or getattr(args, "aq_stream_5", False)
+        or getattr(args, "aq_stream_7", False)
+        or getattr(args, "aq_stream_7b", False)
+        or getattr(args, "aq_stream_8", False)
         or getattr(args, "as_0b", False)
         or getattr(args, "as_0", False)
         or getattr(args, "aq_yinyang_4", False)
@@ -4288,7 +5398,59 @@ def run_program_ap(args):
         or getattr(args, "aq_img_1", False)
         or getattr(args, "aq_img_1_lite", False)
     ):
-        if getattr(args, "aq_stream_2", False):
+        if getattr(args, "aq_stream_8", False):
+            controller_names = [
+                "pair_v2_teacher",
+                "static_delta_seen",
+                "local_operator_seen",
+                "local_operator_heldout",
+                "operator_family_conditioned",
+            ]
+            controllers = {name: controllers[name] for name in controller_names}
+        elif getattr(args, "aq_stream_7b", False):
+            controller_names = ["pair_v2_gain_0.25", "static_delta_operator"]
+            for dim_value in parse_int_specs(getattr(args, "aq_stream_local_latent_dims", "6,8")):
+                controller_names.append(f"patch_local_dim{int(dim_value)}")
+                for alpha_label, _alpha_value in parse_stream_gain_specs(
+                    getattr(args, "aq_stream_hybrid_alphas", "0.125,0.25,0.50")
+                ):
+                    controller_names.append(f"hybrid_dim{int(dim_value)}_alpha{alpha_label}")
+                controller_names.append(f"adaptive_gate_dim{int(dim_value)}")
+                controller_names.append(f"residual_neighbor_dim{int(dim_value)}")
+                controller_names.append(f"residual_lowrank_dim{int(dim_value)}")
+            controllers = {name: controllers[name] for name in controller_names}
+        elif getattr(args, "aq_stream_7", False):
+            controllers = {
+                "pair_v2_gain_0.25": controllers["pair_v2_gain_0.25"],
+                "static_delta_operator": controllers["static_delta_operator"],
+                "patch_local_Adelta": controllers["patch_local_Adelta"],
+                "hybrid_local_plus_pair_v2": controllers["hybrid_local_plus_pair_v2"],
+            }
+        elif getattr(args, "aq_stream_5", False):
+            controllers = {
+                "pair_v2_gain_0.25": controllers["pair_v2_gain_0.25"],
+                "static_delta_operator": controllers["static_delta_operator"],
+                "latent_affine_operator_Bfit": controllers["latent_affine_operator_Bfit"],
+                "Adelta_diag_phase": controllers["Adelta_diag_phase"],
+                "Adelta_hamiltonian": controllers["Adelta_hamiltonian"],
+                "Adelta_hamiltonian_plus_luma": controllers["Adelta_hamiltonian_plus_luma"],
+            }
+        elif getattr(args, "aq_stream_4", False):
+            controllers = {
+                "pair_v2_teacher": controllers["pair_v2_teacher"],
+                "static_delta_operator": controllers["static_delta_operator"],
+                "latent_affine_operator_Bfit": controllers["latent_affine_operator_Bfit"],
+                "low_rank_delta_operator": controllers["low_rank_delta_operator"],
+                "teacher_distilled_operator": controllers["teacher_distilled_operator"],
+            }
+        elif getattr(args, "aq_stream_3_iso", False):
+            controllers = {
+                "pair_v2_teacher": controllers["pair_v2_teacher"],
+                "static_delta_operator": controllers["static_delta_operator"],
+                "latent_diag_phase_operator": controllers["latent_diag_phase_operator"],
+                "latent_unitary_operator_tied_BC": controllers["latent_unitary_operator_tied_BC"],
+            }
+        elif getattr(args, "aq_stream_2", False):
             gain_controller_names = [
                 f"pair_v2_gain_{label}" for label, _gain in parse_stream_gain_specs(args.aq_stream_gains)
             ]
@@ -4368,7 +5530,15 @@ def run_program_ap(args):
         nodes = build_interval_nodes(args.sequence_length, max_span)
         print(f"\nDepth={depth} nodes={nodes.shape[0]} max_span={max_span}")
 
-        if (getattr(args, "aq_stream_1", False) or getattr(args, "aq_stream_2", False)) and getattr(args, "aq_stream_fast_path", True):
+        if (
+            getattr(args, "aq_stream_1", False)
+            or getattr(args, "aq_stream_2", False)
+            or getattr(args, "aq_stream_3_iso", False)
+            or getattr(args, "aq_stream_4", False)
+            or getattr(args, "aq_stream_5", False)
+            or getattr(args, "aq_stream_7", False)
+            or getattr(args, "aq_stream_7b", False)
+        ) and getattr(args, "aq_stream_fast_path", True):
             motif_entropy_cache = {
                 "structured": jnp.zeros((seqs.shape[0], nodes.shape[0]), dtype=jnp.float32),
             }
@@ -4771,6 +5941,12 @@ def run_program_ap(args):
             or getattr(args, "aq_stream_0", False)
             or getattr(args, "aq_stream_1", False)
             or getattr(args, "aq_stream_2", False)
+            or getattr(args, "aq_stream_3_iso", False)
+            or getattr(args, "aq_stream_4", False)
+            or getattr(args, "aq_stream_5", False)
+            or getattr(args, "aq_stream_7", False)
+            or getattr(args, "aq_stream_7b", False)
+            or getattr(args, "aq_stream_8", False)
             or getattr(args, "as_0b", False)
             or getattr(args, "as_0", False)
             or getattr(args, "aq_yinyang_3", False)
@@ -4868,7 +6044,60 @@ def run_program_ap(args):
                                 f"{tf.get('delta_recurrence_match', 0.0):>8.4f}"
                             )
             print("=" * 112)
-        if getattr(args, "aq_stream_2", False):
+        if getattr(args, "aq_stream_8", False):
+            controller_names = [
+                "pair_v2_teacher",
+                "static_delta_seen",
+                "local_operator_seen",
+                "local_operator_heldout",
+                "operator_family_conditioned",
+            ]
+            controllers = {name: controllers[name] for name in controller_names}
+        elif getattr(args, "aq_stream_7b", False):
+            controller_names = ["pair_v2_gain_0.25", "static_delta_operator"]
+            for dim_value in parse_int_specs(getattr(args, "aq_stream_local_latent_dims", "6,8")):
+                dim_label = str(int(dim_value))
+                controller_names.append(f"patch_local_dim{dim_label}")
+                for alpha_label, _gain in parse_stream_gain_specs(
+                    getattr(args, "aq_stream_hybrid_alphas", "0.125,0.25,0.50")
+                ):
+                    controller_names.append(f"hybrid_dim{dim_label}_alpha{alpha_label}")
+                controller_names.append(f"adaptive_gate_dim{dim_label}")
+                controller_names.append(f"residual_neighbor_dim{dim_label}")
+                controller_names.append(f"residual_lowrank_dim{dim_label}")
+            controllers = {name: controllers[name] for name in controller_names}
+        elif getattr(args, "aq_stream_7", False):
+            controllers = {
+                "pair_v2_gain_0.25": controllers["pair_v2_gain_0.25"],
+                "static_delta_operator": controllers["static_delta_operator"],
+                "patch_local_Adelta": controllers["patch_local_Adelta"],
+                "hybrid_local_plus_pair_v2": controllers["hybrid_local_plus_pair_v2"],
+            }
+        elif getattr(args, "aq_stream_5", False):
+            controllers = {
+                "pair_v2_gain_0.25": controllers["pair_v2_gain_0.25"],
+                "static_delta_operator": controllers["static_delta_operator"],
+                "latent_affine_operator_Bfit": controllers["latent_affine_operator_Bfit"],
+                "Adelta_diag_phase": controllers["Adelta_diag_phase"],
+                "Adelta_hamiltonian": controllers["Adelta_hamiltonian"],
+                "Adelta_hamiltonian_plus_luma": controllers["Adelta_hamiltonian_plus_luma"],
+            }
+        elif getattr(args, "aq_stream_4", False):
+            controllers = {
+                "pair_v2_teacher": controllers["pair_v2_teacher"],
+                "static_delta_operator": controllers["static_delta_operator"],
+                "latent_affine_operator_Bfit": controllers["latent_affine_operator_Bfit"],
+                "low_rank_delta_operator": controllers["low_rank_delta_operator"],
+                "teacher_distilled_operator": controllers["teacher_distilled_operator"],
+            }
+        elif getattr(args, "aq_stream_3_iso", False):
+            controllers = {
+                "pair_v2_teacher": controllers["pair_v2_teacher"],
+                "static_delta_operator": controllers["static_delta_operator"],
+                "latent_diag_phase_operator": controllers["latent_diag_phase_operator"],
+                "latent_unitary_operator_tied_BC": controllers["latent_unitary_operator_tied_BC"],
+            }
+        elif getattr(args, "aq_stream_2", False):
             gain_controller_names = [
                 f"pair_v2_gain_{label}" for label, _gain in parse_stream_gain_specs(args.aq_stream_gains)
             ]
@@ -5086,13 +6315,31 @@ def run_program_ap(args):
             getattr(args, "aq_stream_0", False)
             or getattr(args, "aq_stream_1", False)
             or getattr(args, "aq_stream_2", False)
+            or getattr(args, "aq_stream_3_iso", False)
+            or getattr(args, "aq_stream_4", False)
+            or getattr(args, "aq_stream_5", False)
+            or getattr(args, "aq_stream_7", False)
+            or getattr(args, "aq_stream_7b", False)
+            or getattr(args, "aq_stream_8", False)
             or getattr(args, "aq_yinyang_4", False)
             or getattr(args, "aq_img_0", False)
             or getattr(args, "aq_img_1", False)
             or getattr(args, "aq_img_1_lite", False)
         ):
             print("\n" + "=" * 112)
-            if getattr(args, "aq_stream_2", False):
+            if getattr(args, "aq_stream_8", False):
+                title = "AQ-STREAM-8 held-out transition generalization readout"
+            elif getattr(args, "aq_stream_7b", False):
+                title = "AQ-STREAM-7b local-dim/alpha sweep readout"
+            elif getattr(args, "aq_stream_7", False):
+                title = "AQ-STREAM-7 patch-local operator-field readout"
+            elif getattr(args, "aq_stream_5", False):
+                title = "AQ-STREAM-5 Adelta generator readout"
+            elif getattr(args, "aq_stream_4", False):
+                title = "AQ-STREAM-4 reconstruction-aligned operator readout"
+            elif getattr(args, "aq_stream_3_iso", False):
+                title = "AQ-STREAM-3-ISO latent transition-operator readout"
+            elif getattr(args, "aq_stream_2", False):
                 title = "AQ-STREAM-2 gain plus delta-operator recovery readout"
             elif getattr(args, "aq_stream_1", False):
                 title = "AQ-STREAM-1 pair-resource gain sweep readout"
@@ -5117,7 +6364,17 @@ def run_program_ap(args):
                                 f"residual_mae={tf.get('image_patch_residual_mae', 0.0):.4f} "
                                 f"luma_mae={tf.get('image_patch_luma_mae', 0.0):.4f}"
                             )
-                            if getattr(args, "aq_stream_0", False) or getattr(args, "aq_stream_1", False) or getattr(args, "aq_stream_2", False):
+                            if (
+                                getattr(args, "aq_stream_0", False)
+                                or getattr(args, "aq_stream_1", False)
+                                or getattr(args, "aq_stream_2", False)
+                                or getattr(args, "aq_stream_3_iso", False)
+                                or getattr(args, "aq_stream_4", False)
+                                or getattr(args, "aq_stream_5", False)
+                                or getattr(args, "aq_stream_7", False)
+                                or getattr(args, "aq_stream_7b", False)
+                                or getattr(args, "aq_stream_8", False)
+                            ):
                                 print(
                                     f"  arm={tf.get('stream_arm', 'unknown')} "
                                     f"gain={tf.get('stream_pair_gain', 0.0):.3f} "
@@ -5129,20 +6386,48 @@ def run_program_ap(args):
                                     f"leak={tf.get('cross_frame_leakage', 0.0):.4f} "
                                     f"pair={tf.get('pair_correlation_fidelity', 0.0):.4f}"
                                 )
-                                if getattr(args, "aq_stream_1", False) or getattr(args, "aq_stream_2", False):
+                                if (
+                                    getattr(args, "aq_stream_1", False)
+                                    or getattr(args, "aq_stream_2", False)
+                                    or getattr(args, "aq_stream_3_iso", False)
+                                    or getattr(args, "aq_stream_4", False)
+                                    or getattr(args, "aq_stream_5", False)
+                                    or getattr(args, "aq_stream_7", False)
+                                    or getattr(args, "aq_stream_7b", False)
+                                    or getattr(args, "aq_stream_8", False)
+                                ):
                                     print(
                                         f"  pair_delta={tf.get('pair_delta_recovery', 0.0):.4f} "
                                         f"pair_product={tf.get('pair_product_recovery', 0.0):.4f} "
                                         f"pair_corr={tf.get('pair_corr_recovery', 0.0):.4f} "
                                         f"boundary={tf.get('boundary_consistency', 0.0):.4f}"
                                     )
-                                if getattr(args, "aq_stream_2", False):
+                                if getattr(args, "aq_stream_2", False) or getattr(args, "aq_stream_3_iso", False) or getattr(args, "aq_stream_4", False) or getattr(args, "aq_stream_5", False) or getattr(args, "aq_stream_7", False) or getattr(args, "aq_stream_7b", False) or getattr(args, "aq_stream_8", False):
                                     print(
                                         f"  derived_psnr={tf.get('derived_operator_psnr', 0.0):.4f} "
                                         f"derived_frame2={tf.get('derived_frame_2_psnr', 0.0):.4f} "
                                         f"derived_delta={tf.get('derived_frame_delta_psnr', 0.0):.4f} "
                                         f"delta_op={tf.get('delta_operator_recovery', 0.0):.4f} "
                                         f"anchor={tf.get('anchor_pixel_recovery', 0.0):.4f}"
+                                    )
+                                if getattr(args, "aq_stream_8", False):
+                                    print(
+                                        f"  seen={tf.get('seen_transition_psnr', 0.0):.4f} "
+                                        f"  heldout_frame={tf.get('heldout_derived_frame_psnr', 0.0):.4f} "
+                                        f"heldout_delta={tf.get('heldout_delta_psnr', 0.0):.4f} "
+                                        f"gen_gap={tf.get('operator_generalization_gap', 0.0):.4f} "
+                                        f"teacher_gap={tf.get('direct_pair_teacher_gap', 0.0):.4f}"
+                                    )
+                                if getattr(args, "aq_stream_3_iso", False) or getattr(args, "aq_stream_4", False) or getattr(args, "aq_stream_5", False) or getattr(args, "aq_stream_7", False) or getattr(args, "aq_stream_7b", False) or getattr(args, "aq_stream_8", False):
+                                    print(
+                                        f"  latent_err={tf.get('latent_transition_error', 0.0):.6f} "
+                                        f"unitarity={tf.get('operator_unitarity_error', 0.0):.6f} "
+                                        f"basis_mse={tf.get('latent_basis_reconstruction_mse', 0.0):.6f} "
+                                        f"op_cos={tf.get('operator_recovery_cosine', 0.0):.4f} "
+                                        f"B_iso={tf.get('B_isometry_error', 0.0):.6f} "
+                                        f"B_op={tf.get('operator_cosine_Bspace', 0.0):.4f} "
+                                        f"rollout={tf.get('rollout_consistency', 0.0):.4f} "
+                                        f"field_smooth={tf.get('operator_field_smoothness', 0.0):.6f}"
                                     )
             print(f"{'row':>4} {'true_motif':>18} {'pred_motif':>18} {'target_luma':>12} {'pred_luma':>12}")
             print("-" * 112)
@@ -5401,6 +6686,42 @@ if __name__ == "__main__":
         help="Run Program AQ-STREAM-2: pair-resource gain sweep plus delta-operator derived-frame recovery.",
     )
     parser.add_argument(
+        "--aq-stream-3-iso",
+        dest="aq_stream_3_iso",
+        action="store_true",
+        help="Run Program AQ-STREAM-3-ISO: compact latent transition-generator operator architecture test.",
+    )
+    parser.add_argument(
+        "--aq-stream-4",
+        dest="aq_stream_4",
+        action="store_true",
+        help="Run Program AQ-STREAM-4: reconstruction-aligned latent/delta operator promotion test.",
+    )
+    parser.add_argument(
+        "--aq-stream-5",
+        dest="aq_stream_5",
+        action="store_true",
+        help="Run Program AQ-STREAM-5: Adelta latent generator transition test.",
+    )
+    parser.add_argument(
+        "--aq-stream-7",
+        dest="aq_stream_7",
+        action="store_true",
+        help="Run Program AQ-STREAM-7: patch-local Adelta operator-field plus pair-resource hybrid test.",
+    )
+    parser.add_argument(
+        "--aq-stream-7b",
+        dest="aq_stream_7b",
+        action="store_true",
+        help="Run Program AQ-STREAM-7b: local latent dimension and hybrid alpha sweep with adaptive fallback.",
+    )
+    parser.add_argument(
+        "--aq-stream-8",
+        dest="aq_stream_8",
+        action="store_true",
+        help="Run Program AQ-STREAM-8: held-out transition generalization over four ordered frames.",
+    )
+    parser.add_argument(
         "--aq-stream-gains",
         default="0.125,0.25",
         help="Comma-separated AQ-STREAM pair-v2 gain arms to run, e.g. 0.125,0.25 or 0.50.",
@@ -5411,6 +6732,28 @@ if __name__ == "__main__":
         default=16,
         choices=[16, 32],
         help="Reference yin-yang frame size for AQ-STREAM runs.",
+    )
+    parser.add_argument(
+        "--aq-stream-latent-dim",
+        type=int,
+        default=8,
+        help="Latent patch dimension for AQ-STREAM-3-ISO tied-adjoint transition operators.",
+    )
+    parser.add_argument(
+        "--aq-stream-local-latent-dim",
+        type=int,
+        default=4,
+        help="Per-patch latent dimension for AQ-STREAM-7 local transition operators.",
+    )
+    parser.add_argument(
+        "--aq-stream-local-latent-dims",
+        default="6,8",
+        help="Comma-separated per-patch latent dimensions for AQ-STREAM-7b.",
+    )
+    parser.add_argument(
+        "--aq-stream-hybrid-alphas",
+        default="0.125,0.25,0.50",
+        help="Comma-separated hybrid residual alpha arms for AQ-STREAM-7b.",
     )
     parser.add_argument(
         "--aq-stream-fast-steps",
@@ -5599,6 +6942,12 @@ if __name__ == "__main__":
             and not args.aq_stream_0
             and not args.aq_stream_1
             and not args.aq_stream_2
+            and not args.aq_stream_3_iso
+            and not args.aq_stream_4
+            and not args.aq_stream_5
+            and not args.aq_stream_7
+            and not args.aq_stream_7b
+            and not args.aq_stream_8
             and not args.require_tpu
         ):
             raise SystemExit(0)
@@ -5870,6 +7219,47 @@ if __name__ == "__main__":
         args.save_preview_png = True
         print(f"[AQ-STREAM-2] gain sweep plus delta-operator recovery ({args.aq_stream_frame_size}x{args.aq_stream_frame_size})")
 
+    if args.aq_stream_3_iso or args.aq_stream_4 or args.aq_stream_5 or args.aq_stream_7 or args.aq_stream_7b or args.aq_stream_8:
+        stream_frames = 4 if args.aq_stream_8 else 2
+        stream_state_count = stream_frames * (int(args.aq_stream_frame_size) // 4) * (int(args.aq_stream_frame_size) // 4)
+        args.sequence_length = 16
+        args.depth_sweep = [3]
+        args.seeds = []
+        args.dlinoss_steps = min(args.dlinoss_steps, 16)
+        args.include_controls = False
+        args.run_heldout_transport = False
+        args.heldout_include_controls = False
+        args.run_semantic_recovery = True
+        args.recovery_train_states = stream_state_count
+        args.recovery_test_states = stream_state_count
+        args.recovery_noise_sweep = [0.00]
+        args.recovery_seeds = [11]
+        args.control_block_size = 2
+        args.save_preview_png = True
+        label = (
+            "AQ-STREAM-8"
+            if args.aq_stream_8
+            else "AQ-STREAM-7b"
+            if args.aq_stream_7b
+            else "AQ-STREAM-7"
+            if args.aq_stream_7
+            else ("AQ-STREAM-5" if args.aq_stream_5 else ("AQ-STREAM-4" if args.aq_stream_4 else "AQ-STREAM-3-ISO"))
+        )
+        desc = (
+            "held-out transition generalization"
+            if args.aq_stream_8
+            else "patch-local latent-dim and hybrid-alpha sweep"
+            if args.aq_stream_7b
+            else "patch-local operator-field plus pair-resource hybrid test"
+            if args.aq_stream_7
+            else (
+                "Adelta latent generator transition test"
+                if args.aq_stream_5
+                else ("reconstruction-aligned operator promotion" if args.aq_stream_4 else "latent transition operator test")
+            )
+        )
+        print(f"[{label}] {desc} ({args.aq_stream_frame_size}x{args.aq_stream_frame_size})")
+
     if args.aq_img_0 or args.aq_img_1 or args.aq_img_1_lite:
         args.sequence_length = 8 if args.aq_img_1_lite else 16
         args.depth_sweep = [3]
@@ -6137,6 +7527,12 @@ if __name__ == "__main__":
             or args.aq_stream_0
             or args.aq_stream_1
             or args.aq_stream_2
+            or args.aq_stream_3_iso
+            or args.aq_stream_4
+            or args.aq_stream_5
+            or args.aq_stream_7
+            or args.aq_stream_7b
+            or args.aq_stream_8
             or args.as_0
             or args.aq_hybrid_0
             or args.aq_dna_0
@@ -6153,8 +7549,9 @@ if __name__ == "__main__":
             or args.aq_img_1
             or args.aq_img_1_lite
         )
-        stream_state_count = 2 * (int(args.aq_stream_frame_size) // 4) * (int(args.aq_stream_frame_size) // 4)
-        args.sequence_length = 16 if (args.aq_stream_0 or args.aq_stream_1 or args.aq_stream_2 or args.as_0b or args.as_0 or args.aq_hybrid_0 or args.aq_dna_0 or args.aq_yinyang_4 or args.aq_fft_7 or args.aq_fft_6 or args.aq_fft_5 or args.aq_fft_4 or args.aq_fft_3 or args.aq_fft_2 or args.aq_fft_1 or args.aq_fft_0) else (8 if (args.aq_0b or aq_l5_mode) else 12)
+        stream_frame_count = 4 if args.aq_stream_8 else 2
+        stream_state_count = stream_frame_count * (int(args.aq_stream_frame_size) // 4) * (int(args.aq_stream_frame_size) // 4)
+        args.sequence_length = 16 if (args.aq_stream_0 or args.aq_stream_1 or args.aq_stream_2 or args.aq_stream_3_iso or args.aq_stream_4 or args.aq_stream_5 or args.aq_stream_7 or args.aq_stream_7b or args.aq_stream_8 or args.as_0b or args.as_0 or args.aq_hybrid_0 or args.aq_dna_0 or args.aq_yinyang_4 or args.aq_fft_7 or args.aq_fft_6 or args.aq_fft_5 or args.aq_fft_4 or args.aq_fft_3 or args.aq_fft_2 or args.aq_fft_1 or args.aq_fft_0) else (8 if (args.aq_0b or aq_l5_mode) else 12)
         args.depth_sweep = [2]
         args.seeds = [11]
         args.dlinoss_steps = 4 if (args.aq_0b or aq_l5_mode) else 12
@@ -6165,10 +7562,10 @@ if __name__ == "__main__":
         args.run_semantic_recovery = True
         args.n_train_states = 2 if (args.aq_0b or aq_l5_mode) else 3
         args.n_test_states = 1 if (args.aq_0b or aq_l5_mode) else 2
-        args.recovery_train_states = stream_state_count if (args.aq_stream_0 or args.aq_stream_1 or args.aq_stream_2) else (16 if (args.aq_1c or args.as_0b or args.as_0 or args.aq_hybrid_0 or args.aq_dna_0 or args.aq_yinyang_4 or args.aq_fft_7 or args.aq_fft_6 or args.aq_fft_5 or args.aq_fft_4 or args.aq_fft_3 or args.aq_fft_2 or args.aq_fft_1 or args.aq_fft_0 or args.aq_img_0 or args.aq_img_1) else (8 if args.aq_img_1_lite else (4 if aq_l5_mode else (2 if args.aq_0b else 3))))
-        args.recovery_test_states = stream_state_count if (args.aq_stream_0 or args.aq_stream_1 or args.aq_stream_2) else (16 if (args.aq_1c or args.as_0b or args.as_0 or args.aq_hybrid_0 or args.aq_dna_0 or args.aq_yinyang_4 or args.aq_fft_7 or args.aq_fft_6 or args.aq_fft_5 or args.aq_fft_4 or args.aq_fft_3 or args.aq_fft_2 or args.aq_fft_1 or args.aq_fft_0 or args.aq_img_0 or args.aq_img_1) else (8 if args.aq_img_1_lite else (4 if aq_l5_mode else (1 if args.aq_0b else 2))))
+        args.recovery_train_states = stream_state_count if (args.aq_stream_0 or args.aq_stream_1 or args.aq_stream_2 or args.aq_stream_3_iso or args.aq_stream_4 or args.aq_stream_5 or args.aq_stream_7 or args.aq_stream_7b or args.aq_stream_8) else (16 if (args.aq_1c or args.as_0b or args.as_0 or args.aq_hybrid_0 or args.aq_dna_0 or args.aq_yinyang_4 or args.aq_fft_7 or args.aq_fft_6 or args.aq_fft_5 or args.aq_fft_4 or args.aq_fft_3 or args.aq_fft_2 or args.aq_fft_1 or args.aq_fft_0 or args.aq_img_0 or args.aq_img_1) else (8 if args.aq_img_1_lite else (4 if aq_l5_mode else (2 if args.aq_0b else 3))))
+        args.recovery_test_states = stream_state_count if (args.aq_stream_0 or args.aq_stream_1 or args.aq_stream_2 or args.aq_stream_3_iso or args.aq_stream_4 or args.aq_stream_5 or args.aq_stream_7 or args.aq_stream_7b or args.aq_stream_8) else (16 if (args.aq_1c or args.as_0b or args.as_0 or args.aq_hybrid_0 or args.aq_dna_0 or args.aq_yinyang_4 or args.aq_fft_7 or args.aq_fft_6 or args.aq_fft_5 or args.aq_fft_4 or args.aq_fft_3 or args.aq_fft_2 or args.aq_fft_1 or args.aq_fft_0 or args.aq_img_0 or args.aq_img_1) else (8 if args.aq_img_1_lite else (4 if aq_l5_mode else (1 if args.aq_0b else 2))))
         args.recovery_noise_sweep = [0.30] if aq_l5_mode else ([0.00] if args.aq_0b else [0.18])
-        args.recovery_noise_sweep = [0.00] if (args.aq_1c or args.aq_seq_0 or args.aq_stream_0 or args.aq_stream_1 or args.aq_stream_2 or args.as_0b or args.as_0 or args.aq_hybrid_0 or args.aq_dna_0 or args.aq_yinyang_4 or args.aq_fft_7 or args.aq_fft_6 or args.aq_fft_5 or args.aq_fft_4 or args.aq_fft_3 or args.aq_fft_2 or args.aq_fft_1 or args.aq_fft_0 or args.aq_img_0 or args.aq_img_1 or args.aq_img_1_lite) else args.recovery_noise_sweep
+        args.recovery_noise_sweep = [0.00] if (args.aq_1c or args.aq_seq_0 or args.aq_stream_0 or args.aq_stream_1 or args.aq_stream_2 or args.aq_stream_3_iso or args.aq_stream_4 or args.aq_stream_5 or args.aq_stream_7 or args.aq_stream_7b or args.aq_stream_8 or args.as_0b or args.as_0 or args.aq_hybrid_0 or args.aq_dna_0 or args.aq_yinyang_4 or args.aq_fft_7 or args.aq_fft_6 or args.aq_fft_5 or args.aq_fft_4 or args.aq_fft_3 or args.aq_fft_2 or args.aq_fft_1 or args.aq_fft_0 or args.aq_img_0 or args.aq_img_1 or args.aq_img_1_lite) else args.recovery_noise_sweep
         args.recovery_seeds = [11] if (args.aq_0b or aq_l5_mode) else args.recovery_seeds
         args.control_block_size = 2 if (args.aq_0b or aq_l5_mode) else 3
         print("[SMOKE TEST]")

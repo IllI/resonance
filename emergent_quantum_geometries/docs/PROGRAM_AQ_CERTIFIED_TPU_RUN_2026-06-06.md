@@ -1,7 +1,7 @@
 # Program AQ Certified TPU Run
 
 Date: 2026-06-06  
-Script: `emergent_quantum_geometries/program_aq_so3_kernel_galerkin.py`  
+Script: `emergent_quantum_geometries/kernel/program_aq_so3_kernel_galerkin.py`  
 Result file: `emergent_quantum_geometries/program_aq_tpu_certified/summary.json`
 
 ## What Changed
@@ -53,7 +53,7 @@ Configuration:
 Command:
 
 ```bash
-python3 -u program_aq_so3_kernel_galerkin.py \
+python3 -u kernel/program_aq_so3_kernel_galerkin.py \
   --quadrature-source euler-grid \
   --validation-source euler-grid \
   --diagnostics \

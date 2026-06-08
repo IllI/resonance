@@ -2,7 +2,7 @@
 
 Date: 2026-06-06  
 Experiment: SO(3) kernel-Galerkin pilot for Collins' truncated kernel theorem  
-Script: `emergent_quantum_geometries/program_aq_so3_kernel_galerkin.py`  
+Script: `emergent_quantum_geometries/kernel/program_aq_so3_kernel_galerkin.py`  
 Results:
 - `emergent_quantum_geometries/program_aq_tpu_smoke/summary.json`
 - `emergent_quantum_geometries/program_aq_tpu_pilot/summary.json`
@@ -104,7 +104,7 @@ and list eight TPU devices.
 Smoke test:
 
 ```bash
-python3 -u program_aq_so3_kernel_galerkin.py \
+python3 -u kernel/program_aq_so3_kernel_galerkin.py \
   --smoke-test \
   --require-accelerator \
   --out-dir program_aq_tpu_smoke
@@ -113,7 +113,7 @@ python3 -u program_aq_so3_kernel_galerkin.py \
 Pilot sweep:
 
 ```bash
-python3 -u program_aq_so3_kernel_galerkin.py \
+python3 -u kernel/program_aq_so3_kernel_galerkin.py \
   --dataset-source haar \
   --operator sobolev \
   --aux-dim 0 \

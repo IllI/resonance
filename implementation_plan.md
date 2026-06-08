@@ -1990,3 +1990,165 @@ Artifacts:
 - `tpu_previews/aq_stream0_v2_2026-06-04/program_ap_summary.json`
 - `tpu_previews/aq_stream0_v2_2026-06-04/aq_frame_depth3_noise0.0_seed11_entangled_pair_stream_taichi_16x16_frame_1_compare.png`
 - `tpu_previews/aq_stream0_v2_2026-06-04/aq_frame_depth3_noise0.0_seed11_entangled_pair_stream_taichi_16x16_frame_2_compare.png`
+
+## AQ-STREAM-4 Reconstruction-Aligned Operator Readout
+
+After the pair-v2 stream improvement, the next question became whether the stream could learn a transition operator rather than only recover two ordered frames. `AQ-STREAM-4` tested a compact operator-architecture correction on the `32 x 32` tai chi frames:
+
+- mode: `--aq-stream-4`
+- seed: `11`
+- noise: `0.00`
+- depth: `3`
+- latent dimension: `8`
+- artifact: `tpu_previews/aq_stream4_2026-06-04/program_ap_summary.json`
+- full note: `emergent_quantum_geometries/docs/PROGRAM_AQ_STREAM4_REMOTE_ANALYSIS_2026-06-04.md`
+
+Readout:
+
+| arm | worst control margin | folded recovery score | noisy graph cosine | block lift | topology lift |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| `pair_v2_teacher` | `0.3379` | `0.5287` | `0.9854` | `0.4192` | `0.4871` |
+| `static_delta_operator` | `0.3456` | `0.5334` | `0.9854` | `0.3764` | `0.4302` |
+| `latent_affine_operator_Bfit` | `0.7078` | `0.7507` | `0.9854` | `0.2807` | `0.4339` |
+| `low_rank_delta_operator` | `0.3576` | `0.5406` | `0.9854` | `0.4312` | `0.5273` |
+| `teacher_distilled_operator` | `0.3110` | `0.5126` | `0.9854` | `0.4684` | `0.5180` |
+
+Layer recovery was stable across all arms:
+
+| layer | recovery |
+| --- | ---: |
+| `L1_occupation` | `0.9978` |
+| `L2_transition` | `0.9854` |
+| `L3_fft_phase` | `0.9880` |
+| `L4_recurrence` | `0.9925` |
+
+Interpretation:
+
+The folded recovery score is still not strong enough to treat the operator problem as solved. However, the data says something useful: the transport channel was essentially unchanged across all arms, while `latent_affine_operator_Bfit` produced a much larger adversarial-control margin. The working signal is therefore hidden in the coordinate system of the operator, not in a larger state transport effect.
+
+The best mathematical read is:
+
+```text
+z_{t,p} = B^H (x_{t,p} - mu)
+z_hat_{t+1,p} = T z_{t,p} + b
+x_hat_{t+1,p} = mu + B z_hat_{t+1,p}
+```
+
+`B/B^H` gives the stream a stable compress/reconstruct pair. `T` is the latent transition generator. In this run, the reconstruction-aligned affine `T` was more identifiable than static delta, low-rank delta, or direct teacher distillation.
+
+Relation to the larger goal:
+
+In the simulator framing, once a state is recoverable and the operator function is learned, Alice's local pixel states can be streamed into Bob's corresponding mode-labeled pair-resource states. Bob's side then unfolds the recovered stream into real-time playback. The claim remains simulation-specific: "entangled pixels" here means paired state slots with shared time, patch, polarity, and residual structure, not a physical assertion of instantaneous image transfer.
+
+Next correction:
+
+- promote `latent_affine_operator_Bfit` into the explicit derived-frame path
+- report frame 1 PSNR, derived frame 2 PSNR, frame delta PSNR, operator cosine in `B/B^H` coordinates, cross-frame leakage, and patch-position accuracy
+- gate on `latent_affine_operator_Bfit derived_frame_2_psnr > static_delta_operator derived_frame_2_psnr`
+
+## AQ-STREAM-5 Adelta Generator Readout
+
+`AQ-STREAM-5` implemented the next operator correction: do not use the one-sample rank-1 map `T = x_{t+1} x_t^dagger / ||x_t||^2` as the learned transition law. Instead, keep the operator in the D-LinOSS latent dynamics:
+
+```text
+z_t = B^H (x_t - mu)
+z_hat_{t+1} = exp(A delta_t) z_t + b
+x_hat_{t+1} = mu + B z_hat_{t+1}
+```
+
+Run envelope:
+
+- mode: `--aq-stream-5`
+- frame size: `32 x 32`
+- seed: `11`
+- noise: `0.00`
+- depth: `3`
+- latent dimension: `8`
+- artifact: `tpu_previews/aq_stream5_2026-06-04/program_ap_summary.json`
+- full note: `emergent_quantum_geometries/docs/PROGRAM_AQ_STREAM5_REMOTE_ANALYSIS_2026-06-04.md`
+- runtime: `25.5s`
+
+Readout:
+
+| arm | mean PSNR | frame 2 PSNR | derived frame 2 PSNR | derived delta PSNR | operator recovery | `B`-space op cosine |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| `pair_v2_gain_0.25` | `25.06` | `24.83` | `24.83` | `19.06` | `0.92` | `1.0000` |
+| `static_delta_operator` | `22.79` | `23.27` | `23.27` | `17.53` | `0.90` | `0.0000` |
+| `latent_affine_operator_Bfit` | `20.26` | `20.79` | `19.46` | `13.06` | `0.92` | `1.0000` |
+| `Adelta_diag_phase` | `20.26` | `20.79` | `19.46` | `13.06` | `0.92` | `1.0000` |
+| `Adelta_hamiltonian` | `20.26` | `20.79` | `19.48` | `13.07` | `0.92` | `1.0000` |
+| `Adelta_hamiltonian_plus_luma` | `20.26` | `20.79` | `19.47` | `13.06` | `0.92` | `1.0000` |
+
+Interpretation:
+
+The result is negative for immediate playback quality but positive for operator diagnosis. The `A_delta` variants learned the transition almost perfectly inside the compressed `B` space (`operator_cosine_Bspace ~= 1.0`, tiny latent transition error), yet reconstructed frame 2 only reached about `19.5 dB`. The bottleneck moved from "can we learn a reusable operator?" to "does the basis preserve enough image detail for Bob to unfold?"
+
+For `Adelta_hamiltonian_plus_luma`:
+
+- `operator_cosine_Bspace = 0.999998`
+- `latent_transition_error = 0.0000024`
+- `B_isometry_error = 0.006388`
+- `operator_unitarity_error = 0.007800`
+- `latent_basis_reconstruction_mse = 0.004889`
+- `derived_frame_2_psnr = 19.47 dB`
+
+Conclusion:
+
+`A_delta` is mathematically coherent in latent space, but `latent_dim = 8` is too small for this image-state playback task. The next correction should not be a more exotic operator. It should test whether increasing or layering `B` capacity lets the good latent flow become good visual reconstruction.
+
+Next run:
+
+```text
+AQ-STREAM-6:
+  frame_size = 32
+  latent_dim = 8, 12, 16
+  arms = pair_v2_gain_0.25, static_delta_operator, Adelta_hamiltonian_plus_luma
+  gate = Adelta derived_frame_2_psnr improves with latent_dim
+```
+
+## AQ-STREAM-6 Latent-Capacity Capstone
+
+The quick follow-up sweep reused the `AQ-STREAM-5` implementation path to test `latent_dim = 8, 12, 16` on the `32 x 32` tai chi frames. It fetched only the summary/log artifacts plus selected compare PNGs for the teacher, static baseline, and Adelta generator.
+
+Full note:
+
+- `emergent_quantum_geometries/docs/PROGRAM_AQ_STREAM6_LATENT_SWEEP_2026-06-05.md`
+
+Artifacts:
+
+- `tpu_previews/aq_stream6_latent_sweep_2026-06-05/latent_dim_8/program_ap_summary.json`
+- `tpu_previews/aq_stream6_latent_sweep_2026-06-05/latent_dim_12/program_ap_summary.json`
+- `tpu_previews/aq_stream6_latent_sweep_2026-06-05/latent_dim_16/program_ap_summary.json`
+- `tpu_previews/aq_stream6_latent_sweep_2026-06-05/latent_dim_16/selected_pngs/`
+
+Result:
+
+| latent dim | `Adelta_hamiltonian_plus_luma` derived frame 2 | derived delta | rollout |
+| ---: | ---: | ---: | ---: |
+| `8` | `19.47 dB` | `13.06 dB` | `0.385` |
+| `12` | `20.86 dB` | `14.37 dB` | `0.480` |
+| `16` | `20.87 dB` | `14.94 dB` | `0.550` |
+
+Comparison:
+
+| arm | derived frame 2 |
+| --- | ---: |
+| `pair_v2_gain_0.25` | `24.83 dB` |
+| `static_delta_operator` | `23.27 dB` |
+| best `Adelta_hamiltonian_plus_luma` | `20.87 dB` |
+
+Interpretation:
+
+The latent-capacity hypothesis partially passed: increasing `latent_dim` from `8` to `12` improved Adelta reconstruction. It then saturated by `16`. Since basis MSE was nearly zero at `latent_dim=16`, the remaining failure is not simply insufficient `B` capacity. The generator is coherent in latent space, but the recovered operator payload does not preserve enough actionable pixel detail to beat static delta or pair-v2 playback.
+
+A final no-fast-path diagnostic at `latent_dim=16` was stopped after about `14m45s` because it had not progressed past the initial depth banner. That path is too slow for quick validation at this scale.
+
+Conclusion:
+
+This closes the current Adelta sequence. The next productive branch should be a patch-local or residual-assisted operator decoder:
+
+```text
+frame_1 state + local patch transition code + pair-v2 residual teacher -> derived frame_2
+```
+
+That preserves the reusable-operator goal while avoiding the bottleneck of forcing all visual detail through one compact global latent generator.

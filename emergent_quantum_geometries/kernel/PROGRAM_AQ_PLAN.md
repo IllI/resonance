@@ -173,7 +173,7 @@ External datasets are useful only after the theorem-facing run works. They can s
 
 ---
 
-## 7. Implementation: `program_aq_so3_kernel_galerkin.py`
+## 7. Implementation: `kernel/program_aq_so3_kernel_galerkin.py`
 
 ### 7.1 Data Generation
 
