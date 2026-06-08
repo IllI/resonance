@@ -679,17 +679,13 @@ python3 -u kernel/program_aq_so3_kernel_galerkin.py \
 
 ## 12. File Layout
 
+This folder (`kernel/`) is **self-contained** — everything you need is here:
+
 ```
-emergent_quantum_geometries/
-├── kernel/
-│   ├── program_aq_so3_kernel_galerkin.py   ← The working experiment script
-│   ├── PROGRAM_AQ_PLAN.md                  ← Mathematical plan for Collins' theorem
-│   ├── TPU_GUIDE_FOR_MATHEMATICIANS.md     ← This file
-│   └── paper.md / paper.pdf                ← Collins' dissertation
-├── run_program_aq_shotgun.ps1              ← Automated TPU launcher (advanced)
-├── docs/
-│   ├── PROGRAM_AQ_TPU_EXPERIMENT_SUMMARY_2026-06-06.md
-│   ├── PROGRAM_AQ_CERTIFIED_TPU_RUN_2026-06-06.md
-│   └── PROGRAM_AQ_CONFIDENCE_TPU_RUN_2026-06-06.md
-└── ...
+kernel/
+├── program_aq_so3_kernel_galerkin.py   ← The working experiment script
+├── run_program_aq_shotgun.ps1          ← Automated TPU launcher (provisions, deploys, monitors, cleans up)
+├── PROGRAM_AQ_PLAN.md                  ← Mathematical plan for Collins' theorem
+├── TPU_GUIDE_FOR_MATHEMATICIANS.md     ← This file
+└── paper.md / paper.pdf                ← Collins' dissertation
 ```
