@@ -4,6 +4,7 @@ $LogFile = Join-Path $Workspace "chronos_shotgun.log"
 $CloudSdk = "C:\Users\cityz\AppData\Local\Google\Cloud SDK\google-cloud-sdk\bin\gcloud.cmd"
 $CloudSdkBin = "C:\Users\cityz\AppData\Local\Google\Cloud SDK\google-cloud-sdk\bin"
 $ProgramExtraArgs = if ($env:CHRONOS_EXTRA_ARGS) { $env:CHRONOS_EXTRA_ARGS } else { "--blocks 20 --block-size 100 --d 512 --sparse-block 32 --layers 6 --condition all" }
+$Module = if ($env:CHRONOS_MODULE) { $env:CHRONOS_MODULE } else { "chronos_time_emission.run_chronos_tpu" }
 
 $Candidates = @(
     @{ Zone = "us-east1-d";     QR = "chronos-time-emission-us-v1"; Node = "chronos-time-emission-us-node-v1"; Type = "v6e-8" },
@@ -64,7 +65,32 @@ function Cleanup-Loser {
     }
 }
 
-Write-LaunchLog "shotgun_start extra=$ProgramExtraArgs"
+function Cleanup-LoserAsync {
+    param([hashtable]$Winner)
+    $losers = @()
+    foreach ($candidate in $Candidates) {
+        if ($candidate.Zone -eq $Winner.Zone -and $candidate.Node -eq $Winner.Node) { continue }
+        $losers += $candidate
+    }
+    if ($losers.Count -eq 0) { return }
+    foreach ($candidate in $losers) {
+        Write-LaunchLog "cleanup_loser zone=$($candidate.Zone) qr=$($candidate.QR) node=$($candidate.Node)"
+    }
+    Start-Process -FilePath "C:\Program Files\PowerShell\7\pwsh.exe" `
+        -ArgumentList @(
+            '-NoProfile',
+            '-Command',
+            @"
+`$g = '$CloudSdk'
+`$project = '$Project'
+& `$g compute tpus tpu-vm delete '$($losers[0].Node)' --project=`$project --zone='$($losers[0].Zone)' --quiet 2>`$null | Out-Null
+& `$g compute tpus queued-resources delete '$($losers[0].QR)' --project=`$project --zone='$($losers[0].Zone)' --quiet 2>`$null | Out-Null
+"@
+        ) `
+        -WindowStyle Hidden | Out-Null
+}
+
+Write-LaunchLog "shotgun_start module=$Module extra=$ProgramExtraArgs"
 foreach ($candidate in $Candidates) {
     Ensure-QueuedResource $candidate
 }
@@ -72,18 +98,20 @@ foreach ($candidate in $Candidates) {
 $deadline = (Get-Date).AddHours(3)
 while ((Get-Date) -lt $deadline) {
     foreach ($candidate in $Candidates) {
+        Ensure-QueuedResource $candidate
         $qrState = Get-QueuedState $candidate
         $nodeState = Get-NodeState $candidate
         Write-LaunchLog "poll zone=$($($candidate.Zone)) qr=$qrState node=$nodeState"
         if ($qrState -eq "ACTIVE" -and $nodeState -eq "READY") {
-            Cleanup-Loser $candidate
             Set-Location $Workspace
             $env:CHRONOS_NODE = $candidate.Node
             $env:CHRONOS_ZONE = $candidate.Zone
             $env:CHRONOS_EXTRA_ARGS = $ProgramExtraArgs
+            $env:CHRONOS_MODULE = $Module
             Write-LaunchLog "launching zone=$($($candidate.Zone)) node=$($($candidate.Node))"
             & .\run_chronos_ready_node.ps1 *>> $LogFile
             Write-LaunchLog "launcher_exit zone=$($($candidate.Zone)) code=$LASTEXITCODE"
+            Cleanup-LoserAsync $candidate
             exit $LASTEXITCODE
         }
     }

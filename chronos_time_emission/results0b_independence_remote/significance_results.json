@@ -1,0 +1,82 @@
+{
+  "alice": {
+    "ended_epoch": 1781367885.0042982,
+    "fs_actual_hz": 128.00012650448562,
+    "node_label": "alice_us",
+    "started_epoch": 1781367629.0000706
+  },
+  "block_size": 256,
+  "bob": {
+    "ended_epoch": 1781367885.0040905,
+    "fs_actual_hz": 128.00014298402323,
+    "node_label": "bob_eu",
+    "started_epoch": 1781367629.0001037
+  },
+  "controls": {
+    "block": {
+      "delta_mean": 0.04470590653569492,
+      "delta_p_ge": 0.000999000999000999,
+      "delta_std": 0.04318431005482643,
+      "schumann_mean": 0.09118369185364496,
+      "schumann_p_ge": 0.000999000999000999,
+      "schumann_std": 0.014828580755951896
+    },
+    "phase": {
+      "delta_mean": -0.0049295525784872575,
+      "delta_p_ge": 0.000999000999000999,
+      "delta_std": 0.15016669721028253,
+      "schumann_mean": 0.0038238551360325686,
+      "schumann_p_ge": 0.003996003996003996,
+      "schumann_std": 0.09806471018179552
+    },
+    "shuffle": {
+      "delta_mean": -5.209243005522647e-06,
+      "delta_p_ge": 0.000999000999000999,
+      "delta_std": 0.01073468148750549,
+      "schumann_mean": 0.00013723941193679922,
+      "schumann_p_ge": 0.000999000999000999,
+      "schumann_std": 0.007544163638117777
+    }
+  },
+  "fs_hz_used": 128.00012650448562,
+  "mode_rows": {
+    "anti": {
+      "best_lag": 11,
+      "best_lag_seconds": 0.08593741506665244,
+      "r_best": -0.3615389773332212,
+      "r_zero": -0.2678048075876113
+    },
+    "full": {
+      "best_lag": -8,
+      "best_lag_seconds": -0.06249993823029268,
+      "r_best": -0.2760022181351487,
+      "r_zero": -0.11987000672069668
+    },
+    "grid": {
+      "best_lag": 25,
+      "best_lag_seconds": 0.19531230696966462,
+      "r_best": 0.5390941636715179,
+      "r_zero": -0.3273265156368935
+    },
+    "schumann": {
+      "best_lag": -16,
+      "best_lag_seconds": -0.12499987646058536,
+      "r_best": 0.2804615133257716,
+      "r_zero": 0.23649678194287374
+    }
+  },
+  "n_samples": 32768,
+  "permutations": 1000,
+  "preregistered_gates": {
+    "delta_threshold": 0.1,
+    "diagnostic_lag_only": true,
+    "p_threshold": 0.01,
+    "primary_endpoint": "zero_lag_schumann_minus_anti",
+    "primary_pass": true,
+    "secondary_pass": true
+  },
+  "program": "CHRONOS-SCHUMANN-0b-significance",
+  "schumann_best_minus_zero": 0.04396473138289789,
+  "schumann_minus_anti": 0.5043015895304851,
+  "schumann_z_approx_raw_samples": 42.80853067600857
+}

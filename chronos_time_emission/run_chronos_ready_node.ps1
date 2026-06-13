@@ -2,6 +2,7 @@ $Project = "time-emission"
 $Zone = if ($env:CHRONOS_ZONE) { $env:CHRONOS_ZONE } else { "us-east1-d" }
 $NodeId = if ($env:CHRONOS_NODE) { $env:CHRONOS_NODE } else { "chronos-time-emission-node-v1" }
 $ExtraArgs = if ($env:CHRONOS_EXTRA_ARGS) { $env:CHRONOS_EXTRA_ARGS } else { "--blocks 20 --block-size 100 --d 512 --sparse-block 32 --layers 6 --condition all" }
+$Module = if ($env:CHRONOS_MODULE) { $env:CHRONOS_MODULE } else { "chronos_time_emission.run_chronos_tpu" }
 $RemoteDir = "/home/cityz/chronos_time_emission"
 $RemoteOut = "$RemoteDir/results"
 $LogFile = "chronos_run.log"
@@ -21,6 +22,10 @@ if ($ExtraArgs -match '[;&|`<>$]') {
     Write-Host "[ERROR] CHRONOS_EXTRA_ARGS contains shell control characters."
     exit 1
 }
+if ($Module -notmatch '^[A-Za-z0-9_.]+$') {
+    Write-Host "[ERROR] CHRONOS_MODULE must be a dotted Python module path."
+    exit 1
+}
 
 Write-Host "[CHECK] Verifying ready TPU VM: $NodeId in $Zone"
 $NodeState = (gcloud compute tpus tpu-vm describe $NodeId --project=$Project --zone=$Zone --format="value(state)" 2>$null)
@@ -34,33 +39,33 @@ if ($NodeState.Trim() -ne "READY") {
 }
 
 Write-Host "[SSH] Preparing remote workspace..."
-"y" | gcloud compute tpus tpu-vm ssh $NodeId --project=$Project --zone=$Zone --quiet --command="mkdir -p $RemoteDir $RemoteOut"
+"n" | gcloud compute tpus tpu-vm ssh $NodeId --project=$Project --zone=$Zone --quiet --command="rm -f /tmp/libtpu_lockfile; mkdir -p $RemoteDir $RemoteOut"
 if ($LASTEXITCODE -ne 0) { exit 1 }
 
 Write-Host "[SSH] Verifying TPU-backed JAX runtime..."
 $RuntimeCheck = "python3 -c 'import jax; print(jax.__version__, jax.default_backend(), jax.devices()); assert jax.default_backend() == ""tpu""'"
-"y" | gcloud compute tpus tpu-vm ssh $NodeId --project=$Project --zone=$Zone --quiet --command=$RuntimeCheck
+"n" | gcloud compute tpus tpu-vm ssh $NodeId --project=$Project --zone=$Zone --quiet --command=$RuntimeCheck
 if ($LASTEXITCODE -ne 0) {
     Write-Host "[SETUP] Installing jax[tpu] and helpers..."
-    "y" | gcloud compute tpus tpu-vm ssh $NodeId --project=$Project --zone=$Zone --quiet --command="python3 -m pip install -q -U 'jax[tpu]' -f https://storage.googleapis.com/jax-releases/libtpu_releases.html scipy numpy"
+    "n" | gcloud compute tpus tpu-vm ssh $NodeId --project=$Project --zone=$Zone --quiet --command="python3 -m pip install -q -U 'jax[tpu]' -f https://storage.googleapis.com/jax-releases/libtpu_releases.html numpy"
     if ($LASTEXITCODE -ne 0) { exit 1 }
-    "y" | gcloud compute tpus tpu-vm ssh $NodeId --project=$Project --zone=$Zone --quiet --command=$RuntimeCheck
+    "n" | gcloud compute tpus tpu-vm ssh $NodeId --project=$Project --zone=$Zone --quiet --command=$RuntimeCheck
     if ($LASTEXITCODE -ne 0) { exit 1 }
 }
 
 Write-Host "[SCP] Uploading CHRONOS source only..."
 $SourceFiles = Get-ChildItem -Path $PSScriptRoot -Filter "*.py" -File
 foreach ($sourceFile in $SourceFiles) {
-    "y" | gcloud compute tpus tpu-vm scp $sourceFile.FullName "$NodeId`:$RemoteDir/" --project=$Project --zone=$Zone --quiet
+    "n" | gcloud compute tpus tpu-vm scp $sourceFile.FullName "$NodeId`:$RemoteDir/" --project=$Project --zone=$Zone --quiet
     if ($LASTEXITCODE -ne 0) { exit 1 }
 }
 
-Write-Host "[RUN] Launching CHRONOS on TPU..."
-$RunCmd = "bash -lc 'cd /home/cityz; rm -f $RemoteDir/$LogFile; export PYTHONPATH=/home/cityz; nohup python3 -u -m chronos_time_emission.run_chronos_tpu --require-tpu --out $RemoteOut $ExtraArgs > $RemoteDir/$LogFile 2>&1 & echo CHRONOS_PID=`$!'"
-"y" | gcloud compute tpus tpu-vm ssh $NodeId --project=$Project --zone=$Zone --quiet --command=$RunCmd
+Write-Host "[RUN] Launching $Module on TPU..."
+$RunCmd = "bash -lc 'cd /home/cityz; rm -f /tmp/libtpu_lockfile; rm -f $RemoteDir/$LogFile; export PYTHONPATH=/home/cityz; nohup bash -lc ""python3 -c '\''import jax; assert jax.default_backend() == \""tpu\""'\'' >/dev/null 2>&1 || python3 -m pip install -q -U '\''jax[tpu]'\'' -f https://storage.googleapis.com/jax-releases/libtpu_releases.html numpy; python3 -c '\''import jax; print(jax.__version__, jax.default_backend(), jax.devices()); assert jax.default_backend() == \""tpu\""'\''; python3 -u -m $Module --require-tpu --out $RemoteOut $ExtraArgs"" > $RemoteDir/$LogFile 2>&1 & echo CHRONOS_PID=`$!'"
+"n" | gcloud compute tpus tpu-vm ssh $NodeId --project=$Project --zone=$Zone --quiet --command=$RunCmd
 if ($LASTEXITCODE -ne 0) { exit 1 }
 
 Write-Host "[MONITOR] Waiting for initial output..."
 Start-Sleep -Seconds 45
-"y" | gcloud compute tpus tpu-vm ssh $NodeId --project=$Project --zone=$Zone --quiet --command="tail -n 80 $RemoteDir/$LogFile 2>/dev/null || true"
+"n" | gcloud compute tpus tpu-vm ssh $NodeId --project=$Project --zone=$Zone --quiet --command="tail -n 80 $RemoteDir/$LogFile 2>/dev/null || true"
 Write-Host "[DONE] CHRONOS launched. No result files downloaded."

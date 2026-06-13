@@ -1,0 +1,57 @@
+{
+  "alice": {
+    "ended_epoch": 1781367885.0042982,
+    "fs_actual_hz": 128.00012650448562,
+    "node_label": "alice_us",
+    "samples": 32768,
+    "started_epoch": 1781367629.0000706
+  },
+  "bob": {
+    "ended_epoch": 1781367885.0040905,
+    "fs_actual_hz": 128.00014298402323,
+    "node_label": "bob_eu",
+    "samples": 32768,
+    "started_epoch": 1781367629.0001037
+  },
+  "fs_hz_used": 128.00012650448562,
+  "modes": {
+    "anti": {
+      "best_lag": -8,
+      "r_best": -0.30983530286163874,
+      "r_zero": -0.2678048075876113,
+      "rms_alice": 1.0535011426002752,
+      "rms_bob": 1.3303216496870933
+    },
+    "full": {
+      "best_lag": -8,
+      "r_best": -0.2760022181351486,
+      "r_zero": -0.11987000672069666,
+      "rms_alice": 1.4197887452528375,
+      "rms_bob": 1.4482454504363715
+    },
+    "gate_minus_one": {
+      "passed": true,
+      "r_full": -0.11987000672069666,
+      "scenario": "independent_or_weakly_coupled",
+      "verdict": "PASS"
+    },
+    "gate_one_passed": true,
+    "grid": {
+      "best_lag": -4,
+      "r_best": -0.5314094200371408,
+      "r_zero": -0.3273265156368936,
+      "rms_alice": 0.3385548661196514,
+      "rms_bob": 0.2041060822965332
+    },
+    "schumann": {
+      "best_lag": 6,
+      "r_best": 0.25437270753697355,
+      "r_zero": 0.23649678194287374,
+      "rms_alice": 0.9518064003181224,
+      "rms_bob": 0.5724152278577667
+    },
+    "schumann_minus_anti": 0.5043015895304851
+  },
+  "paired_samples": 32768,
+  "program": "CHRONOS-SCHUMANN-0b-analyze"
+}

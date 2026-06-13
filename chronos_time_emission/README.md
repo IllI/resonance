@@ -67,3 +67,7 @@ Each run writes:
   `chronos_time_emission/results0b_remote/results.json`
 - Run note:
   `chronos_time_emission/docs/CHRONOS_0B_REMOTE_ANALYSIS_2026-06-07.md`
+- `CHRONOS-SCHUMANN-0a` saturated all modes at `r=1.0000`, diagnosing same-host/common-mode timing rather than Schumann-specific structure.
+- `CHRONOS-SCHUMANN-0b` added a two-host US/EU independence gate. The first run passed Gate -1 and produced a strong zero-lag Schumann-minus-anti separation (`+0.5043`, phase-surrogate `p_delta=0.0010`), but the preregistered `rep1` run did not replicate the primary endpoint (`schumann_minus_anti=-0.2920`, phase-surrogate `p_delta=0.8222`).
+- Current Schumann status: frequency-structured cross-system timing correlations are present, but a stable Schumann-band carrier claim is not established. See:
+  `chronos_time_emission/docs/CHRONOS_SCHUMANN_REPLICATION_SPEC_2026-06-13.md`
