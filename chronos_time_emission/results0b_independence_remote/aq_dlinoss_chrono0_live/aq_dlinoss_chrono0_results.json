@@ -1,0 +1,71 @@
+{
+  "alice": {
+    "ended_epoch": 1781470130.0042458,
+    "fs_actual_hz": 128.0001140890834,
+    "node_label": "alice_us_chrono0",
+    "samples": 32768,
+    "seed": 14,
+    "started_epoch": 1781469874.0003512
+  },
+  "bob": {
+    "ended_epoch": 1781470130.0040827,
+    "fs_actual_hz": 128.0001207552991,
+    "node_label": "bob_eu_chrono0",
+    "samples": 32768,
+    "seed": 14,
+    "started_epoch": 1781469874.0002108
+  },
+  "calibration_windows": 127,
+  "external_band_carrier": {
+    "calibration_score": 0.29159014280985646,
+    "payload_score": -0.00843936485144139,
+    "selected_band": "schumann",
+    "selected_lag": -2
+  },
+  "feature_notes": {
+    "transition_residual_mean_alice": 273.39354744735414,
+    "transition_residual_mean_bob": 71.1191368034144
+  },
+  "gate_minus_one": {
+    "passed": true,
+    "r_full_zero_lag": 0.5744247107713623
+  },
+  "gates": {
+    "gate_1_passed": false,
+    "gate_2_passed": false,
+    "gate_3_passed": false,
+    "relational_beats_external": false
+  },
+  "hop": 128,
+  "null_prior_note": "If Gate 1 fails, treat the result as evidence that cross-system temporal geometry is not stable enough for calibration-to-payload prediction under this hardware/window configuration.",
+  "paired_samples": 32768,
+  "paired_windows": 255,
+  "payload_windows": 121,
+  "phase_surrogate_test": {
+    "p_value": 0.3880597014925373,
+    "surrogate_score_mean": 0.0017201224929712738,
+    "surrogate_score_std": 0.03855618174659927
+  },
+  "program": "AQ-DLINOSS-CHRONO-0-analyze",
+  "relational_clock_carrier": {
+    "calibration_score": 0.40214700258277236,
+    "payload_score": 0.021174587152981802,
+    "selected_lag": -3
+  },
+  "true_transition": {
+    "calibration_score": 0.44315669974684824,
+    "heldout_cross_system_transition_gain": -0.07814688103040644,
+    "payload_null_scores": {
+      "cross_seed_B": 0.010815051355356743,
+      "severed_same_distribution_B": 0.07601058178136047,
+      "shuffled_B": -0.04013037620243208,
+      "wrong_time_B": 0.08926495128307244
+    },
+    "payload_true_mse": 45012.58778130813,
+    "payload_true_score": 0.011118070252665991,
+    "selected_lag": 7,
+    "transition_operator_condition": 77003301.90274948,
+    "transition_operator_norm": 1061.8102575870726
+  },
+  "window": 256
+}

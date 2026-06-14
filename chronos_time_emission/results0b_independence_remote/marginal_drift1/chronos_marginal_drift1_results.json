@@ -1,0 +1,52 @@
+{
+  "alice": {
+    "ended_epoch": 1781470130.0042458,
+    "fs_actual_hz": 128.0001140890834,
+    "node_label": "alice_us_chrono0",
+    "seed": 14,
+    "started_epoch": 1781469874.0003512
+  },
+  "policy": "correlation is diagnostic; heldout transition gain remains the evidence gate",
+  "program": "CHRONOS-MARGINAL-DRIFT-1",
+  "same_bob": {
+    "ended_epoch": 1781470130.0040827,
+    "fs_actual_hz": 128.0001207552991,
+    "node_label": "bob_eu_chrono0",
+    "seed": 14,
+    "started_epoch": 1781469874.0002108
+  },
+  "same_minus_shifted": {
+    "anti": 0.055086543560464385,
+    "full": 0.07873773332043371,
+    "grid": 0.0935344284889906,
+    "high_residual": 0.05458302399596357,
+    "low_drift": -0.08070749489096393,
+    "schumann": 0.13909904782575888
+  },
+  "same_window": {
+    "anti": 0.6528440759492419,
+    "full": 0.5744247107713623,
+    "grid": 0.03981459705537027,
+    "high_residual": 0.02719961328063989,
+    "low_drift": 0.1054624017491734,
+    "schumann": 0.20960002895897986,
+    "schumann_minus_anti": -0.443244046990262
+  },
+  "shifted_bob": {
+    "ended_epoch": 1781473986.0040238,
+    "fs_actual_hz": 128.0001057868158,
+    "node_label": "bob_eu_chrono0_plus1h",
+    "seed": 15,
+    "started_epoch": 1781473730.000081
+  },
+  "shifted_window": {
+    "anti": 0.5977575323887775,
+    "full": 0.49568697745092855,
+    "grid": -0.05371983143362033,
+    "high_residual": -0.027383410715323676,
+    "low_drift": 0.18616989664013733,
+    "schumann": 0.07050098113322098,
+    "schumann_minus_anti": -0.5272565512555565
+  },
+  "verdict": "hardware_structural_or_extractor_similarity"
+}
