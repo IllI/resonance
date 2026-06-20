@@ -1,0 +1,6 @@
+results/*.fits
+results/local_*.json
+results/run.log
+queue.log
+*.tar.gz
+__pycache__/

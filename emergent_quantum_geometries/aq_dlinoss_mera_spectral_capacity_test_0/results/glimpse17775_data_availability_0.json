@@ -1,0 +1,67 @@
+{
+  "run": "AQ-LRD-GLIMPSE17775-DATA-AVAILABILITY-0",
+  "verdict": "PASS_LRD_DATA",
+  "audit_date": "2026-06-20",
+  "program_3293": {
+    "role": "GLIMPSE imaging survey",
+    "mast_association_count": 9,
+    "public": true,
+    "instruments": ["NIRCam imaging"],
+    "nirspec_products_found": false,
+    "conclusion": "Program 3293 alone is imaging/catalog/lensing support and would be PASS_PROXY_ONLY."
+  },
+  "spectrum_source": {
+    "program_id": 9223,
+    "program_type": "DDT",
+    "instrument": "NIRSpec MSA",
+    "filter": "F290LP",
+    "grating": "G395M",
+    "data_rights": "PUBLIC",
+    "mast_source_association": "jw09223-o001_s000017775_nirspec_f290lp-g395m",
+    "mast_obsid": 297526846,
+    "mast_products": [
+      {"type": "crf", "public": true, "size_bytes": 48444480},
+      {"type": "s2d", "public": true, "size_bytes": 1992960},
+      {"type": "x1d", "public": true, "size_bytes": 397440}
+    ]
+  },
+  "published_reduced_spectrum": {
+    "repository": "Zenodo",
+    "record": 17575391,
+    "url": "https://zenodo.org/records/17575391",
+    "access": "open",
+    "filename": "stacked_1_2_17775_CORR.spec.fits",
+    "size_bytes": 155520,
+    "md5": "400a7dbcc9687752fcd582ff410705e6",
+    "hdu": "SPEC1D",
+    "rows": 1661,
+    "columns": ["wave", "flux", "err", "sky", "path_corr", "npix", "flux_sum", "profile_sum", "var_sum"],
+    "wavelength_min_um": 2.68,
+    "wavelength_max_um": 5.509904761905082,
+    "finite_flux_rows": 1651,
+    "finite_error_rows": 1651,
+    "positive_error_rows": 1651,
+    "flux_unit": "microJansky",
+    "resolution_metadata": {
+      "filter": "F290LP",
+      "grating": "G395M",
+      "disperser_reference": "crds://jwst_nirspec_disperser_0084.asdf",
+      "wavelength_range_reference": "jwst_nirspec_wavelengthrange_0008_ext.asdf"
+    }
+  },
+  "paper": {
+    "arxiv": "2511.07515v2",
+    "title": "The Deepest GLIMPSE of a Dense Gas Cocoon Enshrouding a Little Red Dot",
+    "declared_spectrum_program": 9223,
+    "declared_public_spectrum_record": 17575391
+  },
+  "gate_checks": {
+    "public_1d_spectrum": true,
+    "public_2d_spectrum": true,
+    "uncertainty_array": true,
+    "wavelength_coverage_suitable": true,
+    "resolution_metadata_present": true,
+    "source_association_identified": true
+  },
+  "claim_boundary": "This audit establishes data availability only. It does not authorize radiative-history interpretation unless the independent synthetic MPS capacity gate passes."
+}
