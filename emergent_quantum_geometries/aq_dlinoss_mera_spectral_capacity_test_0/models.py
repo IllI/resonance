@@ -33,7 +33,8 @@ def init_mps(key: jax.Array, wavelengths: int, block_size: int, bond_dim: int, s
         raise ValueError("wavelength count must be divisible by block_size")
     sites = wavelengths // block_size
     k1, k2 = jax.random.split(key)
-    cores = jax.random.normal(k1, (sites, bond_dim, 5, bond_dim)) / jnp.sqrt(5.0 * bond_dim)
+    physical_dim = 1 + 2 * block_size
+    cores = jax.random.normal(k1, (sites, bond_dim, physical_dim, bond_dim)) / jnp.sqrt(float(physical_dim * bond_dim))
     left = jnp.zeros((bond_dim,)).at[0].set(1.0)
     projection = jax.random.normal(k2, (bond_dim, spectral_dim)) / jnp.sqrt(float(bond_dim))
     return MPSParams(cores, left, projection, jnp.zeros((spectral_dim,)))
@@ -44,11 +45,7 @@ def mps_encode(params: MPSParams, spectrum: jax.Array, mask: jax.Array, block_si
     sites = spectrum.shape[-1] // block_size
     x = spectrum.reshape(sites, block_size)
     m = mask.reshape(sites, block_size)
-    count = jnp.maximum(jnp.sum(m, axis=-1), 1.0)
-    mean = jnp.sum(x * m, axis=-1) / count
-    rms = jnp.sqrt(jnp.sum(jnp.square(x) * m, axis=-1) / count + 1e-8)
-    slope = jnp.sum(x * m * jnp.linspace(-1.0, 1.0, block_size), axis=-1) / count
-    local = jnp.stack((jnp.ones_like(mean), mean, rms, jnp.mean(m, axis=-1), slope), axis=-1)
+    local = jnp.concatenate((jnp.ones((sites, 1), x.dtype), x * m, m), axis=-1)
 
     def contract(state, inputs):
         core, feature = inputs
@@ -69,7 +66,7 @@ def init_observer(
     *,
     use_mps: bool,
     block_size: int = 8,
-    bond_dim: int = 12,
+    bond_dim: int = 16,
     spectral_dim: int = 24,
 ) -> ObserverParams:
     keys = jax.random.split(key, 9)

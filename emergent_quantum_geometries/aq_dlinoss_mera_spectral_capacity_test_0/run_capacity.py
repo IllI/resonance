@@ -127,8 +127,8 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--npz", required=True)
     parser.add_argument("--out", required=True)
-    parser.add_argument("--steps", type=int, nargs="+", default=(800, 2000))
-    parser.add_argument("--hidden", type=int, nargs="+", default=(20, 48))
+    parser.add_argument("--steps", type=int, nargs="+", default=(2000, 4000))
+    parser.add_argument("--hidden", type=int, nargs="+", default=(48, 96))
     parser.add_argument("--seeds", type=int, nargs="+", default=(11, 23, 31))
     parser.add_argument("--dt-days", type=float, default=0.25)
     parser.add_argument("--require-eight-devices", action="store_true")
@@ -198,12 +198,12 @@ def main():
     else:
         verdict = "DO_NOT_PROMOTE"
     result = {
-        "run": "AQ-DLINOSS-MERA-SPECTRAL-CAPACITY-TEST-0",
+        "run": "AQ-DLINOSS-MERA-SPECTRAL-CAPACITY-TEST-1",
         "backend": jax.default_backend(),
         "device_count": jax.device_count(),
         "input_shape": list(data["train_x"].shape),
         "target_scale": scale,
-        "architecture": "masked local features -> open-boundary MPS contraction -> spectral state -> temporal observer",
+        "architecture": "per-bin [masked_flux, mask] channels -> open-boundary bond-16 MPS contraction -> spectral state -> temporal observer",
         "rows": rows,
         "summaries": summaries,
         "mps_dlinoss_gain_over_linear_ssm": gain,

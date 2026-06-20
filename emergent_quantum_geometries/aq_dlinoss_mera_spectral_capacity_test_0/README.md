@@ -9,7 +9,7 @@ The test compares four equal-supervision arms on the locked 96-bin masked synthe
 3. physics-locked D-LinOSS without compression
 4. linear SSM without compression
 
-The spectral compressor is an open-boundary matrix-product contraction over 12 contiguous eight-bin sites. Each site receives masked local moments and a spectral slope. Both compressed arms use the same encoder contract.
+Run 0 used an open-boundary matrix-product contraction over 12 contiguous eight-bin sites. Each site received masked local moments and only the mean mask value. Both compressed arms used the same encoder contract.
 
 Promotion requires MPS+D-LinOSS leave-window-out correlation at least 0.75, residual correlation at least 0.88, at least 5% improvement over the uncompressed linear SSM, mask and spectral-window shuffle degradation at least 20%, and false-positive correlation at most 0.05.
 
@@ -27,3 +27,12 @@ The 48-configuration sweep completed on eight TPU devices with verdict `DO_NOT_P
 MPS compression materially improved D-LinOSS leave-window-out recovery from 0.4359 to 0.7462, but remained below the predeclared 0.75 threshold. More importantly, mask-shuffle degradation was only 7.68%, far below the required 20%. The model therefore learned a useful compressed spectral representation without demonstrating robust mask-conditioned assimilation.
 
 The independent GLIMPSE-17775 audit returned `PASS_LRD_DATA`, but the real radiative-history run remains blocked because the synthetic architecture gate did not pass. The relevant public spectrum is from DDT Program 9223 rather than imaging Program 3293.
+
+## Follow-up run 1
+
+Run 1 changes only two predeclared capacity controls:
+
+- each eight-bin MPS site receives `[1, masked_flux[8], mask[8]]`, preserving the visibility state of every wavelength bin instead of only mean mask occupancy;
+- the MPS bond dimension is fixed at 16.
+
+The bounded sweep uses hidden dimensions 48 and 96, training lengths 2000 and 4000, and seeds 11, 23, and 31. All targets, priors, nulls, baselines, and promotion gates are unchanged.

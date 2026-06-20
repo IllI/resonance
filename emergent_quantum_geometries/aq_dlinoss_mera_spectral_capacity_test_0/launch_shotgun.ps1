@@ -9,8 +9,8 @@ $Eqg = (Resolve-Path "$PSScriptRoot\..").Path
 $Gcloud = "$env:USERPROFILE\AppData\Local\Google\Cloud SDK\google-cloud-sdk\bin\gcloud.cmd"
 $Log = Join-Path $PSScriptRoot "queue.log"
 $Candidates = @(
-  @{ Zone="us-east1-d"; QR="aq-dlinoss-mera-us-v1"; Node="aq-dlinoss-mera-us-node-v1" },
-  @{ Zone="europe-west4-a"; QR="aq-dlinoss-mera-eu-v1"; Node="aq-dlinoss-mera-eu-node-v1" }
+  @{ Zone="us-east1-d"; QR="aq-dlinoss-mera-mask-us-v1"; Node="aq-dlinoss-mera-mask-us-node-v1" },
+  @{ Zone="europe-west4-a"; QR="aq-dlinoss-mera-mask-eu-v1"; Node="aq-dlinoss-mera-mask-eu-node-v1" }
 )
 
 function Log([string]$Message) { Add-Content -LiteralPath $Log -Value "$(Get-Date -Format o) $Message" }
