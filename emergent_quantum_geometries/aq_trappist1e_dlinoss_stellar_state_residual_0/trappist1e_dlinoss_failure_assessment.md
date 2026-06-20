@@ -16,6 +16,42 @@ The later equal-supervision rematch materially improved that picture, but it did
 
 ---
 
+## What Data We Were Actually Modeling
+
+An astrophysicist reading this branch should interpret it as a time-series contamination-separation study on JWST transit spectroscopy, not as an atmosphere retrieval attempt.
+
+The real-data observables were:
+
+- `Program 1331`: four TRAPPIST-1e NIRSpec/PRISM visits
+- integration-time spectra over wavelength for each visit
+- uncertainty arrays, valid-data masks, transit phase, and visit timing
+- residualized spectra after removing dominant visit-mean or smooth baseline structure
+
+The paired-data observables were:
+
+- `Programs 9256/6456`: three verified close TRAPPIST-1b/e pairs
+- matched b/e spectral tensors on a common wavelength grid
+- measured b/e time offsets of 4.26, 4.42, and 6.01 hours
+
+The astrophysical structure of interest was:
+
+- wavelength-dependent stellar contamination that changes between visits or between close b/e observations:
+  spot/facula color contrast, activity-state drift, flare contamination, phase- or chord-dependent chromatic residuals
+
+The structure we hoped would remain after contamination correction was:
+
+- a stable planetary transmission residual shared across TRAPPIST-1e visits
+
+The branch was designed to reject shortcut signals such as:
+
+- static continuum level
+- smooth visit-average shape
+- mask pattern or wavelength coverage
+- visit identity or pair identity artifacts
+- bookkeeping structure unrelated to stellar or planetary physics
+
+---
+
 ## Failure 1: Input Shape Collapse — `[4, 209, 96, 1]` with `C=1`
 
 > [!CAUTION]

@@ -19,6 +19,38 @@ The only active real-data interpretation path that survived the branch is the se
 - TPU strong-prior audit: `PROMOTE_CLOSER_PAIRING_REQUIRED`; at the observed 4.26--6.01 hour offsets, only coarse scalar coupling was robust enough to identify
 - Active science path: DREAMS-style Program 1331 e-only per-visit GP
 
+## Scientific target
+
+The astrophysical target in this branch was not a generic classifier. It was a contamination-separation problem on JWST time-series transit spectroscopy:
+
+- `Program 1331`: four TRAPPIST-1e NIRSpec/PRISM visits
+- `Programs 9256/6456`: close TRAPPIST-1b/e pair visits intended to use `b` as a stellar-contamination proxy for `e`
+- `WASP-39b`: high-SNR positive control for residual-detection infrastructure
+
+The core scientific question was:
+
+- Can visit-variable stellar contamination be separated from a stable planetary transmission residual in public TRAPPIST-1e data?
+
+The concrete observables used were:
+
+- integration-time flux spectra as a function of wavelength
+- per-integration uncertainties and data-quality masks
+- transit phase and absolute integration time
+- white-light normalized and continuum-removed residual tensors
+- visit-to-visit variability across the four Program 1331 visits
+- for paired runs, matched `b` and `e` spectra with measured b/e time offsets
+
+The main astrophysical signal classes we were trying to distinguish were:
+
+- stellar contamination that varies between visits:
+  spot/facula color contrast, activity-state drift, flare contamination, time-offset decorrelation
+- stable or repeatable planetary residual structure:
+  wavelength-localized transmission residuals that persist across visits or survive contamination correction
+- trivial nonphysical structure that must not drive a claim:
+  static continuum level, mask pattern, wavelength coverage, visit ID, pair ID, redshift-free bookkeeping artifacts
+
+The branch did not attempt a defensible methane or atmosphere detection. Its job was to determine whether the public data support a recoverable contamination model precise enough to make a later planetary-residual test meaningful.
+
 ## Canonical documents
 
 Treat these as the authoritative branch record:
