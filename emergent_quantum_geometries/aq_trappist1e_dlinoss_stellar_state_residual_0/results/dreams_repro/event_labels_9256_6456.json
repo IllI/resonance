@@ -1,0 +1,112 @@
+{
+  "run": "AQ-DREAMS-PAIR9256-6456-EVENT-LABELS-0",
+  "verdict": "PASS_PAIR_UNLOCK",
+  "clean_pair_count": 3,
+  "pairs": [
+    {
+      "program_id": 9256,
+      "observation_id": "o008",
+      "visit_id": 8,
+      "pair_id": "9256-o008-be",
+      "planet_id": [
+        "b",
+        "e"
+      ],
+      "mid_transit_time": {
+        "b": 60868.04584552921,
+        "e": 60868.23002423955
+      },
+      "phase_zero_time": {
+        "b": 60868.04584552921,
+        "e": 60868.23002423955
+      },
+      "time_offset_between_b_and_e_hours": 4.420289048168343,
+      "wavelength_grid_hash": "bc767424d4f3fad11718a118a548a4528c793fe02d0884851533a165ce7bee23",
+      "mask_fraction": 0.94199538230896,
+      "usable_for_training": true
+    },
+    {
+      "program_id": 9256,
+      "observation_id": "o009",
+      "visit_id": 9,
+      "pair_id": "9256-o009-be",
+      "planet_id": [
+        "b",
+        "e"
+      ],
+      "mid_transit_time": {
+        "b": 60874.08286347092,
+        "e": 60874.333217108244
+      },
+      "phase_zero_time": {
+        "b": 60874.08286347092,
+        "e": 60874.333217108244
+      },
+      "time_offset_between_b_and_e_hours": 6.008487295825034,
+      "wavelength_grid_hash": "bc767424d4f3fad11718a118a548a4528c793fe02d0884851533a165ce7bee23",
+      "mask_fraction": 0.9421296119689941,
+      "usable_for_training": true
+    },
+    {
+      "program_id": 6456,
+      "observation_id": "o003",
+      "visit_id": 3,
+      "pair_id": "6456-o003-be",
+      "planet_id": [
+        "b",
+        "e"
+      ],
+      "mid_transit_time": {
+        "e": 60502.238576999865,
+        "b": 60502.41612799978
+      },
+      "phase_zero_time": {
+        "e": 60502.238576999865,
+        "b": 60502.41612799978
+      },
+      "time_offset_between_b_and_e_hours": 4.261223997920752,
+      "wavelength_grid_hash": "bc767424d4f3fad11718a118a548a4528c793fe02d0884851533a165ce7bee23",
+      "mask_fraction": 1.0,
+      "flare_status": "clean_no_pronounced_flares_reported",
+      "source": "Allen et al. 2025, JWST TRAPPIST-1 e/b Program: Motivation and first observations",
+      "source_arxiv": "2512.07695",
+      "events": [
+        {
+          "planet_id": "e",
+          "mid_transit_time_bjd_tdb": 2460502.738577,
+          "mid_transit_time_mjd_tdb": 60502.238576999865,
+          "uncertainty_days": 1.5e-05,
+          "duration_minutes": 57.0,
+          "period_days": 6.101012,
+          "minimum_absolute_phase": 5.846776068113568e-05,
+          "verified": true,
+          "label_source": "Allen_et_al_2025_arXiv_2512.07695_Table_2"
+        },
+        {
+          "planet_id": "b",
+          "mid_transit_time_bjd_tdb": 2460502.916128,
+          "mid_transit_time_mjd_tdb": 60502.41612799978,
+          "uncertainty_days": 1.6e-05,
+          "duration_minutes": 36.0,
+          "period_days": 1.510826,
+          "minimum_absolute_phase": 7.127640050003103e-05,
+          "verified": true,
+          "label_source": "Allen_et_al_2025_arXiv_2512.07695_Table_2"
+        }
+      ],
+      "usable_for_training": true
+    }
+  ],
+  "gates": {
+    "clean_pair_count_at_least_3": true,
+    "all_planet_labels_verified": true,
+    "all_phase_labels_verified": true,
+    "pair_offsets_recorded": true,
+    "wavelength_grids_compatible": true,
+    "mask_fractions_sane": true,
+    "no_unresolved_multi_transit_ambiguity": true,
+    "published_6456_o003_centers_inside_product": true,
+    "6456_o003_reported_clean": true
+  },
+  "claim_boundary": "This unlocks paired reduction and correction machinery only; it is not an atmospheric detection."
+}

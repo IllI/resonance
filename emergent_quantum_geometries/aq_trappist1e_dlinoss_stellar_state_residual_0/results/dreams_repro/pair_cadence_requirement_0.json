@@ -1,0 +1,79 @@
+{
+  "run": "AQ-DREAMS-PAIR-CADENCE-REQUIREMENT-0",
+  "verdict": "PROMOTE_CLOSER_PAIRING_REQUIRED",
+  "active_real_data_model": "DREAMS-style e-only per-visit GP",
+  "paired_learning_status": "PROMOTE_GP_ONLY",
+  "evidence": {
+    "pair_count_power_audit": "pair_count_power_audit_0_tpu_summary.json",
+    "strong_prior_audit": "remote_fetch/strong_prior_identifiability_0_tpu.json",
+    "clean_pair_count": 3,
+    "actual_pair_offsets_hours": [
+      4.261223997920752,
+      4.420289048168343,
+      6.008487295825034
+    ],
+    "robust_physical_constraints_at_actual_offsets": [],
+    "strongest_identifiable_constraint": "scalar"
+  },
+  "cadence_findings": {
+    "hard_max_supported_b_e_offset_hours": null,
+    "recommended_test_cadence_hours": 2.0,
+    "recommended_test_cadence_is_hard_limit": false,
+    "observed_offsets_support_wavelength_dependent_transfer": false,
+    "observed_offsets_support_coarse_scalar_transfer_in_coherent_regimes": true,
+    "universal_minimum_clean_pair_count": null,
+    "more_pairs_alone_is_sufficient": false,
+    "priority_order": [
+      "shorter b/e time offset",
+      "independent stellar activity-state constraints",
+      "additional clean pairs"
+    ]
+  },
+  "pair_count_audit_promotion_rate_by_offset_hours": {
+    "2": {
+      "n3": 0.7405960648148148,
+      "n20": 0.7369791666666666
+    },
+    "4": {
+      "n3": 0.5892650462962963,
+      "n20": 0.5662615740740741
+    },
+    "6": {
+      "n3": 0.4765625,
+      "n20": 0.49985532407407407
+    },
+    "8": {
+      "n3": 0.4014756944444444,
+      "n20": 0.35170717592592593
+    }
+  },
+  "actual_offset_constraint_promotion_rates": {
+    "scalar": {
+      "low_stability": 0.4826388888888889,
+      "medium_stability": 0.9930555555555556,
+      "high_stability": 1.0
+    },
+    "spot_facula": {
+      "low_stability": 0.2094184027777778,
+      "medium_stability": 0.509765625,
+      "high_stability": 0.6323784722222222
+    },
+    "offset_decay": {
+      "low_stability": 0.2717013888888889,
+      "medium_stability": 0.5837673611111112,
+      "high_stability": 0.6714409722222222
+    },
+    "rotation_activity": {
+      "low_stability": 0.3519965277777778,
+      "medium_stability": 0.5729166666666666,
+      "high_stability": 0.4633246527777778
+    }
+  },
+  "decision": {
+    "real_data": "Keep PROMOTE_GP_ONLY. Do not reopen a learned b/e wavelength-transfer model on the current three pairs.",
+    "future_observations": "Prioritize b/e pairs materially closer than the current 4.26-6.01 hour offsets and obtain independent activity-state measurements.",
+    "scalar_correction": "Useful only as a coarse identifiability signal; it does not authorize a wavelength-dependent contamination correction.",
+    "wavelength_dependent_transfer": "Not robustly identifiable at the observed offsets under the tested physically structured priors."
+  },
+  "claim_boundary": "Synthetic observing-design result only. It does not establish an atmosphere, a real paired correction, a hard cadence cutoff, or a universal minimum pair count."
+}

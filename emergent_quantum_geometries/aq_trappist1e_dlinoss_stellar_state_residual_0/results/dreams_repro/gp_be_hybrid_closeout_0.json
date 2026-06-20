@@ -1,0 +1,13 @@
+{
+  "run": "AQ-DREAMS-GP-BE-HYBRID-CLOSEOUT-0",
+  "verdict": "PROMOTE_GP_ONLY",
+  "clean_pair_count": 3,
+  "facts": {
+    "three_clean_be_pairs_exist": true,
+    "naive_subtraction_worsened_scatter": true,
+    "hybrid_improved_in_sample_scatter": true,
+    "hybrid_failed_heldout_prediction": true,
+    "required_nulls_degraded": false
+  },
+  "final_boundary": "No further learned paired-transfer tuning is authorized with these three pairs. Reopen with sufficient new pairs or a preregistered external stellar-transfer prior."
+}

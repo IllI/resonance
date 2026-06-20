@@ -1,0 +1,24 @@
+{
+  "run": "AQ-DREAMS-1331-GP-FINAL-REPRO-1",
+  "verdict": "PASS_GP_REPRO_DIRECTIONAL",
+  "active_science_model": "DREAMS-style e-only per-visit GP",
+  "checks": {
+    "four_released_visit_spectra_loaded": true,
+    "per_visit_gp_reduces_shared_spectrum_residual": true,
+    "gp_absorbs_hundreds_of_ppm_variable_structure": true,
+    "all_gp_optimizations_converged": true
+  },
+  "directional_log_likelihoods": {
+    "level0_no_gp": -1752.991091135614,
+    "level1_per_visit_gp": -1694.4613687071342,
+    "level2_shared_spectrum_per_visit_gp": -1670.5775519101244
+  },
+  "numeric_evidence_reproduction": false,
+  "supported_statement": "The released Program 1331 spectra reproduce the need for per-visit GP contamination modeling; three paired b/e observations do not support a stable learned transfer correction.",
+  "unsupported_claims": [
+    "exact DREAMS Bayesian evidence reproduction",
+    "atmospheric detection",
+    "molecular detection",
+    "validated paired b/e correction"
+  ]
+}

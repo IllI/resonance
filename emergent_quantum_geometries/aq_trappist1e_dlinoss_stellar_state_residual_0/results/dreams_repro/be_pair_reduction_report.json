@@ -1,0 +1,48 @@
+{
+  "run": "AQ-DREAMS-PAIR9256-6456-PAIR-ABI-0",
+  "verdict": "PASS_BE_PAIR_ABI",
+  "tensor": "results\\shards\\trappist1_be_pairs_9256_6456.npz",
+  "shape": [
+    3,
+    2,
+    165,
+    64
+  ],
+  "checks": {
+    "clean_pair_count_at_least_3": true,
+    "wavelength_grid_identical": true,
+    "all_event_windows_have_24_samples": true,
+    "all_pair_offsets_recorded": true,
+    "all_masks_sane": true
+  },
+  "pairs": [
+    {
+      "pair_id": "9256-o008-be",
+      "program_id": 9256,
+      "visit_id": 8,
+      "b_samples": 165,
+      "e_samples": 154,
+      "time_offset_hours": 4.420289048168343,
+      "source_compact": "results\\shards\\pair9256\\o008_compact.npz"
+    },
+    {
+      "pair_id": "9256-o009-be",
+      "program_id": 9256,
+      "visit_id": 9,
+      "b_samples": 156,
+      "e_samples": 151,
+      "time_offset_hours": 6.008487295825034,
+      "source_compact": "results\\shards\\pair9256\\o009_compact.npz"
+    },
+    {
+      "pair_id": "6456-o003-be",
+      "program_id": 6456,
+      "visit_id": 3,
+      "b_samples": 157,
+      "e_samples": 163,
+      "time_offset_hours": 4.261223997920752,
+      "source_compact": "results\\shards\\pair6456\\o003_compact.npz"
+    }
+  ],
+  "claim_boundary": "ABI validation only; no correction or atmospheric claim is made."
+}

@@ -1,0 +1,83 @@
+{
+  "run": "AQ-DREAMS-PAIR-COUNT-POWER-AUDIT-0-TPU",
+  "verdict": "PROMOTE_PAIR_COUNT_REQUIREMENT",
+  "verdict_scope": "conditional_not_global",
+  "backend": "tpu",
+  "device_count": 8,
+  "condition_count": 2592,
+  "replicates_per_condition": 64,
+  "total_trials": 165888,
+  "global_minimum_clean_pair_count": null,
+  "global_minimum_prior_strength": null,
+  "corrected_interpretation": {
+    "pair_count_is_primary_bottleneck": false,
+    "stellar_state_stability_is_primary_bottleneck": true,
+    "pair_offset_is_secondary_bottleneck": true,
+    "three_pairs_underpowered_in_best_case": false,
+    "more_pairs_alone_resolve_unstable_regimes": false,
+    "strong_prior_arm_is_diagnostic": false,
+    "strong_prior_note": "The implemented spot-facula arm was overconstrained and underperformed the no-prior and weak-prior arms; it cannot establish that physical priors are ineffective."
+  },
+  "promotion_rate_by_stability": {
+    "high": {
+      "n3": 0.9745008680555556,
+      "n20": 0.9997829861111112
+    },
+    "medium": {
+      "n3": 0.578125,
+      "n20": 0.5580512152777778
+    },
+    "low": {
+      "n3": 0.1032986111111111,
+      "n20": 0.058268229166666664
+    }
+  },
+  "promotion_rate_by_offset_hours": {
+    "2": {
+      "n3": 0.7405960648148148,
+      "n20": 0.7369791666666666
+    },
+    "4": {
+      "n3": 0.5892650462962963,
+      "n20": 0.5662615740740741
+    },
+    "6": {
+      "n3": 0.4765625,
+      "n20": 0.49985532407407407
+    },
+    "8": {
+      "n3": 0.4014756944444444,
+      "n20": 0.35170717592592593
+    }
+  },
+  "conditional_identifiability": {
+    "no_prior": {
+      "regime_count": 144,
+      "identifiable_fraction_by_n20": 0.5208333333333333,
+      "minimum_at_n3": 72,
+      "newly_identifiable_after_n3": 3,
+      "unresolved_at_n20": 69
+    },
+    "weak_rotation": {
+      "regime_count": 144,
+      "identifiable_fraction_by_n20": 0.5277777777777778,
+      "minimum_at_n3": 71,
+      "newly_identifiable_after_n3": 5,
+      "unresolved_at_n20": 68
+    },
+    "strong_spot_facula": {
+      "regime_count": 144,
+      "identifiable_fraction_by_n20": 0.41666666666666663,
+      "minimum_at_n3": 48,
+      "newly_identifiable_after_n3": 12,
+      "unresolved_at_n20": 84
+    }
+  },
+  "decision": {
+    "learned_transfer_with_current_three_pairs": "Only identifiable when the b/e stellar state is already highly coherent, especially at short offsets.",
+    "additional_pairs": "Do not justify a universal 5, 8, 10, 15, or 20-pair requirement; most solvable regimes already pass at N=3 and unstable regimes remain unresolved at N=20.",
+    "next_data_priority": "Prefer closer-in-time pairs and independent activity-state measurements over simply increasing pair count.",
+    "active_science_model": "DREAMS-style e-only per-visit GP"
+  },
+  "claim_boundary": "Synthetic identifiability result only; no atmosphere or real paired-correction claim."
+}

@@ -1,0 +1,36 @@
+{
+  "run": "AQ-DREAMS-BRANCH-FREEZE-0",
+  "created_utc": "2026-06-19T00:00:00Z",
+  "verdict": "PASS_BRANCH_FREEZE",
+  "detector_branch": {
+    "dlinoss_v0": "retired_from_detector_role",
+    "physics_locked_dlinoss": "synthetic_capacity_shown_not_promoted",
+    "promoted_detector_stack": "residual_first_linear_ssm_and_residual_baseline",
+    "program1331_observable_sensitivity": "not_demonstrated_through_500_ppm"
+  },
+  "quarantined_results": [
+    {
+      "run": "AQ-TRAPPIST1E-DLINOSS-REAL-REFERENCE-INJECTION-0",
+      "status": "invalidated_do_not_reuse",
+      "reason": "binned white-light timestamps were aligned to unbinned spectral integrations"
+    }
+  ],
+  "paired_data_gate": {
+    "minimum_clean_be_pairs": 3,
+    "required": [
+      "TTV-aware planet labels",
+      "verified phase labels",
+      "recorded b/e time offsets",
+      "compatible wavelength grids",
+      "sane mask fractions",
+      "no unresolved multi-transit ambiguity"
+    ],
+    "current_verified_9256_pairs": 2,
+    "current_pair_ids": [
+      "9256-o008-be",
+      "9256-o009-be"
+    ],
+    "training_unlocked": false
+  },
+  "claim_boundary": "DREAMS GP reproduction and paired-data auditing do not reopen the retired D-LinOSS detector branch."
+}
