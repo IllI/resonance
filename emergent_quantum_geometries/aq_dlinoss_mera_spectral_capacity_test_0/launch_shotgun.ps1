@@ -51,7 +51,7 @@ while (-not $Winner -and (Get-Date) -lt $Deadline) {
   foreach ($candidate in $Candidates) {
     $queue=State $candidate "queue"; $node=State $candidate "node"
     Log "poll zone=$($candidate.Zone) queue=$queue node=$node"
-    if ($queue -eq "ACTIVE" -and $node -eq "READY") { $Winner=$candidate; break }
+    if ($queue -match "ACTIVE|PROVISIONING" -and $node -eq "READY") { $Winner=$candidate; break }
   }
   if (-not $Winner) { Start-Sleep -Seconds 30 }
 }
