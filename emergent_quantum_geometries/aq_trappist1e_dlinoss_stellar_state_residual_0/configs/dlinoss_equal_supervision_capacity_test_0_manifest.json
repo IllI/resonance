@@ -1,0 +1,73 @@
+{
+  "manifest_version": 2,
+  "run": "AQ-DLINOSS-EQUAL-SUPERVISION-CAPACITY-TEST-0",
+  "authorization_status": "AUTHORIZED",
+  "authorized_date": "2026-06-19",
+  "shard_generated": false,
+  "locked_before_generation": true,
+  "units": {
+    "timestamp_unit": "day",
+    "timestamp_dtype": "float64",
+    "seconds_per_day": 86400.0,
+    "tau_ref_days": 1.0,
+    "tau_ref_seconds": 86400.0
+  },
+  "physical_prior": {
+    "periods_days": {
+      "stellar_rotation": 3.3,
+      "active_region_short": 7.0,
+      "active_region_long": 14.0,
+      "nominal_visit_separation": 30.0,
+      "nominal_transit_duration": 0.025694444444444443
+    },
+    "nominal_transit_duration_minutes": 37.0,
+    "omega_unit": "radian_per_day",
+    "gamma_role": "real_damping_or_line_width_only",
+    "gamma_allowed_in_omega_fixed": false
+  },
+  "generator": {
+    "transition_class": "damped_oscillatory_backbone_plus_bounded_nonlinear_cross_mode_coupling",
+    "latent_dim": 6,
+    "spectral_features": 96,
+    "timesteps": 160,
+    "dt_days": 0.25,
+    "duration_days": 40.0,
+    "oracle_periods_days": [4.1, 9.5, 18.0],
+    "damping_times_days": [8.0, 20.0, 35.0],
+    "nonlinear_state_coefficient": 0.12,
+    "nonlinear_emission_coefficient": 0.15,
+    "mask_schedule": ["A", "B", "C", "A+B", "B+C", "A+C"],
+    "train_samples": 120,
+    "validation_samples": 36,
+    "test_samples": 36,
+    "data_seeds": {
+      "train": 101,
+      "validation": 103,
+      "test": 107
+    },
+    "required_variance_fraction_report": [
+      "oscillatory",
+      "nonlinear",
+      "smooth_nuisance",
+      "observation_noise"
+    ]
+  },
+  "sweep": {
+    "hidden_dim": [20, 48, 96],
+    "training_steps": [800, 2000, 4000],
+    "model_seeds": [11, 23, 31]
+  },
+  "optimization_validity": {
+    "required_valid_seeds_per_configuration": 2,
+    "final_window_fraction": 0.2,
+    "max_relative_validation_improvement_in_final_window": 0.01,
+    "max_residual_corr_std": 0.05,
+    "max_improvement_margin_std": 0.05
+  },
+  "frequency_firewall": {
+    "physical_prior_may_read_generator_frequencies": false,
+    "physical_prior_may_infer_time_scale": false,
+    "oracle_frequency_arm_may_read_oracle_periods": true,
+    "manifest_must_be_hashed_before_generation": true
+  }
+}

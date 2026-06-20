@@ -8,7 +8,7 @@
 
 ## Executive Summary
 
-D-LinOSS v0 was retired as a "controlled negative." The linear SSM/residual baseline passed WASP-39b positive control (recovery correlation 0.990), but the D-LinOSS model consistently lost to trivial baselines (smooth average, last-visit subtraction) on TRAPPIST-1e Program 1331 data. The branch was closed after injection sensitivity failed through 500 ppm.
+D-LinOSS v0 was retired after it consistently lost to simple baselines. The later audit identified an upstream problem more fundamental than the four architecture defects: the astronomy experiments were performed on residualized `x1dints` integration flux, while the DREAMS contamination framework operates on wavelength-dependent transit depths extracted from fitted spectrophotometric light curves. The 500 ppm raw-flux failure therefore cannot be interpreted as a Program 1331 transmission-spectrum sensitivity limit.
 
 **The model that was tested was not a properly configured D-LinOSS.** It was a degraded approximation with four compounding architectural errors that prevented it from ever accessing the spectral covariance structure D-LinOSS needs to decompose stellar contamination.
 
@@ -49,6 +49,42 @@ The branch was designed to reject shortcut signals such as:
 - mask pattern or wavelength coverage
 - visit identity or pair identity artifacts
 - bookkeeping structure unrelated to stellar or planetary physics
+
+## Failure 0: Wrong Pipeline Stage
+
+This failure is upstream of the four model-implementation failures below.
+
+### What DREAMS analyzes
+
+For each of the four Program 1331 visits, the reduction must first produce a visit-level transmission spectrum:
+
+`wavelength, fitted transit depth, depth uncertainty`
+
+That requires two explicit fitting stages:
+
+1. White-light fitting for the visit baseline/systematics, limb darkening, transit center, and common transit geometry.
+2. Wavelength-channel light-curve fitting for the transit depth in every spectral bin, using the validated timing and systematics model.
+
+The DREAMS GP then explains visit-to-visit residuals among four `[wavelength, depth, uncertainty]` spectra. Atmospheric retrieval follows only after that contamination model.
+
+### What this branch modeled
+
+The experimental models received integration-level tensors shaped approximately `[visit, integration, wavelength]`. Residualization removed means or smooth trends, but it did not turn raw integration flux into fitted transit depth. The model was therefore asked to infer contamination while simultaneously carrying the dominant stellar continuum, instrumental drift, transit light-curve shape, and adjacent-integration autocorrelation.
+
+### Why the baselines won
+
+Smooth and last-visit baselines are strong on raw flux because neighboring integrations and visit-average spectra are highly correlated. That comparison is not representative of the task DREAMS poses in transmission-depth space, where the common light-curve and continuum structure have already been fitted out.
+
+The injection audit inherited the same mismatch. Ppm-scale residuals were injected and scored in raw-flux residual space rather than propagated through the full light-curve fit into extracted depth space. Its null sensitivity floor is therefore specific to that objective and must not be quoted as an atmospheric or transmission-spectrum limit.
+
+### Correct next real-data sequence
+
+1. Reproduce the Allen/Lewis white-light fits and fitted transit centers.
+2. Fit every wavelength-channel light curve with consistent limb darkening, baselines, masks, and uncertainty propagation.
+3. Validate four extracted visit spectra against the released DREAMS depth tables.
+4. Only then compare per-visit GP, linear SSM, and any future physics-locked D-LinOSS contamination model.
+
+This is a substantial reduction project. It is separate from the completed synthetic architecture capacity test.
 
 ---
 
@@ -244,7 +280,7 @@ loss = jnp.sum(loss_mask[:, None] * jnp.square(pred - target)) / jnp.sum(loss_ma
 
 That is **not guaranteed**. Four visits may not contain enough temporal leverage to distinguish rotation-modulated contamination from random noise. But it is **genuinely untested**, because what was tested was not D-LinOSS — it was a degraded scalar-input, soft-prior, full-spectrum, memoryless approximation of it.
 
-The linear SSM baseline already achieved 0.990 on WASP-39b. A correctly-built D-LinOSS with hard physical eigenfrequencies should do **better** than the linear SSM, not worse, because it has the additional constraint of physically meaningful oscillation channels. If it still loses to the baseline after the four fixes, the conclusion is real: 4 visits of Program 1331 data genuinely lack the temporal structure needed for decomposition, and the path forward requires Program 9256 paired b/e data.
+The linear SSM baseline achieved 0.990 on the WASP-39b injected positive control. A correctly built D-LinOSS should be compared with that baseline under equal supervision in synthetic data, and with GP/SSM baselines only after the relevant astronomical observable has been extracted. Losing on raw Program 1331 integration flux cannot establish that the four visit-level transmission spectra lack decomposable contamination structure.
 
 ---
 

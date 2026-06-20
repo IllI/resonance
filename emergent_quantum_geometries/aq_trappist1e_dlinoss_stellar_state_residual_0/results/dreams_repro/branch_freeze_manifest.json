@@ -1,12 +1,21 @@
 {
   "run": "AQ-DREAMS-BRANCH-FREEZE-0",
   "created_utc": "2026-06-19T00:00:00Z",
+  "updated_utc": "2026-06-20T00:00:00Z",
   "verdict": "PASS_BRANCH_FREEZE",
   "detector_branch": {
     "dlinoss_v0": "retired_from_detector_role",
     "physics_locked_dlinoss": "synthetic_capacity_shown_not_promoted",
-    "promoted_detector_stack": "residual_first_linear_ssm_and_residual_baseline",
-    "program1331_observable_sensitivity": "not_demonstrated_through_500_ppm"
+    "validated_architecture_baseline": "residual_first_linear_ssm_and_residual_baseline",
+    "program1331_raw_flux_sensitivity": "not_demonstrated_through_500_ppm",
+    "program1331_transmission_depth_sensitivity": "not_tested",
+    "pipeline_stage_correction": "models_used_residualized_x1dints_integration_flux_before_white_light_and_spectrophotometric_transit_depth_extraction"
+  },
+  "dreams_reproduction": {
+    "gp_behavior": "directionally_reproduced_from_released_visit_level_spectra",
+    "white_light_extraction_from_x1dints": "not_reproduced",
+    "spectrophotometric_transit_depth_extraction_from_x1dints": "not_reproduced",
+    "next_required_observable": "four_visit_transmission_depth_tables_with_propagated_uncertainties"
   },
   "quarantined_results": [
     {
@@ -25,12 +34,15 @@
       "sane mask fractions",
       "no unresolved multi-transit ambiguity"
     ],
-    "current_verified_9256_pairs": 2,
+    "current_verified_9256_6456_pairs": 3,
     "current_pair_ids": [
       "9256-o008-be",
-      "9256-o009-be"
+      "9256-o009-be",
+      "6456-o003-be"
     ],
-    "training_unlocked": false
+    "training_unlocked": true,
+    "learned_transfer_status": "closed_promote_gp_only",
+    "observing_design_status": "promote_closer_pairing_required"
   },
-  "claim_boundary": "DREAMS GP reproduction and paired-data auditing do not reopen the retired D-LinOSS detector branch."
+  "claim_boundary": "Raw integration-flux detector results do not measure DREAMS transmission-depth sensitivity. DREAMS GP reproduction and paired-data auditing do not reopen the retired D-LinOSS detector branch."
 }

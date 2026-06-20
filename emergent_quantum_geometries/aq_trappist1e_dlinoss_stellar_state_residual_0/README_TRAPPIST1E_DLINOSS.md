@@ -4,7 +4,9 @@ This branch learns visit-varying stellar contamination before testing for a stab
 
 ## Branch closeout
 
-This branch is closed as a controlled negative; see `TRAPPIST1E_LINEARSSM_1331_CLOSEOUT_0.md`. The linear SSM/residual baseline passed the strict WASP-39b positive control, but corrected Program 1331 e-only data produced no observable sensitivity floor through 500 ppm. D-LinOSS-v0 is retired from the detector role, and no further Program 1331 model variants should be launched from this branch.
+This branch is closed as a methodological boundary result; see `TRAPPIST1E_LINEARSSM_1331_CLOSEOUT_0.md`. D-LinOSS-v0 is retired from the detector role, and no further Program 1331 raw-integration model variants should be launched from this branch.
+
+The earlier statement that Program 1331 produced no observable sensitivity floor through 500 ppm is not an astrophysical sensitivity limit. Those experiments operated on residualized `x1dints` integration flux, before wavelength-by-wavelength transit fitting. DREAMS operates on extracted visit-level transmission spectra: transit depth as a function of wavelength. Because the tested tensor and the published analysis use different observables, the raw-flux result cannot establish that Program 1331 lacks a recoverable transmission-depth signal.
 
 The only active real-data interpretation path that survived the branch is the separate DREAMS-style Program 1331 e-only GP reproduction. The paired b/e correction branch is also closed on the current public data: three clean pairs exist, but the learned transfer path remains frozen at `PROMOTE_GP_ONLY`, and the observing-design closeout is `PROMOTE_CLOSER_PAIRING_REQUIRED`.
 
@@ -17,7 +19,7 @@ The only active real-data interpretation path that survived the branch is the se
 - Paired b-proxy plus residual GP: closed as `PROMOTE_GP_ONLY`; in-sample scatter improved, held-out prediction and null gates failed
 - TPU pair-count power audit: no universal minimum pair count; state coherence and b/e time offset dominate identifiability
 - TPU strong-prior audit: `PROMOTE_CLOSER_PAIRING_REQUIRED`; at the observed 4.26--6.01 hour offsets, only coarse scalar coupling was robust enough to identify
-- Active science path: DREAMS-style Program 1331 e-only per-visit GP
+- Active science path: reproduce the white-light and spectrophotometric extraction, then apply the DREAMS-style per-visit GP in transmission-depth space
 
 ## Scientific target
 
@@ -31,7 +33,7 @@ The core scientific question was:
 
 - Can visit-variable stellar contamination be separated from a stable planetary transmission residual in public TRAPPIST-1e data?
 
-The concrete observables used were:
+The detector-level observables actually supplied to the experimental models were:
 
 - integration-time flux spectra as a function of wavelength
 - per-integration uncertainties and data-quality masks
@@ -39,6 +41,15 @@ The concrete observables used were:
 - white-light normalized and continuum-removed residual tensors
 - visit-to-visit variability across the four Program 1331 visits
 - for paired runs, matched `b` and `e` spectra with measured b/e time offsets
+
+These are not the final DREAMS observables. The published contamination analysis follows this sequence:
+
+1. Fit each visit's white-light curve for transit timing, limb darkening, and visit baseline/systematics.
+2. Fit each wavelength-channel light curve and extract `transit_depth[visit, wavelength]` with uncertainty.
+3. Model visit-variable stellar contamination across the four extracted transmission spectra with a per-visit GP.
+4. Compare the corrected/shared transmission spectrum with atmospheric hypotheses.
+
+This branch attempted stage 3-like state modeling directly on stage 0 detector-level integration flux. It did not independently reproduce stages 1 and 2 first. The resulting `[visit, integration, wavelength]` tensors are useful for reduction and light-curve work, but they are not interchangeable with the `[visit, wavelength]` transmission-depth tables analyzed by DREAMS.
 
 The main astrophysical signal classes we were trying to distinguish were:
 
@@ -49,7 +60,11 @@ The main astrophysical signal classes we were trying to distinguish were:
 - trivial nonphysical structure that must not drive a claim:
   static continuum level, mask pattern, wavelength coverage, visit ID, pair ID, redshift-free bookkeeping artifacts
 
-The branch did not attempt a defensible methane or atmosphere detection. Its job was to determine whether the public data support a recoverable contamination model precise enough to make a later planetary-residual test meaningful.
+The branch did not attempt a defensible methane or atmosphere detection. Its raw-flux detector results now document a preprocessing boundary: a D-LinOSS, linear-SSM, or GP contamination comparison must be performed after a validated transmission-spectrum extraction, or be formulated as part of a joint transit-plus-contamination model.
+
+## Synthetic capacity result
+
+`AQ-DLINOSS-EQUAL-SUPERVISION-CAPACITY-TEST-0` already completed on eight TPU devices. It evaluated 108 training configurations: two supervision arms, two frequency-prior arms, three hidden dimensions, three training lengths, and three seeds. All arms achieved high in-distribution synthetic recovery, but the final verdict was `DO NOT PROMOTE` because the gain over the equal-supervision linear SSM was below 5%, mask-shuffle degradation stayed below 20%, and leave-window-out recovery failed. This result is independent of the JWST extraction error and does not authorize an astronomy claim.
 
 ## Canonical documents
 
@@ -63,7 +78,7 @@ Most of the other `.md` files in this folder are run specs or point-in-time memo
 
 ## DREAMS reproduction branch
 
-The DREAMS reproduction is a separate CPU-first data/reduction branch. It does not reopen D-LinOSS-v0 or authorize a new detector claim.
+The DREAMS reproduction is a separate CPU-first branch. Its directional GP result used released visit-level spectra; it did not independently reproduce the white-light and wavelength-channel extraction from `x1dints`. It therefore validates the qualitative GP behavior after extraction, not the full reduction pipeline. It does not reopen D-LinOSS-v0 or authorize a new detector claim.
 
 Authoritative machine-readable state lives under `results/dreams_repro/`:
 

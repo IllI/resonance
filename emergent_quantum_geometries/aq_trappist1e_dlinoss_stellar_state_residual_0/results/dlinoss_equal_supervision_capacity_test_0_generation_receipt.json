@@ -1,0 +1,39 @@
+{
+  "run": "AQ-DLINOSS-EQUAL-SUPERVISION-CAPACITY-TEST-0",
+  "manifest_version": 2,
+  "manifest_sha256": "1b754f02da21fa08a75361a5f098a4ca83acb6c6321d3094b693c8abc56484d1",
+  "shard": "C:\\Users\\cityz\\IllI\\newer_all\\emergent_quantum_geometries\\aq_trappist1e_dlinoss_stellar_state_residual_0\\results\\shards\\dlinoss_equal_supervision_capacity_test_0.npz",
+  "shard_sha256": "b80d94b1994f001078c82785ec613a95428c80c27591c18cab1b3158c6d7bb6c",
+  "shard_generated": true,
+  "timestamp_unit": "day",
+  "tau_ref_days": 1.0,
+  "variance": {
+    "oscillatory": 0.01404995284974575,
+    "nonlinear": 0.00013183141709305346,
+    "smooth_nuisance": 0.004360512364655733,
+    "observation_noise": 0.0012242652010172606
+  },
+  "variance_fraction": {
+    "oscillatory": 0.7107939645141808,
+    "nonlinear": 0.006669415663184215,
+    "smooth_nuisance": 0.22060044643088186,
+    "observation_noise": 0.06193617339175315
+  },
+  "shapes": {
+    "train": [
+      120,
+      160,
+      96
+    ],
+    "validation": [
+      36,
+      160,
+      96
+    ],
+    "test": [
+      36,
+      160,
+      96
+    ]
+  }
+}

@@ -2,7 +2,17 @@
 
 ## Final status
 
-Controlled negative. The detector pipeline is validated, but the corrected public Program 1331 e-only tensor does not support an observable stellar-contamination sensitivity floor through 500 ppm.
+Methodological boundary result. The detector infrastructure is validated, but the Program 1331 experiments were performed on residualized integration flux rather than extracted transmission depths. They therefore do not measure the stellar-contamination or planetary-residual sensitivity of the DREAMS analysis observable.
+
+## Pipeline-stage correction
+
+The Lewis/DREAMS analysis does not apply its visit-level contamination GP directly to `x1dints` flux. It first fits the white-light transit and visit systematics, then fits each wavelength-channel light curve to extract a transmission spectrum for each visit:
+
+`transit_depth[visit, wavelength] +/- uncertainty`
+
+The per-visit GP operates on the scatter and residual structure among those four transmission spectra. This branch instead trained on tensors shaped approximately `[visit, integration, wavelength]`, even after residualization. That bypassed the transit-depth extraction stage and exposed the models to dominant integration-level temporal autocorrelation and instrumental/stellar flux structure that are largely divided out during spectrophotometric extraction.
+
+Accordingly, the reported 25--500 ppm injection failures are not a limit on recoverability in transmission-depth space. They are a negative result for the tested raw-flux objective only.
 
 ## What the model was trained on
 
@@ -23,9 +33,13 @@ In astrophysical terms, the intended learnable structure was:
 - not the static baseline:
   mean stellar continuum, fixed detector response, or visit-average transit shape
 
-The relevant question was:
+The question actually answered was:
 
-- does the public Program 1331 dataset contain enough observable time-resolved chromatic structure to identify stellar-state variation on top of the dominant static spectrum?
+- can a residual detector recover injected chromatic structure directly from residualized integration flux?
+
+The intended DREAMS question remains untested by this branch:
+
+- after validated white-light and wavelength-channel transit fitting, can visit-variable contamination be separated across the four extracted transmission spectra?
 
 ## Validated components
 
@@ -41,9 +55,9 @@ Program 1331 observable-only recovery remained 0.004--0.014 over 25--500 ppm. Th
 
 The paired-copy response is a method check, not a physical detection limit: subtracting outputs for identical base and injected copies cancels the real residual background in a linear model.
 
-## What failed in the data
+## What failed in the learning setup
 
-The negative result was not just "the model underperformed." The data did not expose the specific structure we needed at measurable strength.
+The models were optimized against the wrong stage of the reduction pipeline. Raw integration flux is dominated by the static stellar spectrum, smooth instrumental behavior, and adjacent-integration autocorrelation. A transmission spectrum is a fitted parameter product in which those components have already been modeled or divided out.
 
 What the model could see reliably:
 
@@ -59,9 +73,9 @@ What it did not recover at promotable strength:
 
 What that means astrophysically:
 
-- the public four-visit Program 1331 release is sufficient to reproduce DREAMS-style per-visit GP behavior
-- it is not sufficient, in this branch, to support a direct residual detector claim for stellar contamination or planetary transmission structure
-- therefore the correct scientific statement is about contamination-model necessity, not atmospheric recovery
+- no sensitivity statement about the extracted Program 1331 transmission spectra follows from these raw-flux runs
+- the four visits may still support DREAMS-style contamination inference after proper light-curve and transmission-spectrum extraction
+- the correct result is a preprocessing and objective boundary, not evidence that the astrophysical signal is absent
 
 ## Architecture decision
 
@@ -72,13 +86,13 @@ What that means astrophysically:
 
 ## Scientific claim
 
-The pipeline is validated on WASP-39b and on paired-copy TRAPPIST injections, but current public Program 1331 e-only data do not support an observable stellar-contamination sensitivity floor through 500 ppm. Future progress requires additional observations, verified paired b/e data, or a stronger external stellar-contamination prior.
+The tensor, residual, null-control, and TPU infrastructure is validated, but the Program 1331 sensitivity experiment was applied before transmission-spectrum extraction. The next real-data project must first reproduce the white-light fits and wavelength-channel transit-depth extraction, then compare contamination models in depth space. Additional observations or paired b/e data may still help, but they are not substitutes for the missing extraction stage.
 
 No atmosphere, methane, CO2, real stellar-contamination, or time-geometry claim is supported.
 
 ## Optional future audit
 
-`AQ-TRAPPIST1E-OBSERVABLE-NOISE-FLOOR-AUDIT-0` may estimate the injection amplitude required to exceed the residual background. It is a CPU-only measurement audit, not a promotion run.
+No further raw-flux noise-floor audit is useful for the DREAMS question. A future sensitivity audit must inject a transit-depth signal into wavelength-channel light curves, rerun the same extraction, and score the recovered depth spectrum.
 
 ## Authoritative results
 
