@@ -1,0 +1,219 @@
+sequence,commit,parents,date,author,subject
+1,2beff13ad16cabeb0da8b65405c06c2ec48ad0b9,,2025-08-31T13:47:20-05:00,illi,Initial commit with proper file tracking
+2,133c4dfed3c095bba8fdb81d25f9565569ea33d0,2beff13ad16cabeb0da8b65405c06c2ec48ad0b9,2025-09-01T19:53:17-05:00,illi,added 3d modeling model
+3,c1afc952f3ee58485deca02340b438efc5ead103,133c4dfed3c095bba8fdb81d25f9565569ea33d0,2025-09-01T21:24:02-05:00,illi,feat: Atlas-as-Source-of-Truth detection system with >99.9% accuracy
+4,3cf507182da0e82fc1c16ca01cc90669add24064,c1afc952f3ee58485deca02340b438efc5ead103,2025-09-01T21:26:02-05:00,illi,feat: Comprehensive brain model training system on real datasets
+5,fc559c33451ffab052820f21396ddcbf92a1fa53,3cf507182da0e82fc1c16ca01cc90669add24064,2025-09-01T21:27:33-05:00,illi,feat: Dual-GPU parallel training acceleration system
+6,38e248fb7e1f62320a6d38ffa94948fa023eaa6d,fc559c33451ffab052820f21396ddcbf92a1fa53,2025-09-01T21:28:57-05:00,illi,feat: Training showcase and data management utilities
+7,e4699e4ae49e38646d4c378d9d70b0eb50ad763f,38e248fb7e1f62320a6d38ffa94948fa023eaa6d,2025-09-01T21:30:21-05:00,illi,feat: Training showcase and data management utilities
+8,3876f11d91c52af85be9517c50e6f6dec5d81858,e4699e4ae49e38646d4c378d9d70b0eb50ad763f,2025-09-05T12:38:52-05:00,illi,scripts added
+9,7c31d797fbf14f11468b97854de330232a67bbdc,3876f11d91c52af85be9517c50e6f6dec5d81858,2025-09-05T12:54:02-05:00,illi,"Remove large data files and dependencies from git tracking\n\n- Removed large .nii.gz brain imaging files from tracking\n- Removed model files (.pkl, .npz) from tracking\n- Removed large HTML visualizations from tracking\n- Updated .gitignore to exclude data, models, and cache directories\n- These files will now be handled by pip install and data download scripts\n- Repository size significantly reduced for GitHub push"
+10,d48d3439c4dcf8ef00ebafdb2378334145ca7078,7c31d797fbf14f11468b97854de330232a67bbdc,2026-02-26T20:51:47-06:00,IllI,Updated .gitignore
+11,7e696a14a8ab105cf6a2733cfd4f849d4104f385,d48d3439c4dcf8ef00ebafdb2378334145ca7078,2026-05-08T17:36:20-05:00,illi,feat(quantum-teleportation): OAT teleportation experiment — TPU v6e results
+12,50104c98818d240d1d8ae34d5ece1332637cc39c,7e696a14a8ab105cf6a2733cfd4f849d4104f385,2026-05-08T18:14:42-05:00,illi,feat(oat-moqe): D-LiNOSS + signal statistics framework discriminator on TPU v6e
+13,ade331d8f4a560d163036b38e9fdace452921e49,50104c98818d240d1d8ae34d5ece1332637cc39c,2026-05-08T19:34:26-05:00,illi,feat(oat-moqe-v3): two-layer Learner+Observer quantum emergence system
+14,edc2b4868e8af4549d3676bb96f8c8f40667f4d0,ade331d8f4a560d163036b38e9fdace452921e49,2026-05-08T19:44:25-05:00,illi,fix(oat-moqe-v3): all four probe corrections per expert review
+15,bd726f32eb5b1b6ac49c9a61df6eb5445f8bfea0,edc2b4868e8af4549d3676bb96f8c8f40667f4d0,2026-05-08T19:50:34-05:00,illi,docs: experiment findings summary + hypothesis for v4
+16,2ef5827f0dde0f658a057ee71ce16d9e0de51f50,bd726f32eb5b1b6ac49c9a61df6eb5445f8bfea0,2026-05-08T20:11:51-05:00,illi,"feat(oat-moqe-v4): H1 CONFIRMED — real OAT physics data, 4/4 criteria met"
+17,a2ca6cff0eee9ad6902864127bca359ef4e29af0,2ef5827f0dde0f658a057ee71ce16d9e0de51f50,2026-05-09T02:14:32-05:00,illi,docs(report): add Sections 9-11 — publication support analysis + MoQE contribution
+18,9bfe855640864ad1e3d97e351a0baad6d0fce121,a2ca6cff0eee9ad6902864127bca359ef4e29af0,2026-05-09T10:39:31-05:00,illi,feat(v5): validation experiments — 3 open items addressed
+19,ec4b4aa01b61e6ba89272c23b4e4bf608346c60a,9bfe855640864ad1e3d97e351a0baad6d0fce121,2026-05-09T10:41:04-05:00,illi,docs(report): add Sections 12-13 — quantum info transmission roadmap + revised conclusion
+20,a176e4c460463d4b7c9d4f00c35cdcb134f056ab,ec4b4aa01b61e6ba89272c23b4e4bf608346c60a,2026-05-09T16:57:16-05:00,illi,feat(teleport): v3-v5c OAT boundary entanglement + framework discrimination
+21,a36f72c467365632ce55dfaf0fea18249cce8f30,a176e4c460463d4b7c9d4f00c35cdcb134f056ab,2026-05-09T17:01:28-05:00,illi,feat(teleport): v5d witness-decay D-LinOSS observer
+22,bfbfd4485482d2dbcc79ad816f98adbcfabe1796,a36f72c467365632ce55dfaf0fea18249cce8f30,2026-05-09T17:12:31-05:00,illi,feat(teleport): hybrid loop controller + witness fix for D-LinOSS
+23,7885e15230d1d0bd0fee151f9624dccc132ff8b8,bfbfd4485482d2dbcc79ad816f98adbcfabe1796,2026-05-09T17:20:19-05:00,illi,data(teleport): regenerate dlinoss_input with witness channel + fix N header
+24,5cd5b7c7d0936201cd961d97ff90952d06193873,7885e15230d1d0bd0fee151f9624dccc132ff8b8,2026-05-10T17:35:36-05:00,illi,feat(hardware): Phase 1+2 real hardware probe experiments
+25,51a56feee971c56ae4fdc20e057105502ebd9474,5cd5b7c7d0936201cd961d97ff90952d06193873,2026-05-10T17:49:49-05:00,illi,"fix+feat: sign convention, IBM tau range, SYK ED calibration"
+26,494472c0857b8b2ba394d39b485d089b68835164,51a56feee971c56ae4fdc20e057105502ebd9474,2026-05-10T17:59:55-05:00,illi,docs: update FINDINGS.md with complete research state through v5d + hardware validation
+27,a2817092701a290eac97a67bb52ae09a145ff684,494472c0857b8b2ba394d39b485d089b68835164,2026-05-10T18:14:54-05:00,illi,"feat+docs: MBL probe calibrated, FINDINGS complete, all probes done"
+28,a957790e6886d67953d140ed35b5ded093f3573b,a2817092701a290eac97a67bb52ae09a145ff684,2026-05-10T22:34:51-05:00,illi,docs: add PAPER_DRAFT_v1.md -- full scientific narrative
+29,53317522593271fbc7956c20a2ae61421524633a,a957790e6886d67953d140ed35b5ded093f3573b,2026-05-10T22:37:50-05:00,illi,docs: add Section XI -- connection to Rey Dicke model (2602.06114)
+30,db5055cefcdc047e051655cf9cc3c77f37fc36fa,53317522593271fbc7956c20a2ae61421524633a,2026-05-10T22:46:45-05:00,illi,refactor: professional repo restructure + README
+31,f1d2fedd2bc12ecf6d8700a4d8229d4906af5788,db5055cefcdc047e051655cf9cc3c77f37fc36fa,2026-05-10T23:01:09-05:00,illi,docs: add CODE_GUIDE.md -- full developer reference
+32,c0a4005b2145716b2c0d23949be7352bd8f52bd2,f1d2fedd2bc12ecf6d8700a4d8229d4906af5788,2026-05-10T23:16:01-05:00,illi,updated paper
+33,a84942196a9857c45062b5262b3ab033dbc49878,c0a4005b2145716b2c0d23949be7352bd8f52bd2,2026-05-10T23:18:16-05:00,illi,"docs: polish LaTeX, fix broken figures, and improve Mermaid diagrams"
+34,e07dc0f909d299fce68f03b3ba6fab54f22850b1,a84942196a9857c45062b5262b3ab033dbc49878,2026-05-10T23:51:41-05:00,illi,docs: comprehensive paper revision v2 per reviewer feedback
+35,f8a277667636a4429d431503a2ced8c4bb00851b,e07dc0f909d299fce68f03b3ba6fab54f22850b1,2026-05-11T00:09:00-05:00,illi,docs: paper v3 -- comprehensive variable definitions throughout
+36,623d0c21faf9e67001bd31748d7529f5f87e5b3e,f8a277667636a4429d431503a2ced8c4bb00851b,2026-05-11T00:21:52-05:00,illi,docs: paper v4 -- fix LaTeX syntax artifacts and tone
+37,12d42ef2ce89177890cf885b6977d562b954f505,623d0c21faf9e67001bd31748d7529f5f87e5b3e,2026-05-11T00:29:13-05:00,illi,docs: simplify Bell test / witness sentence (tone)
+38,a01b454cfbd927b2ef95413ebefbd0222c2a09db,12d42ef2ce89177890cf885b6977d562b954f505,2026-05-11T00:50:07-05:00,illi,docs: paper v5 -- major structural revision per peer review
+39,83b3b794deb0963090bb5b4e9bfd828a4cbb6a11,a01b454cfbd927b2ef95413ebefbd0222c2a09db,2026-05-11T01:02:46-05:00,illi,"docs: paper v5.1 -- final syntax fixes (unicode units, table cells)"
+40,caa892a4d418558446de104f235174437f49de99,83b3b794deb0963090bb5b4e9bfd828a4cbb6a11,2026-05-11T01:18:22-05:00,illi,docs: paper v5.2 -- Appendix A reframed as proof-of-concept in research program
+41,371d251e97844f6a4402afa50a439a32cdfaec7f,caa892a4d418558446de104f235174437f49de99,2026-05-11T03:01:53-05:00,illi,feat: add tpu_dlinoss_training_gen.py -- D-LinOSS training library generator
+42,6bebc9801ff6e8b8264e54e0f22b206724ff63fb,371d251e97844f6a4402afa50a439a32cdfaec7f,2026-05-11T09:49:59-05:00,illi,fix: OAT exact closed-form rho2 -- correct boundary pair and C values
+43,cd246277b2c6b437c74028d1674eef2761663c60,6bebc9801ff6e8b8264e54e0f22b206724ff63fb,2026-05-11T09:54:53-05:00,illi,docs: paper v5.3 -- correct Proposition 1 (not X-state)
+44,5103b19b1e259a57a5b47640645d44ff9add9dcb,cd246277b2c6b437c74028d1674eef2761663c60,2026-05-11T09:59:41-05:00,illi,"docs: paper v5.4 -- sweep all stale X-state refs, correct conclusion"
+45,c4cf8fa3dab29563c62a2a47a368454313039f7b,5103b19b1e259a57a5b47640645d44ff9add9dcb,2026-05-11T10:00:24-05:00,illi,docs: FINDINGS.md -- session discoveries on OAT boundary states
+46,1aaca75d2eb1cf910824ee9b2f677189ace18dea,c4cf8fa3dab29563c62a2a47a368454313039f7b,2026-05-11T10:11:14-05:00,illi,docs: paper v5.5 + FINDINGS -- six-point reviewer audit complete
+47,a44addd9c70c00e24ca163cef2b20e74db7a0425,1aaca75d2eb1cf910824ee9b2f677189ace18dea,2026-05-11T11:43:57-05:00,illi,feat: TPU run 1 complete -- D-LinOSS fingerprint library (89 records)
+48,6633efa7349a3bfd9f411163aeb35bb89839ce9a,a44addd9c70c00e24ca163cef2b20e74db7a0425,2026-05-11T16:27:09-05:00,illi,feat: adversarial suite + threshold sweep -- K_eff diagnostic complete
+49,2251d1af879cfedbfcd45a5823b7fe65bc15e6da,6633efa7349a3bfd9f411163aeb35bb89839ce9a,2026-05-11T16:29:47-05:00,illi,docs: epistemic labels + adversarial findings + F_opt N=2 proof
+50,a67f81b12cb7f27acdfeba6302563e1d621321ce,2251d1af879cfedbfcd45a5823b7fe65bc15e6da,2026-05-11T16:34:27-05:00,illi,docs: apply all 11 reviewer corrections to docs/FINDINGS.md
+51,0e9cac876aad5938de05e665501703e71c25a28a,a67f81b12cb7f27acdfeba6302563e1d621321ce,2026-05-11T16:42:56-05:00,illi,feat: Run 2 corrected training gen -- BIC rank + adversarial baselines
+52,430cfa28c544508803c8a75ff9b5597a35d165dd,0e9cac876aad5938de05e665501703e71c25a28a,2026-05-12T01:28:54-05:00,illi,results: TPU Run 2 complete -- BIC fingerprint definitive
+53,d9b6de3da6d7c85561c4fea8be06cdb84415ecbd,430cfa28c544508803c8a75ff9b5597a35d165dd,2026-05-12T01:59:28-05:00,illi,proof: singlet fraction conjecture FALSIFIED for OAT non-X states
+54,d8b59d5df2737b80a699ce809dc62996a0cb45b4,d9b6de3da6d7c85561c4fea8be06cdb84415ecbd,2026-05-12T02:20:15-05:00,illi,geometry: Experiments II-IV complete -- three structural discoveries
+55,c881940d34afde8781a7cf064c8aac8118723817,d8b59d5df2737b80a699ce809dc62996a0cb45b4,2026-05-12T03:51:20-05:00,illi,dephasing: Experiment V complete -- critical thresholds and fragility discovery
+56,37325f61379f1e72db63653d003909e24c0ccc7f,c881940d34afde8781a7cf064c8aac8118723817,2026-05-12T10:07:57-05:00,illi,paper: PAPER_DRAFT_v1 corrected -- five sections updated with direct proof results
+57,f357a126ebb9ff79f822a69706c03267b57713c3,37325f61379f1e72db63653d003909e24c0ccc7f,2026-05-12T10:23:45-05:00,illi,channel: Teleportation Channel Reconstruction -- operational proof
+58,5d157c9b492233eb9e5a68e6a12210778310f2f7,f357a126ebb9ff79f822a69706c03267b57713c3,2026-05-12T10:37:50-05:00,illi,"channel: CORRECTED -- normalization fixed, Rz-only insufficient for QA"
+59,d322b30a60806779c35f92de585360822b3d9574,5d157c9b492233eb9e5a68e6a12210778310f2f7,2026-05-12T11:04:41-05:00,illi,"analytic+classical: PTM theorems proved, classical comparator run"
+60,955c1ab5219d1f0eecd6d3afb9e5980548d98849,d322b30a60806779c35f92de585360822b3d9574,2026-05-12T11:18:44-05:00,illi,landscape: Recovery geometry experiment -- three-tier hierarchy
+61,5f0db56448674ee3c45270b39c9eaafaaac6258f,955c1ab5219d1f0eecd6d3afb9e5980548d98849,2026-05-12T11:34:24-05:00,illi,phase_diagram: Recovery geometry phase diagram -- central paper figure
+62,6bf88840dcff8108795e4fb75d09ba655f5b8a40,5f0db56448674ee3c45270b39c9eaafaaac6258f,2026-05-12T11:46:37-05:00,illi,basin: Basin volume V_Q -- teleportation critical line and phase boundary
+63,97bbfe9186769b6726e5bcb8fc43db268f3255fa,6bf88840dcff8108795e4fb75d09ba655f5b8a40,2026-05-12T12:01:00-05:00,illi,"assessment: Case strength, JILA relevance, MC clarification (SS51-54)"
+64,1b70566491a65b2f41e97d5be9cee3883fec709e,97bbfe9186769b6726e5bcb8fc43db268f3255fa,2026-05-12T12:06:18-05:00,illi,"paper: Draft v6 -- PTM theorems, V_Q, recovery geometry, updated abstract/conclusion"
+65,bce61dca3764fe8e63724f02a13afac031e09da6,1b70566491a65b2f41e97d5be9cee3883fec709e,2026-05-12T12:16:22-05:00,illi,"vq_phase_diagram: Session 1 -- five panels, all key results confirmed"
+66,c4482abb4b9bdefb34621edbbb0d96034e1840c6,bce61dca3764fe8e63724f02a13afac031e09da6,2026-05-12T12:18:22-05:00,illi,"paper+plan: Gain formula, chi_t=pi singularity, D-LinOSS mission, Sessions 2-4 plan"
+67,a67c1b061b6f3425ab9fb7e8627e187eb7f08028,c4482abb4b9bdefb34621edbbb0d96034e1840c6,2026-05-12T12:33:18-05:00,illi,conjecture: SS55 -- D-LinOSS applied to fMRI/auditory/CaMKII (working hypothesis)
+68,778d333d0b625baff895f80663a8f41d978d3444,a67c1b061b6f3425ab9fb7e8627e187eb7f08028,2026-05-12T12:46:37-05:00,illi,"vq_n_scaling: Session 2 -- N-scaling, signal/control ratios, D-LinOSS training set"
+69,ed87a4a357410f56572a4ccba6f89ab8f917edd0,778d333d0b625baff895f80663a8f41d978d3444,2026-05-12T12:53:04-05:00,illi,"conjecture: SS59 -- dual-TPU entanglement (rejected as stated, reframed)"
+70,de5c5478a3e142f37ffded56c81e7ba0800e461f,ed87a4a357410f56572a4ccba6f89ab8f917edd0,2026-05-12T13:05:29-05:00,illi,roadmap: Pre-JILA communication checklist and IBM quantum access log
+71,41a2be3224a01931f81d05bc8e5fa75d058f7640,de5c5478a3e142f37ffded56c81e7ba0800e461f,2026-05-12T15:15:26-05:00,illi,dicke_ptm: Session 3 complete -- PTM framework generalises to Dicke model
+72,e62c1bcece74851eedd14f06b221615d06eca252,41a2be3224a01931f81d05bc8e5fa75d058f7640,2026-05-12T15:25:19-05:00,illi,"paper+findings: Draft v7 -- Recovery Basin Conjecture, kappa_Q, geometric reframe"
+73,d22b3f9678a77f5c3e1a2d68b1c280aacb89998a,e62c1bcece74851eedd14f06b221615d06eca252,2026-05-12T15:28:01-05:00,illi,kappa_q: Session 4A -- stiffness confirms chi_t=pi geometric singularity
+74,935d0f47ac29ee0e541128aad8632e21ff646f1a,d22b3f9678a77f5c3e1a2d68b1c280aacb89998a,2026-05-12T15:30:36-05:00,illi,"findings: SS71-74 -- strategic synthesis, killer figure plan, language corrections"
+75,b53e59d17948715f6bec2ab3e1364b37b3de11ca,935d0f47ac29ee0e541128aad8632e21ff646f1a,2026-05-12T15:32:31-05:00,illi,collapse_figure: All 6 observables exact zero at chi_t=pi -- 12 orders of magnitude
+76,e51621b42783cecbf278dc6b22505daa0a8ec0f8,b53e59d17948715f6bec2ab3e1364b37b3de11ca,2026-05-12T15:37:58-05:00,illi,dlinoss_manifold: Session 4B -- singular class identified via curve-shape
+77,b1924d3e468b8e39c5bb729088c1c4e61ff7c13f,e51621b42783cecbf278dc6b22505daa0a8ec0f8,2026-05-12T15:41:53-05:00,illi,"findings: SS78-82 -- geometric reframe, critical exponent conjecture, g_ij metric"
+78,4934ef9a0590dc121c9fcd49d552d3888103ebd2,b1924d3e468b8e39c5bb729088c1c4e61ff7c13f,2026-05-12T15:44:07-05:00,illi,"critical_exponent: two clean power laws, R^2>0.96"
+79,0401bd6d908ae0dc264545e992cb555ede78f3d7,4934ef9a0590dc121c9fcd49d552d3888103ebd2,2026-05-12T15:47:11-05:00,illi,beta_n_scaling: beta=1.0 for N=4 (corrected from 0.866 crossover artifact)
+80,1cca9c273106ba43fd52b3ffdf812cc88256fabe,0401bd6d908ae0dc264545e992cb555ede78f3d7,2026-05-12T15:50:41-05:00,illi,"findings: SS88-90 -- six-layer narrative, Gate 2 plan, singularity sharpening"
+81,36e3ac7ab2458f509311658f2c49e5c8fd3cce89,1cca9c273106ba43fd52b3ffdf812cc88256fabe,2026-05-12T15:53:49-05:00,illi,"gate2: statistical rigor complete -- beta PASSED, nu PARTIAL"
+82,749a73395332cae565ca58d12266d05e08ad9dde,36e3ac7ab2458f509311658f2c49e5c8fd3cce89,2026-05-12T15:58:18-05:00,illi,"findings: SS94-98 -- strategic hardening, kappa_Q as phase indicator, scope lock"
+83,8d45055e973c5f924617ec8a1bfe3f2bc0adf881,749a73395332cae565ca58d12266d05e08ad9dde,2026-05-12T16:05:36-05:00,illi,GATE 2 COMPLETE: both exponents confirmed at 95% CI
+84,0a6688a70804a244bd6b7a539c7acafc78d95681,8d45055e973c5f924617ec8a1bfe3f2bc0adf881,2026-05-12T16:13:36-05:00,illi,"findings: SS102-104 -- five pre-IBM priorities, PTM rank-collapse conjecture"
+85,39b900f93b9ff21e40d78801efa62369089fa09a,0a6688a70804a244bd6b7a539c7acafc78d95681,2026-05-12T16:18:48-05:00,illi,P1+P4: coordinate invariance + PTM rank-collapse both confirmed
+86,32dff8a4bc0611c4d1c7cd8cf4ec623faf96ed10,39b900f93b9ff21e40d78801efa62369089fa09a,2026-05-12T16:24:40-05:00,illi,"findings: SS107-110 -- Goldilocks zone, IBM pivot, bridge experiment"
+87,61f8bcf5d8a98e51a51dc19084efea3e29bb5b8b,32dff8a4bc0611c4d1c7cd8cf4ec623faf96ed10,2026-05-12T16:26:54-05:00,illi,P3 BRIDGE CONFIRMED: V_Q is operational order parameter for teleportation
+88,592455fc8efeb3de8b591e414b1b62767fcfbcf0,61f8bcf5d8a98e51a51dc19084efea3e29bb5b8b,2026-05-12T16:31:22-05:00,illi,"findings: SS114-117 -- IBM locked to 3-point PTM, P2 hardware noise plan"
+89,da54956ada611163282d98c3e4011c35168346fe,592455fc8efeb3de8b591e414b1b62767fcfbcf0,2026-05-12T16:33:30-05:00,illi,"P2 COMPLETE: IBM READY -- T_xx 92.6% survival, rank 1->4->1 preserved"
+90,b7ae5dfbf7e93601647cffbce4d18eb6395542ff,da54956ada611163282d98c3e4011c35168346fe,2026-05-12T16:37:21-05:00,illi,findings: SS121-122 -- IBM justification and readiness certificate
+91,a90b2c6ee0aa2078aab124cc1c54cbd08ffdb615,b7ae5dfbf7e93601647cffbce4d18eb6395542ff,2026-05-12T17:27:38-05:00,illi,IBM DRY-RUN COMPLETE: corrected Hamiltonian + all 3 sessions pass
+92,f7515a5effe627222595054b50db084c5220d0b7,a90b2c6ee0aa2078aab124cc1c54cbd08ffdb615,2026-05-12T17:39:45-05:00,illi,paper: draft v8 -- §IX IBM hardware experiment added
+93,016a0c8321fc6e83b900749e88a8d29f0d61ba55,f7515a5effe627222595054b50db084c5220d0b7,2026-05-12T17:46:57-05:00,illi,IBM HARDWARE RESULTS: 12.5-sigma separation -- rank-collapse confirmed
+94,3e250169ed52fe31104a7257581a7465b96d7c0f,016a0c8321fc6e83b900749e88a8d29f0d61ba55,2026-05-12T17:54:56-05:00,illi,paper v8 final: IX.E filled with hardware results + transpiler diagnostic
+95,33e1b3e47d38601499f2c3fa4971f9b2435aff78,3e250169ed52fe31104a7257581a7465b96d7c0f,2026-05-12T20:41:55-05:00,illi,"FINAL: Theorem 3 hardware-confirmed -- raw counts archived, paper complete"
+96,a8a14f66600021475f62d224a11d2dff99e469f8,33e1b3e47d38601499f2c3fa4971f9b2435aff78,2026-05-12T21:00:24-05:00,illi,"IBM RUN 2: Functional form confirmed R2=0.986, null=0.4sigma"
+97,616e49f117ab93f4a6314d1dfc8ed8678214749d,a8a14f66600021475f62d224a11d2dff99e469f8,2026-05-12T21:21:10-05:00,illi,"IBM RUN 3 + paper v9: topology replication complete, framing corrected"
+98,8f60e7879e9178d4d3d314cb932ea27094c827f6,616e49f117ab93f4a6314d1dfc8ed8678214749d,2026-05-12T22:47:40-05:00,illi,paper v10: resolve critical contradictions before submission
+99,c71f019696161035287d8f0cf9a7a041e59d6939,8f60e7879e9178d4d3d314cb932ea27094c827f6,2026-05-12T23:31:45-05:00,illi,"approach C TPU results: delta_N ~ 0.049*N^(-0.093), purity scaling confirmed"
+100,386724609f33f27d63c689b50035706f1ec453f0,c71f019696161035287d8f0cf9a7a041e59d6939,2026-05-13T15:30:48-05:00,illi,"session2: v6 TPU sim, T_yz discovery, corrected F_avg=0.758, Theorem 4 confirmed"
+101,ee7f5ae7af3bb25091443af0a288349fe55002d3,386724609f33f27d63c689b50035706f1ec453f0,2026-05-14T00:05:54-05:00,illi,D-LinOSS upgrade: operator-space reconstructor replacing scalar classifier
+102,4c74b4fefaa0c18a6e933fa7038662f8df2f3f12,ee7f5ae7af3bb25091443af0a288349fe55002d3,2026-05-14T00:28:24-05:00,illi,Program E: blind operator-geometry discovery experiment
+103,13957752ae2a7a121683e81ca9aa08421f76e2c0,4c74b4fefaa0c18a6e933fa7038662f8df2f3f12,2026-05-14T00:35:59-05:00,illi,Program F: adversarial blind stratification (definitive D-LinOSS validation)
+104,19a73fce51ed955490b9853ecdf5d3d94b1662e5,13957752ae2a7a121683e81ca9aa08421f76e2c0,2026-05-14T00:41:19-05:00,illi,IBM emulator: predictive stratum assignment for hardware runs
+105,0a282cc73c835d775998e396e98350a9c8d01958,19a73fce51ed955490b9853ecdf5d3d94b1662e5,2026-05-14T00:50:19-05:00,illi,Program F full-scale results + dim_vs_teleportation fix
+106,d244e909c7f680c37ccceca253e291871d02c2e8,0a282cc73c835d775998e396e98350a9c8d01958,2026-05-14T01:04:49-05:00,illi,Program G: full teleportation validation with Haar-random ensemble
+107,b3309725ff8e8eed90c230b5c87be6546850cca5,d244e909c7f680c37ccceca253e291871d02c2e8,2026-05-14T01:25:56-05:00,illi,Program G2: PTM-aligned teleportation — F_rot = F_opt verified
+108,4ad6696813490aa8809b39db1fd4032db626d827,b3309725ff8e8eed90c230b5c87be6546850cca5,2026-05-14T10:16:35-05:00,illi,Program H: finite-size scaling of recoverable teleportation geometry
+109,4e43b60f6a093b45fe5f5238cd933b210b5c5484,4ad6696813490aa8809b39db1fd4032db626d827,2026-05-14T11:34:23-05:00,illi,Program H (TPU v6e-8): N=4..256 scaling — 13.1s on europe-west4-a
+110,156df3dbd3689816faa1e3b737d01a6198e4ad8a,4e43b60f6a093b45fe5f5238cd933b210b5c5484,2026-05-14T12:13:08-05:00,illi,Program H2 (TPU v6e-8): Universality of Recoverable Transport Scaling
+111,8819cc67d51982e50516c699c2a4a32c81a3c7fc,156df3dbd3689816faa1e3b737d01a6198e4ad8a,2026-05-14T12:33:43-05:00,illi,Program H3 (TPU v6e-8): What Survives After Concurrence Dies?
+112,8595188408577f7b66b9e64388521cab92773c10,8819cc67d51982e50516c699c2a4a32c81a3c7fc,2026-05-14T13:48:57-05:00,illi,Program I0: Dynamic Operator Transport with representation cross-check
+113,a472974eebc1eb21d9610e627aea928fa93c4db1,8595188408577f7b66b9e64388521cab92773c10,2026-05-14T14:53:39-05:00,illi,"Program I0 (local CPU, N=10): Dynamic Operator Transport -- Representation Cross-Check"
+114,f1d90d0999dadc733daac0184927d4d378b289e3,a472974eebc1eb21d9610e627aea928fa93c4db1,2026-05-14T14:59:42-05:00,illi,"Program I0 (local CPU, N=12, 168s): Representation cross-check confirmed"
+115,be16d91f1cdfbc3718b0903a0af56ed3f26fd381,f1d90d0999dadc733daac0184927d4d378b289e3,2026-05-14T15:34:19-05:00,illi,"Program I0 (TPU v6e-8 Eve, N=14, 1157.9s): Final representation cross-check"
+116,ae87f52c48dcda89a04be7075d23962730c6bb61,be16d91f1cdfbc3718b0903a0af56ed3f26fd381,2026-05-14T16:04:58-05:00,illi,"Program I+ (N=10, 25s): Representation Stability -- XXZ CONSISTENT CV=0.084"
+117,117e0fdba5f1eea74b4333b6751c5b316d11df1a,ae87f52c48dcda89a04be7075d23962730c6bb61,2026-05-14T21:12:53-05:00,illi,"Program J (N=10, 18.2s): Causal Ordering & Blind Prediction of Recoverable Transport"
+118,daadd699aace19615e5965070757f61f904ce64d,117e0fdba5f1eea74b4333b6751c5b316d11df1a,2026-05-14T21:28:06-05:00,illi,"Program K (N=10, 25s): Predictive Recovery Fronts -- adaptive grid, jackknife, logistic proxy"
+119,a286587dd6b9ea606e29eea21f98a20771bf5c62,daadd699aace19615e5965070757f61f904ce64d,2026-05-14T22:11:38-05:00,illi,"Program K (N=12, 247s): Causal Ordering confirmed -- cross-model prec=0.951"
+120,396692fec7e7d58a013e80cf42102105bdb4f1f4,a286587dd6b9ea606e29eea21f98a20771bf5c62,2026-05-14T22:15:12-05:00,illi,Program K N=12 extra (131s): TiltedIsing + OAT negative controls
+121,59e661196151543fc56ce0bf61f194e904a11b04,396692fec7e7d58a013e80cf42102105bdb4f1f4,2026-05-14T22:17:33-05:00,illi,"Update shotgun: SSH-verify winner, TPU-side execution, retry on preemption"
+122,c1748205d98dd1aa551bbb5197a66846af948343,59e661196151543fc56ce0bf61f194e904a11b04,2026-05-14T22:35:44-05:00,illi,"program_k v2: pre-registered thresholds, adversarial basis scramble, causal fraction"
+123,8ea6475f8bb106124aab793c3e7021de591d302b,c1748205d98dd1aa551bbb5197a66846af948343,2026-05-14T22:46:36-05:00,illi,Add MBL-XXZ (W=5) adversarial Hamiltonian
+124,d8060e0303f857d8a155f686f37e87283e29107a,8ea6475f8bb106124aab793c3e7021de591d302b,2026-05-14T22:58:32-05:00,illi,K v2 N=12 baseline (1013s) + RESEARCH_LOG.md
+125,65a8719028d9ec81dd09b8a9aa47a87e58e4ec76,d8060e0303f857d8a155f686f37e87283e29107a,2026-05-15T08:32:14-05:00,illi,PAPER_DRAFT_v1: apply editorial recommendations 1-12
+126,a57311928b7ff1ca05611277161a3684f56db07b,65a8719028d9ec81dd09b8a9aa47a87e58e4ec76,2026-05-15T08:56:48-05:00,illi,"program_k v3: local Clifford scramble, disorder W-sweep, N=14 ready"
+127,04c2e91bd7db2a4a9a421eadd9b769036b9dfd94,a57311928b7ff1ca05611277161a3684f56db07b,2026-05-15T09:02:15-05:00,illi,"RESEARCH_LOG + shotgun: v3 framing, disorder sweep, N=14 three-job spec"
+128,c76f07a205c4e25c6221a2bfd24838314f5359b7,04c2e91bd7db2a4a9a421eadd9b769036b9dfd94,2026-05-15T09:04:13-05:00,illi,fix shotgun: RoundNo variable parse error (PS drive specifier colon)
+129,f6b76fa37aa2050f80b63de3d627bd1bbb1fad6b,c76f07a205c4e25c6221a2bfd24838314f5359b7,2026-05-15T09:44:59-05:00,illi,"shotgun: fix TRC Bible flags (--best-effort for v6e spot, no flag for v4 on-demand)"
+130,44cc940268c314dea0092cff09d6c971bf911a26,f6b76fa37aa2050f80b63de3d627bd1bbb1fad6b,2026-05-15T09:47:10-05:00,illi,shotgun: revert v6e to --spot (--best-effort unrecognised in this gcloud version)
+131,5a4fca1daf1e6698f1c6af402699da4bd3d76b58,44cc940268c314dea0092cff09d6c971bf911a26,2026-05-15T10:21:15-05:00,illi,shotgun: add 30s SSH connect timeout to Test-SSH (prevents indefinite hang on first boot)
+132,06988373265054f9cde04874f4d943f4f24c4b7f,5a4fca1daf1e6698f1c6af402699da4bd3d76b58,2026-05-15T10:54:45-05:00,illi,shotgun: remove SSH verify gate (v6e SSH takes 5-10min after ACTIVE; SCP is the real check)
+133,df78f3e3dc28b211999a8d76a13b441d4f558e23,06988373265054f9cde04874f4d943f4f24c4b7f,2026-05-15T11:49:31-05:00,illi,shotgun: add 3min SSH warm-up + ConnectTimeout=120 on SCP/SSH (fixes v6e first-boot hang)
+134,b61a7ec7914978583181bef30ae0a210ec265cf1,df78f3e3dc28b211999a8d76a13b441d4f558e23,2026-05-15T20:02:52-05:00,illi,shotgun: remove all plink-incompatible SSH flags (gcloud+plink is native on Windows)
+135,f280d7de18ba3079c8d811298e825685a001f900,b61a7ec7914978583181bef30ae0a210ec265cf1,2026-05-16T20:20:41-05:00,illi,"Program N1/N2: Jacobian-calibrated controller, susceptibility-gated alpha, sparsity penalty"
+136,deb0c1c8156c16c1f9af922b875d2196fc9172dd,f280d7de18ba3079c8d811298e825685a001f900,2026-05-16T20:32:22-05:00,illi,N3: regime-conditioned lambda_eff (complementary gate to alpha_eff)
+137,84ec90aa28e7f36906991a6e73241139a23c71bd,deb0c1c8156c16c1f9af922b875d2196fc9172dd,2026-05-16T20:57:45-05:00,illi,N4: disable dx_norm from stable-basin condition (shot noise floor)
+138,df28505451326c7c97b7c1cb8eb31a9f4e638dc2,84ec90aa28e7f36906991a6e73241139a23c71bd,2026-05-16T21:09:26-05:00,illi,N5: D_eff-only stable basin -- disable susceptibility threshold
+139,38545fe0681a7539194dfc51fc0f4871dfbde3af,df28505451326c7c97b7c1cb8eb31a9f4e638dc2,2026-05-16T21:38:54-05:00,illi,N6: null-prediction kill switch + disorder detection gradient gate
+140,fadf507bc890f374eedefc4ce8c113e4ff3d5a7c,38545fe0681a7539194dfc51fc0f4871dfbde3af,2026-05-16T22:10:57-05:00,illi,N7: stable-basin early return -- revert N6 changes
+141,c7e3aabd13f0bb6860555dc10e532d8b3724bedb,fadf507bc890f374eedefc4ce8c113e4ff3d5a7c,2026-05-17T10:08:18-05:00,illi,N8: fragility-aware veto on front_v
+142,29e737d0c7446d3d92102dbc5a2ca0ff9a050f4e,c7e3aabd13f0bb6860555dc10e532d8b3724bedb,2026-05-17T20:23:05-05:00,illi,N9: raise LAMBDA_SPARSE 0.02->0.06; retire N8 front_v veto
+143,6b469800707b1e7cc42f140a5d62b1301b5ebeda,29e737d0c7446d3d92102dbc5a2ca0ff9a050f4e,2026-05-17T20:45:21-05:00,illi,"N10a: W3 confidence characterization script (B=50, CI + eta_ctrl + timing)"
+144,a057e20d1409ba9c07db7346e868901593d9b32e,6b469800707b1e7cc42f140a5d62b1301b5ebeda,2026-05-17T21:06:17-05:00,illi,Fix: guard haware KeyError for partial controller runs; fix PS done-check array cast
+145,4a420f4724cdc6d06b6aecd8eb509caae3f496f3,a057e20d1409ba9c07db7346e868901593d9b32e,2026-05-17T21:51:10-05:00,illi,Fix: Python version gate in Launch-Experiment -- skip v4 nodes (Python 3.8 incompatible with jaxlib 0.4.13); prevent infinite JAX retry loop
+146,4aec159a90e4e2947e9ffa746f61b8a735fd5541,4a420f4724cdc6d06b6aecd8eb509caae3f496f3,2026-05-17T22:18:28-05:00,illi,"N10a complete: W3 intervention-neutral boundary confirmed (B=50, CI=[-0.771,+0.003]); Python version gate; v6e zone priority; haware KeyError fix"
+147,5e99aee71aac80610562588adb34aad12b0d39e1,4aec159a90e4e2947e9ffa746f61b8a735fd5541,2026-05-17T22:20:09-05:00,illi,"RESEARCH_LOG: N3-N10a full narrative, control-phase hierarchy, Program O design"
+148,d8ec209c8a0c6e98bbd874cc1b118827b65e0afe,5e99aee71aac80610562588adb34aad12b0d39e1,2026-05-17T22:27:06-05:00,illi,Program O: encoded-state recoverability script + plan (smoke test passed)
+149,e4ce8d446717d5f6499e1ac90e2662fb0069366c,d8ec209c8a0c6e98bbd874cc1b118827b65e0afe,2026-05-17T22:28:38-05:00,illi,Launcher: add -Script/-ProbeFamilies/-RunChirp params for Program O support
+150,d41d3805b829aaaa55eac7a1488d6726a4555013,e4ce8d446717d5f6499e1ac90e2662fb0069366c,2026-05-17T23:04:33-05:00,illi,"Launcher: version-adaptive JAX install -- v4/py3.8 gets jax==0.4.13 pinned, v6e/py3.10 gets tpu index; v4 is now valid fallback not dead end"
+151,f5fa97648d7e346f41d5dc2ec97f6b04ebdb7eb5,d41d3805b829aaaa55eac7a1488d6726a4555013,2026-05-17T23:07:50-05:00,illi,"TRC compliance: trap block ensures Delete-All runs on any abnormal script exit (Ctrl+C, error)"
+152,594625ed22736208385aa20911b9a5f216492718,f5fa97648d7e346f41d5dc2ec97f6b04ebdb7eb5,2026-05-17T23:21:46-05:00,illi,Revert v4 to clean skip: jaxlib 0.4.13 v4-TPU wheel does not exist on any index; prevents infinite gcloud SSH retry loop
+153,4ae5d0315df5f87cf9e959dc95cb4ff6560d6a64,594625ed22736208385aa20911b9a5f216492718,2026-05-17T23:45:48-05:00,illi,"Shotgun: re-queue any zone stuck PROVISIONING >15min, WAITING_FOR_RESOURCES resets timer"
+154,fa24d25c8969ef870c3d49d649987593849af63a,4ae5d0315df5f87cf9e959dc95cb4ff6560d6a64,2026-05-18T00:23:12-05:00,illi,"Single-SSH atomic setup: Python check + JAX install in one round trip, StrictHostKeyChecking=no -- eliminates fingerprint delay and minimizes preemption window"
+155,68cd91596dc9de8226360a0f10796929af0e59d7,fa24d25c8969ef870c3d49d649987593849af63a,2026-05-18T00:52:54-05:00,illi,Fix winner guard: clear Winner on setup failure so ACTIVE zone can be immediately re-selected; remove QRName exclusion guard
+156,b577b25df216cb6d6710a2de91664364afcb6166,68cd91596dc9de8226360a0f10796929af0e59d7,2026-05-18T01:05:37-05:00,illi,Revert SSH to working 'y' pipe pattern -- StrictHostKeyChecking=no broke TPU VM SSH that was working for weeks
+157,a87099e537af0cd46aa84016f24cc6b7d9c4f3ec,b577b25df216cb6d6710a2de91664364afcb6166,2026-05-18T09:52:27-05:00,illi,Requeue FAILED/SUSPENDED zones immediately; fix AccelType->Type bug in requeue command
+158,98cb469f6a0b9a92d8c8ad8c66ec237fc98d1fa9,a87099e537af0cd46aa84016f24cc6b7d9c4f3ec,2026-05-18T09:57:03-05:00,illi,Fix v5e accelerator type: v5e-8 -> v5litepod-8 per TRC quota config
+159,d76ff62b1872b5203a386e21550d43332950c6b1,98cb469f6a0b9a92d8c8ad8c66ec237fc98d1fa9,2026-05-18T10:13:40-05:00,illi,Fix v5e: v5litepod-4 (4 chips) matches TRC quota limit per zone
+160,741a2a32a9c27c6f2eb65ef50be342e13b91a3b6,d76ff62b1872b5203a386e21550d43332950c6b1,2026-05-18T11:04:50-05:00,illi,"Program O results: agnostic rescues static collapse across all disorder regimes (57/60 PASS, OAT delta_F=+0.640, W3 delta_F=+0.459)"
+161,8f119f2f3856f4e3156b6f027ee61d0fc655fe8f,741a2a32a9c27c6f2eb65ef50be342e13b91a3b6,2026-05-18T11:16:29-05:00,illi,"Add Program P: Partial Information Recovery -- phase encoding, degradation channels, reconstruction metrics (MAE/R2/MI)"
+162,6806e055a608ab0f31e2c350efb6e2a9120131f0,8f119f2f3856f4e3156b6f027ee61d0fc655fe8f,2026-05-18T11:34:26-05:00,illi,"Launcher: add -KeepAlive, -ExtraArgs, program_p routing, fix SCP path, fix launch label"
+163,24a661deef51dfa9e21e8074ef9b4a672b4b0f2f,6806e055a608ab0f31e2c350efb6e2a9120131f0,2026-05-18T12:41:17-05:00,illi,Fix null doneVal crash on preemption; guard .Trim() call
+164,7a01701e4392156d0204b67306b3d898fa041001,24a661deef51dfa9e21e8074ef9b4a672b4b0f2f,2026-05-18T12:43:33-05:00,illi,Add --n-phases CLI arg to program_p for scope control
+165,4aec647237e1d72710eb328371c7f1b138567376,7a01701e4392156d0204b67306b3d898fa041001,2026-05-18T13:35:36-05:00,illi,"Enhance Get-QRState and candidate polling to immediately detect PREEMPTED and TERMINATED VM states, preventing 5-minute SSH timeouts"
+166,5f4dbf1a9aafbda0128a7242a159a071d0a3377b,4aec647237e1d72710eb328371c7f1b138567376,2026-05-18T14:01:57-05:00,illi,"Fix critical bug: stop requeuing on PROVISIONING, which was kicking us to back of GCP queue every 15min"
+167,744474551328a4112d4b0e9e082f871f1d3ef69c,5f4dbf1a9aafbda0128a7242a159a071d0a3377b,2026-05-18T14:19:13-05:00,illi,Add -u flag to all python3 execution patterns in parallel launcher to ensure unbuffered streams
+168,c14592beefc60d712da3aa0c4ccd4fef86a27bc2,744474551328a4112d4b0e9e082f871f1d3ef69c,2026-05-19T12:30:24-05:00,illi,"feat: add Program Q, R, and S1 results summary & code implementations"
+169,f5743284810369dfe575b980756a8b02151c161a,c14592beefc60d712da3aa0c4ccd4fef86a27bc2,2026-05-19T16:41:18-05:00,illi,Add Program T TPU implementation and parallel shotgun launcher
+170,0c8ecc3e075e21d186b27c97fd6366141cab2e64,f5743284810369dfe575b980756a8b02151c161a,2026-05-19T21:02:55-05:00,illi,Add Program T N12 results and JAX/TPU exact diagonalization optimizations
+171,9fb89aab28d4766f207b9751641052bd2ec76bce,0c8ecc3e075e21d186b27c97fd6366141cab2e64,2026-05-19T21:11:58-05:00,illi,Implement Program U hardware CPTP Kraus simulation and shotgun launcher
+172,e3334a98a7bf072f5b0ffcb6b599ee17ff19b529,9fb89aab28d4766f207b9751641052bd2ec76bce,2026-05-19T22:48:43-05:00,illi,Optimize density matrix simulation and run Program U on TPU node
+173,5797fea6952da82c036814675477c8d616a4d41d,e3334a98a7bf072f5b0ffcb6b599ee17ff19b529,2026-05-19T23:04:31-05:00,illi,Implement Program V adaptive entanglement-assisted state transfer and launcher
+174,38e11531d4f0095c126418601a9c4bb67f89efdb,5797fea6952da82c036814675477c8d616a4d41d,2026-05-19T23:08:20-05:00,illi,Refactor Program V to be 100% JAX-Native for maximum TPU optimization
+175,2e270d441aec424ab1582166795150d74f147f0a,38e11531d4f0095c126418601a9c4bb67f89efdb,2026-05-20T00:04:59-05:00,illi,Optimize Program V JAX tracing and execute on TPU cluster
+176,154755ace46ff6918f6bded1ed0b4343d6eb943c,2e270d441aec424ab1582166795150d74f147f0a,2026-05-20T00:18:35-05:00,illi,Implement Program V2 multi-regime threshold scan and launcher
+177,e21d5e07da9801362ba9653d30e24bbb13c6eb3a,154755ace46ff6918f6bded1ed0b4343d6eb943c,2026-05-20T18:26:51-05:00,illi,feat: complete JAX-native Program X calibration and flagship execution sweeps on Cloud TPUs
+178,b48122174bdd8443d41310ce168a0b414eb1b919,e21d5e07da9801362ba9653d30e24bbb13c6eb3a,2026-05-20T21:38:59-05:00,illi,feat: complete Program Y MERA logical preservation scaling study on Cloud TPU
+179,2bdc8d4fd7a71a98296e9c3630ae0d94700d7f8f,b48122174bdd8443d41310ce168a0b414eb1b919,2026-05-21T06:53:10-05:00,illi,feat: complete Program Z scale-resolved MERA recoverability study on Cloud TPU
+180,831e9d5814f0d8a4a2d18fd3d2d381dca8b3218e,2bdc8d4fd7a71a98296e9c3630ae0d94700d7f8f,2026-05-21T07:45:45-05:00,illi,feat: complete Program AA renormalized observable reconstruction study
+181,47741566429762cdcb1cea4705f4e74233a12f49,831e9d5814f0d8a4a2d18fd3d2d381dca8b3218e,2026-05-21T08:56:46-05:00,illi,feat: add robust MERA depth-level checkpointing and resumption to Program AB
+182,6fad43ce289695312750b99db61430e1357db4f9,47741566429762cdcb1cea4705f4e74233a12f49,2026-05-21T10:12:26-05:00,illi,"Add Program AD-lite: Sequential Semantic Transport with Correlated-Channel Memory Injection, Hungarian Frame Decoder, and Time-shuffled relational geometries"
+183,644654bdb91e35e6352a44cd67fa32baa66db0d5,6fad43ce289695312750b99db61430e1357db4f9,2026-05-21T12:04:30-05:00,illi,"Complete Program AE: Dynamic Logical Frame Transport, step-by-step Hungarian co-moving decoder, and full TPU production sweep"
+184,33b87532322a8f2e1992b8bdaeb249257e5d5462,644654bdb91e35e6352a44cd67fa32baa66db0d5,2026-05-21T16:06:55-05:00,illi,docs: finalize Program AF with successful TPU completion for Depth 4; fix summary printout KeyError; add full json checkpoint results
+185,aff39a4277be9007dcd44750a10c406e31956b5b,33b87532322a8f2e1992b8bdaeb249257e5d5462,2026-05-21T18:52:11-05:00,illi,feat(tpu): refactor MERA trajectory simulator and decoders with static compilation and ensemble batching
+186,4e9bb6306f369a53d60789e61b5b2a448342f097,aff39a4277be9007dcd44750a10c406e31956b5b,2026-05-22T15:13:20-05:00,illi,fix(tpu): resolve dictionary key serialization crash and automate full python module sync in shotgun script
+187,67e273024b3530014619be6d6e2a9beb353ab05c,4e9bb6306f369a53d60789e61b5b2a448342f097,2026-05-22T15:14:39-05:00,illi,docs(tpu): add recovered MERA Depth 2 trajectory analysis results
+188,691b2ed1cf85cbcf87447c8538d9866aef640d2d,67e273024b3530014619be6d6e2a9beb353ab05c,2026-05-22T16:45:34-05:00,cityzen,"Implement Program AH: Semantic Normal Modes (DMD, Koopman, RNN, Ablations)"
+189,bcd6ad84df95c697ecb110e18bb7160f68d4332e,691b2ed1cf85cbcf87447c8538d9866aef640d2d,2026-05-23T09:35:37-05:00,illi,docs/perf: Program AH native 8-core jax.pmap TPU parallelization and result data
+190,3faa8e065273c2383c63994d20d55cf09ea15def,bcd6ad84df95c697ecb110e18bb7160f68d4332e,2026-05-23T18:10:03-05:00,illi,"Complete Program AJ execution, generate saturated phase diagram baseline, and update research log"
+191,b96555ed1272c9e78be9e53b81c49a6ff62f85c9,3faa8e065273c2383c63994d20d55cf09ea15def,2026-05-24T14:59:31-05:00,illi,Optimize Program AL: Decouple dynamic Haar matrices from static MERA topology to fix JAX recompilation bottleneck
+192,0663c20318dedaaccce97cfc883f2c0d3a7e2d88,b96555ed1272c9e78be9e53b81c49a6ff62f85c9,2026-05-26T12:15:07-05:00,illi,Program AO focused analysis and decoder guidance
+193,5b1f8fb88a2530df2f70ccf31d685d2f16b7e02d,0663c20318dedaaccce97cfc883f2c0d3a7e2d88,2026-05-27T21:16:53-05:00,illi,"Program AP-T adaptive-alpha run, docs, and runner updates"
+194,a580b962ccb90ad7dfaa493b5a1fe97fb696274b,5b1f8fb88a2530df2f70ccf31d685d2f16b7e02d,2026-05-31T10:33:11-05:00,illi,AQ-IMG: document results; add lite codec gate and launcher timeout
+195,b91596dc79bf99bfa5ac81d19d187e97d45a84a3,a580b962ccb90ad7dfaa493b5a1fe97fb696274b,2026-05-31T10:52:02-05:00,illi,Docs: AQ/AQ-IMG results + TRC TPU bible; update AO recovery
+196,c016eb0a0bcd14eb0d12cf43a5d0ce64be93ab10,b91596dc79bf99bfa5ac81d19d187e97d45a84a3,2026-06-03T23:21:25-05:00,illi,Record AQ YINYANG ordered recovery milestone
+197,d19d973980239690d006f85dcc2094e72b51fdb4,c016eb0a0bcd14eb0d12cf43a5d0ce64be93ab10,2026-06-04T01:49:07-05:00,illi,Document AQ-STREAM image results and v2 pair fix
+198,3c22f35f2c7295cdc4bb6e6c627020363ede5535,d19d973980239690d006f85dcc2094e72b51fdb4,2026-06-04T16:53:09-05:00,illi,Add AQ stream-2 recovery path
+199,05ed17b40a227a45278410f2fff4642a08a4fb45,3c22f35f2c7295cdc4bb6e6c627020363ede5535,2026-06-04T18:27:35-05:00,illi,Document AQ stream-2 results
+200,dcf54b84aecb29c1faf7c917d547fa1b458edc9d,05ed17b40a227a45278410f2fff4642a08a4fb45,2026-06-05T14:59:29-05:00,illi,"Add Program AQ: SO(3) kernel-Galerkin TPU plan for Collins Corollary 6.6.8. LaTeX plan for completing Collins (UH Manoa 2021) Corollary 6.6.8 / Remark 6.6.9 on TPU. Includes Wigner-D setup, three-term error decomposition, oversampling condition, TN-GP bridge via Euler-angle factorization, JAX implementation plan. Reference papers included."
+201,f5b8ba72e4d22be8e9b5a43ee4e962a78fa09416,dcf54b84aecb29c1faf7c917d547fa1b458edc9d,2026-06-05T17:02:03-05:00,illi,"Revise Program AQ plan: CPD kernel, auxiliary space, known-u verification, SO3 datasets, 10x oversampling"
+202,09122404b2789ebbe93872395c2fa1222f6901ad,f5b8ba72e4d22be8e9b5a43ee4e962a78fa09416,2026-06-05T23:22:32-05:00,illi,Add Program AQ certified TPU diagnostics
+203,f5b9d6533ed0e1a2bf154cab16e38d0d9d033f01,09122404b2789ebbe93872395c2fa1222f6901ad,2026-06-05T23:55:42-05:00,illi,Add Program AQ confidence TPU run
+204,50f14f51d17a69da03ce6368765ef84caf9e3864,f5b9d6533ed0e1a2bf154cab16e38d0d9d033f01,2026-06-07T19:27:44-05:00,illi,Add Chronos TPU experiment package and 0b run analysis
+205,deac28b2ae9371401332412b21a6119a383a5c16,50f14f51d17a69da03ce6368765ef84caf9e3864,2026-06-08T11:28:14-05:00,illi,moved so3 script to kernel folder and updated docs
+206,88ca6f0fdff3c33889a523a814cb380c3b692541,deac28b2ae9371401332412b21a6119a383a5c16,2026-06-08T11:54:11-05:00,illi,add TPU guide for mathematicians and stage the run orchestrator script
+207,5de06130cbf0c0f4c4c8755d0d9decbf40cc5330,88ca6f0fdff3c33889a523a814cb380c3b692541,2026-06-08T11:57:58-05:00,illi,"copy shotgun launcher into kernel/ for standalone use, fix internal paths, update guide layout"
+208,e6a2158727e0d253d705d16491c5dcc31dee3542,5de06130cbf0c0f4c4c8755d0d9decbf40cc5330,2026-06-09T15:43:11-05:00,illi,updated docs
+209,ad5b9142546f305545cec7db8bcf42fed06cd790,e6a2158727e0d253d705d16491c5dcc31dee3542,2026-06-13T13:13:51-05:00,illi,Document CHRONOS Schumann replication runs
+210,bc154b25227107fb04705e626166668abc0a3cce,ad5b9142546f305545cec7db8bcf42fed06cd790,2026-06-14T17:06:08-05:00,illi,Add CHRONOS temporal-geometry and drift diagnostics
+211,87c2501c20fbbbc3cb2de8191e10c8d8028ed4b1,bc154b25227107fb04705e626166668abc0a3cce,2026-06-15T12:22:50-05:00,illi,Document Page-Wootters D-LinOSS noise diagnosis handoff
+212,f5dddef9923a300c94382c2192a2a184e9337614,87c2501c20fbbbc3cb2de8191e10c8d8028ed4b1,2026-06-20T11:39:53-05:00,illi,Add TRAPPIST DREAMS branch closeout records
+213,829d029602405dc890234fbc01ca64c8e19c97a4,f5dddef9923a300c94382c2192a2a184e9337614,2026-06-20T11:49:34-05:00,illi,Clarify TRAPPIST observables and failure modes
+214,0a3c89f9081c12de9042d2edd1c22a1b66b824a8,829d029602405dc890234fbc01ca64c8e19c97a4,2026-06-20T12:53:13-05:00,illi,Correct TRAPPIST pipeline-stage interpretation
+215,df331df826427f26e766f6f664b265a819d6c546,0a3c89f9081c12de9042d2edd1c22a1b66b824a8,2026-06-20T13:40:26-05:00,illi,Add MPS spectral capacity gate and GLIMPSE audit
+216,8e272006d367247ba859aafd988f1bf9189e42a7,df331df826427f26e766f6f664b265a819d6c546,2026-06-20T13:42:11-05:00,illi,Harden MPS TPU pmap deployment
+217,158bb4ed397fde08fe56f9e8b4c69000cab000d0,8e272006d367247ba859aafd988f1bf9189e42a7,2026-06-20T14:34:38-05:00,illi,Record MPS spectral capacity result
+218,88adba7b327919de8a61184fb149e98b923d6854,158bb4ed397fde08fe56f9e8b4c69000cab000d0,2026-06-20T14:46:16-05:00,illi,Add explicit mask-channel MPS follow-up
